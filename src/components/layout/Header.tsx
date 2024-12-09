@@ -20,12 +20,20 @@ export const Header: React.FC = () => {
           </div>
           <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
             {auth.isAuthenticated && (
-              <Link
-                to="/bids"
-                className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900 dark:text-gray-100"
-              >
-                Bids
-              </Link>
+              <>
+                <Link
+                  to="/bids"
+                  className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900 dark:text-gray-100"
+                >
+                  Bids
+                </Link>
+                <Link
+                  to="/items/add"
+                  className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900 dark:text-gray-100"
+                >
+                  Add Item
+                </Link>
+              </>
             )}
             {!auth.isAuthenticated ? (
               <Link
@@ -60,4 +68,4 @@ export const Header: React.FC = () => {
       </nav>
     </header>
   );
-};
+}

@@ -4,6 +4,7 @@ import { Home } from './pages/Home';
 import { SignIn } from './pages/SignIn';
 import { SignUp } from './pages/SignUp';
 import { Bids } from './pages/Bids';
+import { AddItem } from './pages/AddItem';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { UserProvider } from './contexts/UserContext';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
@@ -25,6 +26,14 @@ function App() {
                   element={
                     <ProtectedRoute>
                       <Bids />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/items/add"
+                  element={
+                    <ProtectedRoute>
+                      <AddItem />
                     </ProtectedRoute>
                   }
                 />
