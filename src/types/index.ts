@@ -1,3 +1,5 @@
+import { categories } from '../utils/constants';
+
 export interface Bid {
   id: string;
   title: string;
@@ -25,4 +27,13 @@ export interface AuthFormData {
 export interface AuthState {
   isAuthenticated: boolean;
   user: User | null;
+}
+
+export interface ItemFormData {
+  title: string;
+  description: string;
+  category: typeof categories[number];
+  minPrice: number;
+  maxPrice: number;
+  duration: number;
 }

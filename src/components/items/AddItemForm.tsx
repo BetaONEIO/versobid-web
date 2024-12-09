@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useUser } from '../../contexts/UserContext';
 
 interface ItemFormData {
   title: string;
@@ -24,7 +23,6 @@ const categories = [
 
 export const AddItemForm: React.FC = () => {
   const navigate = useNavigate();
-  const { auth } = useUser();
   const [formData, setFormData] = useState<ItemFormData>({
     title: '',
     description: '',
