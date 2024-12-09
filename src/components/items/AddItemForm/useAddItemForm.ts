@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ItemFormData } from '../../types';
-import { categories } from '../../utils/constants';
+import { ItemFormData } from '../../../types';
+import { categories } from '../../../utils/constants';
 
 export const useAddItemForm = () => {
   const navigate = useNavigate();

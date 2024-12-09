@@ -1,5 +1,5 @@
 import React from 'react';
-import { ItemFormData } from '../../types';
+import { ItemFormData } from '../../../types';
 
 interface ItemPriceFieldsProps {
   formData: ItemFormData;

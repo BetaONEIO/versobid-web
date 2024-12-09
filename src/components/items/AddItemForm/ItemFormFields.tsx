@@ -1,6 +1,6 @@
 import React from 'react';
-import { categories } from '../../utils/constants';
-import { ItemFormData } from '../../types';
+import { categories } from '../../../utils/constants';
+import { ItemFormData } from '../../../types';
 
 interface ItemFormFieldsProps {
   formData: ItemFormData;

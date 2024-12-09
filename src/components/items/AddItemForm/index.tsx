@@ -1,7 +1,7 @@
 import React from 'react';
 import { ItemFormFields } from './ItemFormFields';
 import { ItemPriceFields } from './ItemPriceFields';
-import { FormActions } from './FormActions';
+import { FormActions } from '../AddItemForm/FormActions';
 import { useAddItemForm } from './useAddItemForm';
 
 export const AddItemForm: React.FC = () => {
