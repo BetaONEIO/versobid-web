@@ -13,6 +13,7 @@ export interface User {
   id: string;
   name: string;
   email: string;
+  username: string;
   bids: Bid[];
 }
 
@@ -22,6 +23,7 @@ export interface AuthFormData {
   email: string;
   password: string;
   name?: string;
+  username?: string;
 }
 
 export interface AuthState {

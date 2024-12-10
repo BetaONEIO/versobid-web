@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useUser } from '../../contexts/UserContext';
-import { SunIcon, MoonIcon } from '@heroicons/react/24/outline';
+import { SunIcon, MoonIcon, QuestionMarkCircleIcon } from '@heroicons/react/24/outline';
 import { RoleToggle } from '../ui/RoleToggle';
 
 export const Header: React.FC = () => {
@@ -35,6 +35,13 @@ export const Header: React.FC = () => {
                 </Link>
               </>
             )}
+            <Link
+              to="/help"
+              className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900 dark:text-gray-100"
+            >
+              <QuestionMarkCircleIcon className="h-5 w-5 mr-1" />
+              Help
+            </Link>
             {!auth.isAuthenticated ? (
               <Link
                 to="/signin"
@@ -68,4 +75,4 @@ export const Header: React.FC = () => {
       </nav>
     </header>
   );
-}
+};

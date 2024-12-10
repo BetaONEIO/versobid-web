@@ -2,28 +2,45 @@ import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { AuthFormData } from '../types';
 import { useUser } from '../contexts/UserContext';
+import { useNotification } from '../contexts/NotificationContext';
 
 export const SignIn: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { login } = useUser();
+  const { addNotification } = useNotification();
   const [formData, setFormData] = useState<AuthFormData>({
     email: '',
     password: '',
   });
+  const [isEmailLogin, setIsEmailLogin] = useState(true);
 
   const from = location.state?.from?.pathname || '/';
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Mock login for demonstration
-    login({
-      id: '1',
-      name: 'Test User',
-      email: formData.email,
-      bids: []
+    try {
+      // Mock login for demonstration
+      login({
+        id: '1',
+        name: 'Test User',
+        email: formData.email,
+        username: 'testuser',
+        bids: []
+      });
+      addNotification('success', 'Successfully signed in!');
+      navigate(from, { replace: true });
+    } catch (error) {
+      addNotification('error', 'Failed to sign in. Please check your credentials.');
+    }
+  };
+
+  const toggleLoginMethod = () => {
+    setIsEmailLogin(!isEmailLogin);
+    setFormData({
+      email: '',
+      password: '',
     });
-    navigate(from, { replace: true });
   };
 
   return (
@@ -43,20 +60,44 @@ export const SignIn: React.FC = () => {
             </Link>
           </p>
         </div>
+        <div className="flex justify-center space-x-4 mb-4">
+          <button
+            type="button"
+            onClick={() => setIsEmailLogin(true)}
+            className={`px-4 py-2 text-sm font-medium rounded-md ${
+              isEmailLogin
+                ? 'bg-indigo-600 text-white'
+                : 'text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700'
+            }`}
+          >
+            Email
+          </button>
+          <button
+            type="button"
+            onClick={() => setIsEmailLogin(false)}
+            className={`px-4 py-2 text-sm font-medium rounded-md ${
+              !isEmailLogin
+                ? 'bg-indigo-600 text-white'
+                : 'text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700'
+            }`}
+          >
+            Username
+          </button>
+        </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="rounded-md shadow-sm space-y-4">
             <div>
-              <label htmlFor="email" className="sr-only">
-                Email address
+              <label htmlFor={isEmailLogin ? 'email' : 'username'} className="sr-only">
+                {isEmailLogin ? 'Email address' : 'Username'}
               </label>
               <input
-                id="email"
-                name="email"
-                type="email"
-                autoComplete="email"
+                id={isEmailLogin ? 'email' : 'username'}
+                name={isEmailLogin ? 'email' : 'username'}
+                type={isEmailLogin ? 'email' : 'text'}
+                autoComplete={isEmailLogin ? 'email' : 'username'}
                 required
                 className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white dark:bg-gray-700 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                placeholder="Email address"
+                placeholder={isEmailLogin ? 'Email address' : 'Username'}
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
               />
