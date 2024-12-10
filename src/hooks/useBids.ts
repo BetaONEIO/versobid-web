@@ -10,32 +10,8 @@ export const useBids = () => {
     const fetchBids = async () => {
       try {
         // In a real application, this would be an API call
-        const mockBids: Bid[] = [
-          {
-            id: '1',
-            title: 'Vintage Camera Collection',
-            description: 'A rare collection of vintage cameras from the 1950s, including Leica and Rolleiflex models.',
-            amount: 2500,
-            createdAt: new Date(),
-            status: 'open'
-          },
-          {
-            id: '2',
-            title: 'Gaming PC Setup',
-            description: 'High-end gaming PC with RTX 4080, 32GB RAM, and 4K monitor.',
-            amount: 3500,
-            createdAt: new Date(),
-            status: 'open'
-          },
-          {
-            id: '3',
-            title: 'Handcrafted Leather Sofa',
-            description: 'Custom-made Italian leather sofa, perfect condition, barely used.',
-            amount: 1800,
-            createdAt: new Date(),
-            status: 'open'
-          }
-        ];
+        // For now, we start with an empty array
+        const mockBids: Bid[] = [];
         setBids(mockBids);
         setLoading(false);
       } catch (err) {

@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Header } from './components/layout/Header';
+import { Footer } from './components/layout/Footer';
 import { Home } from './pages/Home';
 import { SignIn } from './pages/SignIn';
 import { SignUp } from './pages/SignUp';
@@ -18,9 +19,9 @@ function App() {
       <ThemeProvider>
         <NotificationProvider>
           <UserProvider>
-            <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
+            <div className="min-h-screen bg-gray-100 dark:bg-gray-900 flex flex-col">
               <Header />
-              <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+              <main className="flex-grow max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
                 <Routes>
                   <Route path="/" element={<Home />} />
                   <Route path="/signin" element={<SignIn />} />
@@ -44,6 +45,7 @@ function App() {
                   />
                 </Routes>
               </main>
+              <Footer />
               <NotificationList />
             </div>
           </UserProvider>
