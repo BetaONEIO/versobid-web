@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { AuthFormData } from '../types';
 import { validateName, validateUsername, validateEmail, validatePassword } from '../utils/validation';
+import { userService } from '../services/userService';
+import { useUser } from '../contexts/UserContext';
+import { useNotification } from '../contexts/NotificationContext';
 
 interface FormErrors {
   name: string | null;
@@ -11,6 +14,10 @@ interface FormErrors {
 }
 
 export const SignUp: React.FC = () => {
+  const navigate = useNavigate();
+  const { login } = useUser();
+  const { addNotification } = useNotification();
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState<AuthFormData>({
     email: '',
     password: '',
@@ -48,7 +55,7 @@ export const SignUp: React.FC = () => {
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     // Validate all fields
@@ -66,8 +73,22 @@ export const SignUp: React.FC = () => {
       return;
     }
 
-    // Handle sign up logic here
-    console.log('Sign up:', formData);
+    setIsSubmitting(true);
+
+    try {
+      const user = await userService.signup(formData);
+      login(user);
+      addNotification('success', 'Account created successfully! Welcome to VersoBid.');
+      navigate('/');
+    } catch (error) {
+      if (error instanceof Error) {
+        addNotification('error', error.message);
+      } else {
+        addNotification('error', 'Failed to create account. Please try again.');
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -99,6 +120,7 @@ export const SignUp: React.FC = () => {
                 type="text"
                 autoComplete="name"
                 required
+                disabled={isSubmitting}
                 className={`mt-1 appearance-none rounded-md relative block w-full px-3 py-2 border ${
                   errors.name ? 'border-red-300' : 'border-gray-300'
                 } dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white dark:bg-gray-700 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm`}
@@ -120,6 +142,7 @@ export const SignUp: React.FC = () => {
                 type="text"
                 autoComplete="username"
                 required
+                disabled={isSubmitting}
                 className={`mt-1 appearance-none rounded-md relative block w-full px-3 py-2 border ${
                   errors.username ? 'border-red-300' : 'border-gray-300'
                 } dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white dark:bg-gray-700 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm`}
@@ -141,6 +164,7 @@ export const SignUp: React.FC = () => {
                 type="email"
                 autoComplete="email"
                 required
+                disabled={isSubmitting}
                 className={`mt-1 appearance-none rounded-md relative block w-full px-3 py-2 border ${
                   errors.email ? 'border-red-300' : 'border-gray-300'
                 } dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white dark:bg-gray-700 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm`}
@@ -162,6 +186,7 @@ export const SignUp: React.FC = () => {
                 type="password"
                 autoComplete="new-password"
                 required
+                disabled={isSubmitting}
                 className={`mt-1 appearance-none rounded-md relative block w-full px-3 py-2 border ${
                   errors.password ? 'border-red-300' : 'border-gray-300'
                 } dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white dark:bg-gray-700 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm`}
@@ -182,9 +207,10 @@ export const SignUp: React.FC = () => {
           <div>
             <button
               type="submit"
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              disabled={isSubmitting}
+              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Create account
+              {isSubmitting ? 'Creating account...' : 'Create account'}
             </button>
           </div>
         </form>
