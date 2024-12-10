@@ -3,29 +3,71 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { AuthFormData } from '../types';
 import { useUser } from '../contexts/UserContext';
 import { useNotification } from '../contexts/NotificationContext';
+import { validateEmail, validateUsername, validatePassword } from '../utils/validation';
+
+interface FormErrors {
+  identifier: string | null;
+  password: string | null;
+}
 
 export const SignIn: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { login } = useUser();
   const { addNotification } = useNotification();
+  const [isEmailLogin, setIsEmailLogin] = useState(true);
   const [formData, setFormData] = useState<AuthFormData>({
     email: '',
     password: '',
   });
-  const [isEmailLogin, setIsEmailLogin] = useState(true);
+  const [errors, setErrors] = useState<FormErrors>({
+    identifier: null,
+    password: null,
+  });
 
   const from = location.state?.from?.pathname || '/';
 
+  const validateIdentifier = (value: string): string | null => {
+    if (isEmailLogin) {
+      return validateEmail(value);
+    }
+    return validateUsername(value);
+  };
+
+  const handleChange = (field: 'identifier' | 'password', value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      [isEmailLogin ? 'email' : 'username']: field === 'identifier' ? value : prev.email,
+      password: field === 'password' ? value : prev.password,
+    }));
+    setErrors(prev => ({
+      ...prev,
+      [field]: field === 'identifier' ? validateIdentifier(value) : validatePassword(value),
+    }));
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    const identifierValue = isEmailLogin ? formData.email : formData.username;
+    const newErrors: FormErrors = {
+      identifier: validateIdentifier(identifierValue || ''),
+      password: validatePassword(formData.password),
+    };
+
+    setErrors(newErrors);
+
+    if (Object.values(newErrors).some(error => error !== null)) {
+      return;
+    }
+
     try {
       // Mock login for demonstration
       login({
         id: '1',
         name: 'Test User',
         email: formData.email,
-        username: 'testuser',
+        username: formData.username || '',
         bids: []
       });
       addNotification('success', 'Successfully signed in!');
@@ -33,14 +75,6 @@ export const SignIn: React.FC = () => {
     } catch (error) {
       addNotification('error', 'Failed to sign in. Please check your credentials.');
     }
-  };
-
-  const toggleLoginMethod = () => {
-    setIsEmailLogin(!isEmailLogin);
-    setFormData({
-      email: '',
-      password: '',
-    });
   };
 
   return (
@@ -87,23 +121,28 @@ export const SignIn: React.FC = () => {
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="rounded-md shadow-sm space-y-4">
             <div>
-              <label htmlFor={isEmailLogin ? 'email' : 'username'} className="sr-only">
+              <label htmlFor="identifier" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                 {isEmailLogin ? 'Email address' : 'Username'}
               </label>
               <input
-                id={isEmailLogin ? 'email' : 'username'}
-                name={isEmailLogin ? 'email' : 'username'}
+                id="identifier"
+                name="identifier"
                 type={isEmailLogin ? 'email' : 'text'}
                 autoComplete={isEmailLogin ? 'email' : 'username'}
                 required
-                className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white dark:bg-gray-700 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                className={`mt-1 appearance-none rounded-md relative block w-full px-3 py-2 border ${
+                  errors.identifier ? 'border-red-300' : 'border-gray-300'
+                } dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white dark:bg-gray-700 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm`}
                 placeholder={isEmailLogin ? 'Email address' : 'Username'}
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                value={isEmailLogin ? formData.email : formData.username}
+                onChange={(e) => handleChange('identifier', e.target.value)}
               />
+              {errors.identifier && (
+                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.identifier}</p>
+              )}
             </div>
             <div>
-              <label htmlFor="password" className="sr-only">
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Password
               </label>
               <input
@@ -112,11 +151,16 @@ export const SignIn: React.FC = () => {
                 type="password"
                 autoComplete="current-password"
                 required
-                className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white dark:bg-gray-700 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                className={`mt-1 appearance-none rounded-md relative block w-full px-3 py-2 border ${
+                  errors.password ? 'border-red-300' : 'border-gray-300'
+                } dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white dark:bg-gray-700 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm`}
                 placeholder="Password"
                 value={formData.password}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                onChange={(e) => handleChange('password', e.target.value)}
               />
+              {errors.password && (
+                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.password}</p>
+              )}
             </div>
           </div>
 
