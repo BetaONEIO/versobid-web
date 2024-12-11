@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Welcome to VersoBid</title>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; margin: 0; padding: 0; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background-color: #4F46E5; padding: 20px; text-align: center; }
+    .header img { max-width: 200px; }
+    .content { background-color: #ffffff; padding: 30px; }
+    .button { display: inline-block; padding: 12px 24px; background-color: #4F46E5; color: #ffffff; text-decoration: none; border-radius: 4px; margin: 20px 0; }
+    .footer { text-align: center; padding: 20px; color: #666666; font-size: 12px; }
+  </style>
+</head>
+<body style="background-color: #f3f4f6;">
+  <div class="container">
+    <div class="header">
+      <h1 style="color: #ffffff; margin: 0;">VersoBid</h1>
+    </div>
+    <div class="content">
+      <h2>Welcome to VersoBid, {{ params.name }}!</h2>
+      <p>Thank you for joining our community of buyers and sellers. We're excited to have you on board!</p>
+      <p>With VersoBid, you can:</p>
+      <ul>
+        <li>Browse unique items from trusted sellers</li>
+        <li>Place bids on items you love</li>
+        <li>List your own items for sale</li>
+        <li>Connect with other members of our community</li>
+      </ul>
+      <p>To get started, please verify your email address:</p>
+      <div style="text-align: center;">
+        <a href="{{ params.confirmation_link }}" class="button">Verify Email Address</a>
+      </div>
+      <p>If you have any questions, our support team is here to help!</p>
+    </div>
+    <div class="footer">
+      <p>&copy; {{ current_year }} VersoBid. All rights reserved.</p>
+      <p>You received this email because you signed up for VersoBid.</p>
+    </div>
+  </div>
+</body>
+</html>

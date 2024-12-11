@@ -1,6 +1,7 @@
 import { supabase } from '../../lib/supabase';
 import { AuthFormData, User } from '../../types';
 import { profileService } from '../profileService';
+import { emailService } from '../emailService';
 
 export const authService = {
   signup: async (formData: AuthFormData): Promise<User> => {
@@ -33,6 +34,14 @@ export const authService = {
       created_at: new Date().toISOString(),
       avatar_url: null,
     });
+
+    // Send welcome email
+    try {
+      await emailService.sendWelcomeEmail(formData.email, formData.name || '');
+    } catch (error) {
+      console.error('Failed to send welcome email:', error);
+      // Don't throw error here as the user account is already created
+    }
 
     return {
       id: profile.id,
@@ -75,5 +84,18 @@ export const authService = {
       username: profile.username,
       bids: []
     };
+  },
+
+  async requestPasswordReset(email: string): Promise<void> {
+    const { error } = await supabase.auth.resetPasswordForEmail(email);
+    if (error) throw error;
+
+    try {
+      const resetToken = await supabase.auth.generateResetToken(email);
+      await emailService.sendPasswordResetEmail(email, resetToken);
+    } catch (error) {
+      console.error('Failed to send password reset email:', error);
+      throw new Error('Failed to send password reset email');
+    }
   }
 };
