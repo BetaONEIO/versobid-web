@@ -1,16 +1,18 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ItemFormData } from '../../types/item';
-import { useUser } from '../../contexts/UserContext';
-import { itemService } from '../../services/itemService';
-import { useNotification } from '../../contexts/NotificationContext';
+import { useUser } from '../../../contexts/UserContext';
+import { useNotification } from '../../../contexts/NotificationContext';
+import { itemService } from '../../../services/itemService';
 import { useItemForm } from './useItemForm';
+import { ItemFormFields } from './ItemFormFields';
+import { ItemPriceFields } from './ItemPriceFields';
+import { ItemShippingFields } from './ItemShippingFields';
 
 export const ItemForm: React.FC = () => {
   const navigate = useNavigate();
   const { auth } = useUser();
   const { addNotification } = useNotification();
-  const { formData, handleSubmit: onSubmit } = useItemForm();
+  const { formData, handleChange, handleShippingChange } = useItemForm();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,7 +29,8 @@ export const ItemForm: React.FC = () => {
           type: option.type,
           cost: option.cost,
           location: option.location
-        }))
+        })),
+        status: 'active'
       });
       addNotification('success', 'Item listed successfully!');
       navigate('/items');
@@ -38,10 +41,18 @@ export const ItemForm: React.FC = () => {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Form fields implementation */}
-      <button type="submit" className="btn-primary">
-        List Item
-      </button>
+      <ItemFormFields formData={formData} onChange={handleChange} />
+      <ItemPriceFields formData={formData} onChange={handleChange} />
+      <ItemShippingFields formData={formData} onShippingChange={handleShippingChange} />
+      
+      <div className="flex justify-end">
+        <button
+          type="submit"
+          className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700"
+        >
+          List Item
+        </button>
+      </div>
     </form>
   );
 };

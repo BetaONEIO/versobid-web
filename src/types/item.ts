@@ -6,18 +6,6 @@ export interface ShippingOption {
   location?: string;
 }
 
-export interface Item {
-  id: string;
-  sellerId: string;
-  title: string;
-  description: string;
-  price: number;
-  category: string;
-  shipping: ShippingOption[];
-  status: 'active' | 'sold' | 'archived';
-  createdAt: string;
-}
-
 export interface ItemFormData {
   title: string;
   description: string;
@@ -26,8 +14,21 @@ export interface ItemFormData {
   shipping: ShippingOption[];
 }
 
-export interface ItemResponse {
-  success: boolean;
-  message: string;
-  item?: Item;
+export interface ItemInsert {
+  title: string;
+  description: string;
+  price: number;
+  seller_id: string;
+  category: string;
+  shipping_options: {
+    type: ShippingType;
+    cost?: number;
+    location?: string;
+  }[];
+  status?: 'active' | 'sold' | 'archived';
+}
+
+export interface Item extends ItemInsert {
+  id: string;
+  created_at: string;
 }
