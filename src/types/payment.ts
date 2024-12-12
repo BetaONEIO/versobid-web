@@ -1,5 +1,3 @@
-import { Bid } from './bid';
-
 export interface PaymentDetails {
   amount: number;
   currency: string;

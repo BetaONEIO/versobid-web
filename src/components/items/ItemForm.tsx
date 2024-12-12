@@ -1,6 +1,5 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ItemFormData } from '../../types/item';
 import { useUser } from '../../contexts/UserContext';
 import { itemService } from '../../services/itemService';
 import { useNotification } from '../../contexts/NotificationContext';
@@ -10,7 +9,7 @@ export const ItemForm: React.FC = () => {
   const navigate = useNavigate();
   const { auth } = useUser();
   const { addNotification } = useNotification();
-  const { formData, handleSubmit: onSubmit } = useItemForm();
+  const { formData, handleSubmit: handleFormSubmit } = useItemForm();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,11 +22,8 @@ export const ItemForm: React.FC = () => {
         price: formData.price,
         seller_id: auth.user.id,
         category: formData.category,
-        shipping_options: formData.shipping.map(option => ({
-          type: option.type,
-          cost: option.cost,
-          location: option.location
-        }))
+        shipping_options: formData.shipping_options,
+        status: 'active'
       });
       addNotification('success', 'Item listed successfully!');
       navigate('/items');

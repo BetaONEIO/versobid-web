@@ -59,7 +59,6 @@ export const SignIn: React.FC = () => {
     }
 
     await login(formData.identifier, formData.password);
-    navigate('/');
   };
 
   return (
