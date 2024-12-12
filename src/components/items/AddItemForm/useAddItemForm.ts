@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ItemFormData } from '../../../types';
+import { ItemFormData } from '../../../types/item';
 import { categories } from '../../../utils/constants';
 
 export const useAddItemForm = () => {
@@ -8,30 +8,22 @@ export const useAddItemForm = () => {
   const [formData, setFormData] = useState<ItemFormData>({
     title: '',
     description: '',
+    price: 0,
     category: categories[0],
-    minPrice: 0,
-    maxPrice: 0,
-    duration: 7,
+    shipping: []
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const medianPrice = (formData.minPrice + formData.maxPrice) / 2;
-    console.log('Submitting item:', { ...formData, medianPrice });
+    console.log('Submitting item:', formData);
     navigate('/bids');
   };
 
-  const handlePriceChange = (field: 'minPrice' | 'maxPrice', value: number) => {
-    setFormData(prev => {
-      const newData = { ...prev, [field]: value };
-      if (field === 'maxPrice' && value < prev.minPrice) {
-        newData.maxPrice = prev.minPrice;
-      }
-      if (field === 'minPrice' && value > prev.maxPrice) {
-        newData.minPrice = prev.maxPrice;
-      }
-      return newData;
-    });
+  const handlePriceChange = (value: number) => {
+    setFormData(prev => ({
+      ...prev,
+      price: value
+    }));
   };
 
   const handleInputChange = (field: keyof ItemFormData, value: string | number) => {

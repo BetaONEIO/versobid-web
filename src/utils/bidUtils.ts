@@ -1,7 +1,11 @@
-import { Bid } from '../types';
+import { Bid } from '../types/bid';
 
 export const sortBidsByDate = (bids: Bid[]): Bid[] => {
-  return [...bids].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  return [...bids].sort((a, b) => {
+    const dateA = new Date(a.createdAt);
+    const dateB = new Date(b.createdAt);
+    return dateB.getTime() - dateA.getTime();
+  });
 };
 
 export const filterBidsByStatus = (bids: Bid[], status: Bid['status']): Bid[] => {
