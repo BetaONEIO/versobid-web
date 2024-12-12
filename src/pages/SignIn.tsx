@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { validateEmail, validateUsername, validatePassword } from '../utils/validation';
 
@@ -14,7 +13,6 @@ interface FormErrors {
 }
 
 export const SignIn: React.FC = () => {
-  const navigate = useNavigate();
   const { login, isLoading } = useAuth();
   const [formData, setFormData] = useState<FormData>({
     identifier: '',

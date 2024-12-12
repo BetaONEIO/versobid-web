@@ -46,8 +46,7 @@ export const authService = {
       id: profile.id,
       name: profile.full_name,
       email: profile.email,
-      username: profile.username,
-      bids: []
+      username: profile.username
     };
   },
 
@@ -80,8 +79,7 @@ export const authService = {
       id: profile.id,
       name: profile.full_name,
       email: profile.email,
-      username: profile.username,
-      bids: []
+      username: profile.username
     };
   },
 

@@ -3,7 +3,7 @@ import { ItemFormData, ShippingOption } from '../../../types/item';
 
 interface ItemShippingFieldsProps {
   formData: ItemFormData;
-  onShippingChange: (shipping: ShippingOption[]) => void;
+  onShippingChange: (shipping_options: ShippingOption[]) => void;
 }
 
 export const ItemShippingFields: React.FC<ItemShippingFieldsProps> = ({ formData, onShippingChange }) => {
@@ -12,11 +12,11 @@ export const ItemShippingFields: React.FC<ItemShippingFieldsProps> = ({ formData
       ? { type: 'shipping', cost: 0 }
       : { type: 'pickup', location: '' };
     
-    onShippingChange([...formData.shipping, newOption]);
+    onShippingChange([...formData.shipping_options, newOption]);
   };
 
   const updateShippingOption = (index: number, updates: Partial<ShippingOption>) => {
-    const newShipping = [...formData.shipping];
+    const newShipping = [...formData.shipping_options];
     newShipping[index] = { ...newShipping[index], ...updates };
     onShippingChange(newShipping);
   };
@@ -25,7 +25,7 @@ export const ItemShippingFields: React.FC<ItemShippingFieldsProps> = ({ formData
     <div className="space-y-4">
       <h3 className="text-lg font-medium text-gray-900 dark:text-white">Shipping Options</h3>
       
-      {formData.shipping.map((option, index) => (
+      {formData.shipping_options.map((option: ShippingOption, index: number) => (
         <div key={index} className="border p-4 rounded-md">
           {option.type === 'shipping' ? (
             <div>

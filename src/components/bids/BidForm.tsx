@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { BidFormData } from '../../types/bid';
-import { Item } from '../../types/item';
+import { Item, ShippingOption } from '../../types/item';
 import { useUser } from '../../contexts/UserContext';
 import { bidService } from '../../services/bidService';
 import { useNotification } from '../../contexts/NotificationContext';
@@ -16,7 +16,7 @@ export const BidForm: React.FC<BidFormProps> = ({ item, onBidSubmitted }) => {
   const [formData, setFormData] = useState<BidFormData>({
     amount: item.price,
     message: '',
-    shippingOption: item.shipping[0].type
+    shippingOption: item.shipping_options[0]?.type || 'shipping'
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -67,7 +67,7 @@ export const BidForm: React.FC<BidFormProps> = ({ item, onBidSubmitted }) => {
           value={formData.shippingOption}
           onChange={(e) => setFormData({ ...formData, shippingOption: e.target.value })}
         >
-          {item.shipping.map((option) => (
+          {item.shipping_options.map((option: ShippingOption) => (
             <option key={option.type} value={option.type}>
               {option.type === 'shipping' 
                 ? `Shipping (+$${option.cost})` 

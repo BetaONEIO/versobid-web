@@ -25,11 +25,7 @@ export const ItemForm: React.FC = () => {
         price: formData.price,
         seller_id: auth.user.id,
         category: formData.category,
-        shipping_options: formData.shipping.map(option => ({
-          type: option.type,
-          cost: option.cost,
-          location: option.location
-        })),
+        shipping_options: formData.shipping_options,
         status: 'active'
       });
       addNotification('success', 'Item listed successfully!');
