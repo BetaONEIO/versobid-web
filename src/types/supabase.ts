@@ -37,6 +37,11 @@ export interface Database {
           seller_id: string;
           status: 'active' | 'sold' | 'archived';
           category: string;
+          shipping_options: {
+            type: 'shipping' | 'pickup';
+            cost?: number;
+            location?: string;
+          }[];
         };
         Insert: {
           id?: string;
@@ -47,6 +52,11 @@ export interface Database {
           seller_id: string;
           status?: 'active' | 'sold' | 'archived';
           category: string;
+          shipping_options: {
+            type: 'shipping' | 'pickup';
+            cost?: number;
+            location?: string;
+          }[];
         };
         Update: {
           id?: string;
@@ -57,6 +67,11 @@ export interface Database {
           seller_id?: string;
           status?: 'active' | 'sold' | 'archived';
           category?: string;
+          shipping_options?: {
+            type: 'shipping' | 'pickup';
+            cost?: number;
+            location?: string;
+          }[];
         };
       };
       bids: {
@@ -66,7 +81,9 @@ export interface Database {
           item_id: string;
           bidder_id: string;
           amount: number;
-          status: 'pending' | 'accepted' | 'rejected';
+          message?: string;
+          shipping_option: string;
+          status: 'pending' | 'accepted' | 'rejected' | 'countered';
         };
         Insert: {
           id?: string;
@@ -74,7 +91,9 @@ export interface Database {
           item_id: string;
           bidder_id: string;
           amount: number;
-          status?: 'pending' | 'accepted' | 'rejected';
+          message?: string;
+          shipping_option: string;
+          status?: 'pending' | 'accepted' | 'rejected' | 'countered';
         };
         Update: {
           id?: string;
@@ -82,56 +101,9 @@ export interface Database {
           item_id?: string;
           bidder_id?: string;
           amount?: number;
-          status?: 'pending' | 'accepted' | 'rejected';
-        };
-      };
-      chats: {
-        Row: {
-          id: string;
-          created_at: string;
-          item_id: string;
-          buyer_id: string;
-          seller_id: string;
-        };
-        Insert: {
-          id?: string;
-          created_at?: string;
-          item_id: string;
-          buyer_id: string;
-          seller_id: string;
-        };
-        Update: {
-          id?: string;
-          created_at?: string;
-          item_id?: string;
-          buyer_id?: string;
-          seller_id?: string;
-        };
-      };
-      messages: {
-        Row: {
-          id: string;
-          created_at: string;
-          chat_id: string;
-          sender_id: string;
-          content: string;
-          read: boolean;
-        };
-        Insert: {
-          id?: string;
-          created_at?: string;
-          chat_id: string;
-          sender_id: string;
-          content: string;
-          read?: boolean;
-        };
-        Update: {
-          id?: string;
-          created_at?: string;
-          chat_id?: string;
-          sender_id?: string;
-          content?: string;
-          read?: boolean;
+          message?: string;
+          shipping_option?: string;
+          status?: 'pending' | 'accepted' | 'rejected' | 'countered';
         };
       };
     };

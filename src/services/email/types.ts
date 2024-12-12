@@ -8,5 +8,5 @@ export interface EmailOptions {
 export interface EmailTemplate {
   name: string;
   subject: string;
-  getParams: (data: Record<string, any>) => Record<string, any>;
+  getParams: (data: any) => Record<string, any>;
 }
