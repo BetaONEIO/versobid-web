@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ItemFormData, ShippingOption } from '../../types/item';
+import { ItemFormData } from '../../types/item';
 import { useUser } from '../../contexts/UserContext';
 import { itemService } from '../../services/itemService';
 import { useNotification } from '../../contexts/NotificationContext';
@@ -14,10 +14,7 @@ export const ItemForm: React.FC = () => {
     description: '',
     price: 0,
     category: 'Other',
-    shipping: [
-      { type: 'shipping', cost: 0 },
-      { type: 'pickup', location: '' }
-    ]
+    shipping: []
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -26,12 +23,8 @@ export const ItemForm: React.FC = () => {
 
     try {
       await itemService.createItem({
-        title: formData.title,
-        description: formData.description,
-        price: formData.price,
-        category: formData.category,
+        ...formData,
         seller_id: auth.user.id,
-        shipping_options: formData.shipping
       });
       addNotification('success', 'Item listed successfully!');
       navigate('/items');
@@ -40,5 +33,12 @@ export const ItemForm: React.FC = () => {
     }
   };
 
-  // Rest of the component remains the same
+  return (
+    <form onSubmit={handleSubmit} className="space-y-6">
+      {/* Form fields implementation */}
+      <button type="submit" className="btn-primary">
+        List Item
+      </button>
+    </form>
+  );
 };
