@@ -16,3 +16,9 @@ export interface BidFormData {
   message?: string;
   shippingOption: string;
 }
+
+export interface BidResponse {
+  success: boolean;
+  message: string;
+  bid?: Bid;
+}

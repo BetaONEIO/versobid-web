@@ -1,5 +1,7 @@
+export type ShippingType = 'shipping' | 'pickup';
+
 export interface ShippingOption {
-  type: 'shipping' | 'pickup';
+  type: ShippingType;
   cost?: number;
   location?: string;
 }
@@ -22,4 +24,10 @@ export interface ItemFormData {
   price: number;
   category: string;
   shipping: ShippingOption[];
+}
+
+export interface ItemResponse {
+  success: boolean;
+  message: string;
+  item?: Item;
 }

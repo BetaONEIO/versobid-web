@@ -29,5 +29,42 @@ export const SignIn: React.FC = () => {
 
   const redirectPath = location.state?.from?.pathname || '/';
 
-  // Rest of the component remains the same, but use redirectPath instead of from
+  const validateIdentifier = (value: string): string | null => {
+    if (isEmailLogin) {
+      return validateEmail(value);
+    }
+    return validateUsername(value);
+  };
+
+  const handleChange = (field: keyof FormData, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+
+    setErrors(prev => ({
+      ...prev,
+      [field]: field === 'identifier' ? validateIdentifier(value) : validatePassword(value)
+    }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const newErrors: FormErrors = {
+      identifier: validateIdentifier(formData.identifier),
+      password: validatePassword(formData.password)
+    };
+
+    setErrors(newErrors);
+
+    if (Object.values(newErrors).some(error => error !== null)) {
+      return;
+    }
+
+    await login(formData.identifier, formData.password);
+    navigate(redirectPath, { replace: true });
+  };
+
+  // Rest of the component remains the same...
 };
