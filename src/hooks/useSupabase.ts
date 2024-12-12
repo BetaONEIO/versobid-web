@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useUser } from '../contexts/UserContext';
 import { useNotification } from '../contexts/NotificationContext';
+import { User } from '../types/user';
 
 export const useSupabase = () => {
   const { login, logout } = useUser();
@@ -19,13 +20,13 @@ export const useSupabase = () => {
             .single();
 
           if (profile) {
-            login({
+            const user: User = {
               id: profile.id,
               name: profile.full_name,
               email: profile.email,
-              username: profile.username,
-              bids: []
-            });
+              username: profile.username
+            };
+            login(user);
           }
         } catch (error) {
           console.error('Error fetching user profile:', error);

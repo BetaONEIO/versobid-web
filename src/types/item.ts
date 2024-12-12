@@ -11,7 +11,7 @@ export interface ItemFormData {
   description: string;
   price: number;
   category: string;
-  shipping: ShippingOption[];
+  shipping_options: ShippingOption[];
 }
 
 export interface ItemInsert {
@@ -20,11 +20,7 @@ export interface ItemInsert {
   price: number;
   seller_id: string;
   category: string;
-  shipping_options: {
-    type: ShippingType;
-    cost?: number;
-    location?: string;
-  }[];
+  shipping_options: ShippingOption[];
   status?: 'active' | 'sold' | 'archived';
 }
 

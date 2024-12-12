@@ -10,7 +10,7 @@ export const BidFormContent: React.FC<BidFormProps> = ({ item, onBidSubmitted })
   const [formData, setFormData] = useState<BidFormState>({
     amount: item.price,
     message: '',
-    shippingOption: item.shipping[0].type
+    shippingOption: item.shipping_options[0]?.type || 'shipping'
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -61,7 +61,7 @@ export const BidFormContent: React.FC<BidFormProps> = ({ item, onBidSubmitted })
           value={formData.shippingOption}
           onChange={(e) => setFormData({ ...formData, shippingOption: e.target.value })}
         >
-          {item.shipping.map((option) => (
+          {item.shipping_options.map((option) => (
             <option key={option.type} value={option.type}>
               {option.type === 'shipping' 
                 ? `Shipping (+$${option.cost})` 

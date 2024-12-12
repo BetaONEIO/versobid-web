@@ -34,7 +34,7 @@ export const PayPalButton: React.FC<PayPalButtonProps> = ({
           return '';
         }
       }}
-      onApprove={async (data, actions) => {
+      onApprove={async (_, actions) => {
         try {
           const details = await actions.order?.capture();
           if (details?.id) {
@@ -46,7 +46,7 @@ export const PayPalButton: React.FC<PayPalButtonProps> = ({
           addNotification('error', 'Payment failed. Please try again.');
         }
       }}
-      onError={(err) => {
+      onError={() => {
         onError('Payment failed');
         addNotification('error', 'Payment failed. Please try again.');
       }}
