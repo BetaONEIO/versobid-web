@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { AuthFormData } from '../types';
-import { useUser } from '../contexts/UserContext';
-import { useNotification } from '../contexts/NotificationContext';
-import { validateEmail, validateUsername, validatePassword } from '../utils/validation';
+import { useAuth } from '../hooks/useAuth';
+import { validateEmail, validateUsername, validatePassword } from '../utils/validation/authValidation';
+
+interface FormData {
+  identifier: string;
+  password: string;
+}
 
 interface FormErrors {
   identifier: string | null;
@@ -13,11 +16,10 @@ interface FormErrors {
 export const SignIn: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { login } = useUser();
-  const { addNotification } = useNotification();
+  const { login, isLoading, error: authError } = useAuth();
   const [isEmailLogin, setIsEmailLogin] = useState(true);
-  const [formData, setFormData] = useState<AuthFormData>({
-    email: '',
+  const [formData, setFormData] = useState<FormData>({
+    identifier: '',
     password: '',
   });
   const [errors, setErrors] = useState<FormErrors>({
@@ -34,25 +36,24 @@ export const SignIn: React.FC = () => {
     return validateUsername(value);
   };
 
-  const handleChange = (field: 'identifier' | 'password', value: string) => {
+  const handleChange = (field: keyof FormData, value: string) => {
     setFormData(prev => ({
       ...prev,
-      [isEmailLogin ? 'email' : 'username']: field === 'identifier' ? value : prev.email,
-      password: field === 'password' ? value : prev.password,
+      [field]: value
     }));
+
     setErrors(prev => ({
       ...prev,
-      [field]: field === 'identifier' ? validateIdentifier(value) : validatePassword(value),
+      [field]: field === 'identifier' ? validateIdentifier(value) : validatePassword(value)
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const identifierValue = isEmailLogin ? formData.email : formData.username;
     const newErrors: FormErrors = {
-      identifier: validateIdentifier(identifierValue || ''),
-      password: validatePassword(formData.password),
+      identifier: validateIdentifier(formData.identifier),
+      password: validatePassword(formData.password)
     };
 
     setErrors(newErrors);
@@ -61,20 +62,19 @@ export const SignIn: React.FC = () => {
       return;
     }
 
-    try {
-      // Mock login for demonstration
-      login({
-        id: '1',
-        name: 'Test User',
-        email: formData.email,
-        username: formData.username || '',
-        bids: []
-      });
-      addNotification('success', 'Successfully signed in!');
-      navigate(from, { replace: true });
-    } catch (error) {
-      addNotification('error', 'Failed to sign in. Please check your credentials.');
-    }
+    await login(formData.identifier, formData.password);
+  };
+
+  const toggleLoginMethod = () => {
+    setIsEmailLogin(!isEmailLogin);
+    setFormData(prev => ({
+      ...prev,
+      identifier: ''
+    }));
+    setErrors(prev => ({
+      ...prev,
+      identifier: null
+    }));
   };
 
   return (
@@ -94,10 +94,11 @@ export const SignIn: React.FC = () => {
             </Link>
           </p>
         </div>
+
         <div className="flex justify-center space-x-4 mb-4">
           <button
             type="button"
-            onClick={() => setIsEmailLogin(true)}
+            onClick={() => toggleLoginMethod()}
             className={`px-4 py-2 text-sm font-medium rounded-md ${
               isEmailLogin
                 ? 'bg-indigo-600 text-white'
@@ -108,7 +109,7 @@ export const SignIn: React.FC = () => {
           </button>
           <button
             type="button"
-            onClick={() => setIsEmailLogin(false)}
+            onClick={() => toggleLoginMethod()}
             className={`px-4 py-2 text-sm font-medium rounded-md ${
               !isEmailLogin
                 ? 'bg-indigo-600 text-white'
@@ -118,7 +119,14 @@ export const SignIn: React.FC = () => {
             Username
           </button>
         </div>
+
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+          {authError && (
+            <div className="rounded-md bg-red-50 dark:bg-red-900 p-4">
+              <p className="text-sm text-red-800 dark:text-red-200">{authError}</p>
+            </div>
+          )}
+
           <div className="rounded-md shadow-sm space-y-4">
             <div>
               <label htmlFor="identifier" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -134,13 +142,14 @@ export const SignIn: React.FC = () => {
                   errors.identifier ? 'border-red-300' : 'border-gray-300'
                 } dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white dark:bg-gray-700 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm`}
                 placeholder={isEmailLogin ? 'Email address' : 'Username'}
-                value={isEmailLogin ? formData.email : formData.username}
+                value={formData.identifier}
                 onChange={(e) => handleChange('identifier', e.target.value)}
               />
               {errors.identifier && (
                 <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.identifier}</p>
               )}
             </div>
+
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Password
@@ -178,18 +187,23 @@ export const SignIn: React.FC = () => {
             </div>
 
             <div className="text-sm">
-              <a href="#" className="font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400">
+              <button
+                type="button"
+                onClick={() => navigate('/forgot-password')}
+                className="font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400"
+              >
                 Forgot your password?
-              </a>
+              </button>
             </div>
           </div>
 
           <div>
             <button
               type="submit"
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              disabled={isLoading}
+              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Sign in
+              {isLoading ? 'Signing in...' : 'Sign in'}
             </button>
           </div>
         </form>

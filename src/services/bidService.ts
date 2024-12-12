@@ -1,53 +1,74 @@
 import { supabase } from '../lib/supabase';
-import type { Database } from '../types/supabase';
-
-type Bid = Database['public']['Tables']['bids']['Row'];
-type BidInsert = Database['public']['Tables']['bids']['Insert'];
-type BidUpdate = Database['public']['Tables']['bids']['Update'];
+import { Bid, BidStatus } from '../types/bid';
+import { emailService } from './emailService';
 
 export const bidService = {
-  async getBids(itemId: string): Promise<Bid[]> {
+  async createBid(bid: Partial<Bid>): Promise<Bid> {
     const { data, error } = await supabase
       .from('bids')
-      .select('*')
-      .eq('item_id', itemId)
-      .order('amount', { ascending: false });
-
-    if (error) throw error;
-    return data;
-  },
-
-  async getUserBids(userId: string): Promise<Bid[]> {
-    const { data, error } = await supabase
-      .from('bids')
-      .select('*')
-      .eq('bidder_id', userId)
-      .order('created_at', { ascending: false });
-
-    if (error) throw error;
-    return data;
-  },
-
-  async createBid(bid: BidInsert): Promise<Bid> {
-    const { data, error } = await supabase
-      .from('bids')
-      .insert([bid])
+      .insert([{
+        ...bid,
+        status: 'pending',
+        created_at: new Date().toISOString()
+      }])
       .select()
       .single();
 
     if (error) throw error;
+
+    // Notify seller
+    const { data: item } = await supabase
+      .from('items')
+      .select('title, seller_id')
+      .eq('id', bid.itemId)
+      .single();
+
+    if (item) {
+      const { data: seller } = await supabase
+        .from('profiles')
+        .select('email')
+        .eq('id', item.seller_id)
+        .single();
+
+      if (seller) {
+        await emailService.sendBidNotificationEmail(
+          seller.email,
+          item.title,
+          bid.amount!,
+          bid.itemId!
+        );
+      }
+    }
+
     return data;
   },
 
-  async updateBidStatus(id: string, status: BidUpdate['status']): Promise<Bid> {
-    const { data, error } = await supabase
+  async updateBidStatus(bidId: string, status: BidStatus): Promise<void> {
+    const { error } = await supabase
       .from('bids')
       .update({ status })
-      .eq('id', id)
-      .select()
-      .single();
+      .eq('id', bidId);
 
     if (error) throw error;
-    return data;
+
+    if (status === 'accepted') {
+      // Get bid details
+      const { data: bid } = await supabase
+        .from('bids')
+        .select('*, items(*), profiles(*)')
+        .eq('id', bidId)
+        .single();
+
+      if (bid) {
+        // Send acceptance email to buyer
+        await emailService.sendBidAcceptedEmail(
+          bid.profiles.email,
+          bid.items.title,
+          bid.amount,
+          bid.items.seller_name,
+          `/payment/${bidId}`
+        );
+      }
+    }
   }
 };
