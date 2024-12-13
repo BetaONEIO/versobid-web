@@ -1,75 +1,30 @@
-import React, { useState } from 'react';
-import { useUser } from '../../../contexts/UserContext';
-import { bidService } from '../../../services/bidService';
-import { useNotification } from '../../../contexts/NotificationContext';
-import { BidFormProps, BidFormState } from './types';
+import React from 'react';
+import { BidAmountField } from './BidAmountField';
+import { BidMessageField } from './BidMessageField';
+import { ShippingOptionField } from './ShippingOptionField';
+import { useBidForm } from './useBidForm';
+import { BidFormProps } from './types';
 
 export const BidFormContent: React.FC<BidFormProps> = ({ item, onBidSubmitted }) => {
-  const { auth } = useUser();
-  const { addNotification } = useNotification();
-  const [formData, setFormData] = useState<BidFormState>({
-    amount: item.price,
-    message: '',
-    shippingOption: item.shipping_options[0]?.type || 'shipping'
-  });
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!auth.user) return;
-
-    try {
-      await bidService.createBid({
-        itemId: item.id,
-        bidderId: auth.user.id,
-        ...formData
-      });
-      addNotification('success', 'Bid placed successfully!');
-      onBidSubmitted();
-    } catch (error) {
-      addNotification('error', 'Failed to place bid');
-    }
-  };
+  const { formData, handleSubmit, handleChange } = useBidForm(item, onBidSubmitted);
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div>
-        <label className="block text-sm font-medium text-gray-700">Your Offer</label>
-        <input
-          type="number"
-          required
-          min="0"
-          step="0.01"
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
-          value={formData.amount}
-          onChange={(e) => setFormData({ ...formData, amount: Number(e.target.value) })}
-        />
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700">Message (Optional)</label>
-        <textarea
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
-          value={formData.message}
-          onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-        />
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700">Shipping Preference</label>
-        <select
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
-          value={formData.shippingOption}
-          onChange={(e) => setFormData({ ...formData, shippingOption: e.target.value })}
-        >
-          {item.shipping_options.map((option) => (
-            <option key={option.type} value={option.type}>
-              {option.type === 'shipping' 
-                ? `Shipping (+$${option.cost})` 
-                : `Pickup (${option.location})`}
-            </option>
-          ))}
-        </select>
-      </div>
+      <BidAmountField 
+        amount={formData.amount}
+        onChange={(value) => handleChange('amount', value)}
+      />
+      
+      <BidMessageField
+        message={formData.message}
+        onChange={(value) => handleChange('message', value)}
+      />
+      
+      <ShippingOptionField
+        selectedOption={formData.shippingOption}
+        options={item.shipping_options}
+        onChange={(value) => handleChange('shippingOption', value)}
+      />
 
       <button
         type="submit"

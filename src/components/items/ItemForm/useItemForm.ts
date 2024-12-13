@@ -1,9 +1,9 @@
-```typescript
 import { useState } from 'react';
 import { ItemFormData } from '../../../types/item';
 import { categories } from '../../../utils/constants';
+import { UseItemFormReturn } from './types';
 
-export const useAddItemForm = () => {
+export const useItemForm = (): UseItemFormReturn => {
   const [formData, setFormData] = useState<ItemFormData>({
     title: '',
     description: '',
@@ -14,24 +14,16 @@ export const useAddItemForm = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    // Form submission logic handled by parent component
   };
 
-  const handlePriceChange = (value: number) => {
-    setFormData((prev: ItemFormData) => ({
-      ...prev,
-      price: value
-    }));
-  };
-
-  const handleInputChange = (field: keyof ItemFormData, value: string | number) => {
-    setFormData((prev: ItemFormData) => ({ ...prev, [field]: value }));
+  const handleChange = (field: keyof ItemFormData, value: any) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
   };
 
   return {
     formData,
     handleSubmit,
-    handlePriceChange,
-    handleInputChange
+    handleChange
   };
 };
-```

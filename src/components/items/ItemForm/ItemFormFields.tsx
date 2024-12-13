@@ -1,7 +1,11 @@
-```typescript
 import React from 'react';
+import { ItemFormData } from '../../../types/item';
 import { categories } from '../../../utils/constants';
-import { ItemFormFieldsProps } from './types';
+
+interface ItemFormFieldsProps {
+  formData: ItemFormData;
+  onChange: (field: keyof ItemFormData, value: string | number) => void;
+}
 
 export const ItemFormFields: React.FC<ItemFormFieldsProps> = ({ formData, onChange }) => {
   return (
@@ -55,4 +59,3 @@ export const ItemFormFields: React.FC<ItemFormFieldsProps> = ({ formData, onChan
     </>
   );
 };
-```

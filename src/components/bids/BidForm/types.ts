@@ -1,3 +1,4 @@
+```typescript
 import { Item } from '../../../types/item';
 
 export interface BidFormProps {
@@ -10,3 +11,4 @@ export interface BidFormState {
   message: string;
   shippingOption: string;
 }
+```

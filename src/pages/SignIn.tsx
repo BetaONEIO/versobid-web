@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { validateEmail, validateUsername, validatePassword } from '../utils/validation';
 
@@ -13,12 +14,13 @@ interface FormErrors {
 }
 
 export const SignIn: React.FC = () => {
+  const navigate = useNavigate();
   const { login, isLoading } = useAuth();
   const [formData, setFormData] = useState<FormData>({
     identifier: '',
     password: '',
   });
-  const [errors, setErrors] = useState<FormErrors>({
+  const [formErrors, setFormErrors] = useState<FormErrors>({
     identifier: null,
     password: null,
   });
@@ -36,7 +38,7 @@ export const SignIn: React.FC = () => {
       [field]: value
     }));
 
-    setErrors(prev => ({
+    setFormErrors(prev => ({
       ...prev,
       [field]: field === 'identifier' ? validateIdentifier(value) : validatePassword(value)
     }));
@@ -50,13 +52,18 @@ export const SignIn: React.FC = () => {
       password: validatePassword(formData.password)
     };
 
-    setErrors(newErrors);
+    setFormErrors(newErrors);
 
     if (Object.values(newErrors).some(error => error !== null)) {
       return;
     }
 
-    await login(formData.identifier, formData.password);
+    try {
+      await login(formData.identifier, formData.password);
+      navigate('/');
+    } catch (error) {
+      // Error handling is done in useAuth hook
+    }
   };
 
   return (
@@ -75,8 +82,8 @@ export const SignIn: React.FC = () => {
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
               required
             />
-            {errors.identifier && (
-              <p className="mt-1 text-sm text-red-600">{errors.identifier}</p>
+            {formErrors.identifier && (
+              <p className="mt-1 text-sm text-red-600">{formErrors.identifier}</p>
             )}
           </div>
           <div>
@@ -90,8 +97,8 @@ export const SignIn: React.FC = () => {
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
               required
             />
-            {errors.password && (
-              <p className="mt-1 text-sm text-red-600">{errors.password}</p>
+            {formErrors.password && (
+              <p className="mt-1 text-sm text-red-600">{formErrors.password}</p>
             )}
           </div>
           <button

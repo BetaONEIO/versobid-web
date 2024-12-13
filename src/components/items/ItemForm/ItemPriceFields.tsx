@@ -1,8 +1,12 @@
-```typescript
 import React from 'react';
-import { ItemPriceFieldsProps } from './types';
+import { ItemFormData } from '../../../types/item';
 
-export const ItemPriceFields: React.FC<ItemPriceFieldsProps> = ({ formData, onPriceChange }) => {
+interface ItemPriceFieldsProps {
+  formData: ItemFormData;
+  onChange: (field: keyof ItemFormData, value: number) => void;
+}
+
+export const ItemPriceFields: React.FC<ItemPriceFieldsProps> = ({ formData, onChange }) => {
   return (
     <div>
       <label htmlFor="price" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -15,10 +19,9 @@ export const ItemPriceFields: React.FC<ItemPriceFieldsProps> = ({ formData, onPr
         step="0.01"
         required
         value={formData.price}
-        onChange={(e) => onPriceChange(Number(e.target.value))}
+        onChange={(e) => onChange('price', Number(e.target.value))}
         className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
       />
     </div>
   );
 };
-```
