@@ -1,4 +1,3 @@
-```typescript
 import React from 'react';
 import { ItemPriceFieldsProps } from './types';
 
@@ -21,4 +20,3 @@ export const ItemPriceFields: React.FC<ItemPriceFieldsProps> = ({ formData, onPr
     </div>
   );
 };
-```

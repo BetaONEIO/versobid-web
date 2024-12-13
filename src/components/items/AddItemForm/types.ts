@@ -1,4 +1,3 @@
-```typescript
 import { ItemFormData } from '../../../types/item';
 
 export interface ItemFormFieldsProps {
@@ -15,4 +14,3 @@ export interface FormActionsProps {
   onCancel: () => void;
   isSubmitting?: boolean;
 }
-```

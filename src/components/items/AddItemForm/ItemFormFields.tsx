@@ -1,4 +1,3 @@
-```typescript
 import React from 'react';
 import { categories } from '../../../utils/constants';
 import { ItemFormFieldsProps } from './types';
@@ -55,4 +54,3 @@ export const ItemFormFields: React.FC<ItemFormFieldsProps> = ({ formData, onChan
     </>
   );
 };
-```
