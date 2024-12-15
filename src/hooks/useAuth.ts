@@ -12,7 +12,7 @@ export const useAuth = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const login = async (identifier: string, password: string) => {
+  const login = async (identifier: string, password: string): Promise<void> => {
     setIsLoading(true);
     setError(null);
 
@@ -30,7 +30,7 @@ export const useAuth = () => {
     }
   };
 
-  const signup = async (formData: AuthFormData) => {
+  const signup = async (formData: AuthFormData): Promise<void> => {
     setIsLoading(true);
     setError(null);
 
@@ -48,7 +48,7 @@ export const useAuth = () => {
     }
   };
 
-  const requestPasswordReset = async (email: string) => {
+  const requestPasswordReset = async (email: string): Promise<void> => {
     setIsLoading(true);
     setError(null);
 

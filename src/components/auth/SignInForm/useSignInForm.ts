@@ -1,46 +1,28 @@
 import { useState } from 'react';
-import { AuthFormData } from '../../../types';
 import { useAuth } from '../../../hooks/useAuth';
 import { validateField } from '../../../utils/validation/authValidation';
-import { FormErrors } from './types';
+import { SignInFormData, FormErrors } from './types';
 
-export const useSignUpForm = () => {
-  const { signup, isLoading, error: authError } = useAuth();
-  const [formData, setFormData] = useState<AuthFormData>({
-    email: '',
+export const useSignInForm = () => {
+  const { login, isLoading, error: authError } = useAuth();
+  const [formData, setFormData] = useState<SignInFormData>({
+    identifier: '',
     password: '',
-    name: '',
-    username: '',
-    acceptedTerms: false,
     captchaValid: false,
   });
 
   const [errors, setErrors] = useState<FormErrors>({
-    name: null,
-    username: null,
-    email: null,
+    identifier: null,
     password: null,
-    acceptedTerms: null,
     captcha: null,
   });
 
-  const handleChange = (field: keyof AuthFormData, value: string) => {
-    setFormData(prev => ({
+  const handleChange = (field: keyof SignInFormData, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    setErrors(prev => ({
       ...prev,
-      [field]: field === 'acceptedTerms' ? value === 'true' : value
+      [field]: validateField(field, value),
     }));
-
-    if (field === 'acceptedTerms') {
-      setErrors(prev => ({
-        ...prev,
-        acceptedTerms: value === 'true' ? null : 'You must accept the terms and conditions'
-      }));
-    } else {
-      setErrors(prev => ({
-        ...prev,
-        [field]: validateField(field, value),
-      }));
-    }
   };
 
   const handleCaptchaChange = (isValid: boolean) => {
@@ -56,11 +38,8 @@ export const useSignUpForm = () => {
 
     // Validate all fields
     const newErrors: FormErrors = {
-      name: validateField('name', formData.name),
-      username: validateField('username', formData.username),
-      email: validateField('email', formData.email),
+      identifier: validateField('identifier', formData.identifier),
       password: validateField('password', formData.password),
-      acceptedTerms: formData.acceptedTerms ? null : 'You must accept the terms and conditions',
       captcha: formData.captchaValid ? null : 'Please complete the security check'
     };
 
@@ -72,9 +51,9 @@ export const useSignUpForm = () => {
     }
 
     try {
-      await signup(formData);
+      await login(formData.identifier, formData.password);
     } catch (error) {
-      console.error('Signup error:', error);
+      console.error('Login error:', error);
     }
   };
 

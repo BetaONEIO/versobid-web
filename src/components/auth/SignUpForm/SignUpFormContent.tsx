@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { FormField } from '../../ui/FormField';
 import { ErrorMessage } from '../../ui/ErrorMessage';
+import { ReCaptcha } from '../../ui/ReCaptcha';
 import { SignUpFormContentProps } from './types';
 
 export const SignUpFormContent: React.FC<SignUpFormContentProps> = ({
@@ -10,6 +11,7 @@ export const SignUpFormContent: React.FC<SignUpFormContentProps> = ({
   isLoading,
   authError,
   onChange,
+  onCaptchaChange,
   onSubmit,
 }) => {
   return (
@@ -37,7 +39,7 @@ export const SignUpFormContent: React.FC<SignUpFormContentProps> = ({
             id="name"
             label="Full name"
             type="text"
-            value={formData.name || ''}
+            value={formData.name}
             error={errors.name}
             disabled={isLoading}
             onChange={(value) => onChange('name', value)}
@@ -48,7 +50,7 @@ export const SignUpFormContent: React.FC<SignUpFormContentProps> = ({
             id="username"
             label="Username"
             type="text"
-            value={formData.username || ''}
+            value={formData.username}
             error={errors.username}
             disabled={isLoading}
             onChange={(value) => onChange('username', value)}
@@ -76,6 +78,46 @@ export const SignUpFormContent: React.FC<SignUpFormContentProps> = ({
             onChange={(value) => onChange('password', value)}
             required
             helperText="Must be 6-20 characters with at least one uppercase letter, number, and special character"
+          />
+
+          <div className="flex items-start">
+            <div className="flex items-center h-5">
+              <input
+                id="terms"
+                name="terms"
+                type="checkbox"
+                checked={formData.acceptedTerms}
+                onChange={(e) => onChange('acceptedTerms', e.target.checked.toString())}
+                className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                required
+              />
+            </div>
+            <div className="ml-3 text-sm">
+              <label htmlFor="terms" className="font-medium text-gray-700 dark:text-gray-300">
+                I agree to the{' '}
+                <Link
+                  to="/terms"
+                  className="text-indigo-600 hover:text-indigo-500 dark:text-indigo-400"
+                >
+                  Terms and Conditions
+                </Link>{' '}
+                and{' '}
+                <Link
+                  to="/privacy"
+                  className="text-indigo-600 hover:text-indigo-500 dark:text-indigo-400"
+                >
+                  Privacy Policy
+                </Link>
+              </label>
+              {errors.acceptedTerms && (
+                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.acceptedTerms}</p>
+              )}
+            </div>
+          </div>
+
+          <ReCaptcha
+            onChange={onCaptchaChange}
+            error={errors.captcha}
           />
         </div>
 

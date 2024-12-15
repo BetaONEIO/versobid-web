@@ -1,8 +1,8 @@
 import React from 'react';
-import { SignUpFormContent } from './SignUpFormContent';
-import { useSignUpForm } from './useSignUpForm';
+import { SignInFormContent } from './SignInFormContent';
+import { useSignInForm } from './useSignInForm';
 
-export const SignUpForm: React.FC = () => {
+export const SignInForm: React.FC = () => {
   const {
     formData,
     errors,
@@ -11,10 +11,10 @@ export const SignUpForm: React.FC = () => {
     handleChange,
     handleCaptchaChange,
     handleSubmit
-  } = useSignUpForm();
+  } = useSignInForm();
 
   return (
-    <SignUpFormContent
+    <SignInFormContent
       formData={formData}
       errors={errors}
       isLoading={isLoading}

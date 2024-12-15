@@ -4,6 +4,8 @@ import { Footer } from './components/layout/Footer';
 import { Home } from './pages/Home';
 import { SignIn } from './pages/SignIn';
 import { SignUp } from './pages/SignUp';
+import { Terms } from './pages/Terms';
+import { Privacy } from './pages/Privacy';
 import { Bids } from './pages/Bids';
 import { AddItem } from './pages/AddItem';
 import { Help } from './pages/Help';
@@ -33,6 +35,8 @@ function AppContent() {
           <Route path="/" element={<Home />} />
           <Route path="/signin" element={<SignIn />} />
           <Route path="/signup" element={<SignUp />} />
+          <Route path="/terms" element={<Terms />} />
+          <Route path="/privacy" element={<Privacy />} />
           <Route path="/help" element={<Help />} />
           <Route
             path="/bids"

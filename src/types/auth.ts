@@ -5,6 +5,8 @@ export interface AuthFormData {
   password: string;
   name: string;
   username: string;
+  acceptedTerms: boolean;
+  captchaValid?: boolean;
 }
 
 export interface AuthState {
