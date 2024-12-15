@@ -15,6 +15,6 @@ export interface SignUpFormContentProps {
   isLoading: boolean;
   authError: string | null;
   onChange: (field: keyof AuthFormData, value: string) => void;
-  onCaptchaChange: (isValid: boolean) => void;
+  onCaptchaChange: (token: string | null) => void;
   onSubmit: (e: React.FormEvent) => void;
 }

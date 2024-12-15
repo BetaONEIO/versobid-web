@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { FormField } from '../../ui/FormField';
 import { ErrorMessage } from '../../ui/ErrorMessage';
-import { ReCaptcha } from '../../ui/ReCaptcha';
+import { HCaptchaComponent } from '../../ui/HCaptcha';
 import { SignInFormContentProps } from './types';
 
 export const SignInFormContent: React.FC<SignInFormContentProps> = ({
@@ -54,7 +54,7 @@ export const SignInFormContent: React.FC<SignInFormContentProps> = ({
           required
         />
 
-        <ReCaptcha
+        <HCaptchaComponent
           onChange={onCaptchaChange}
           error={errors.captcha}
         />

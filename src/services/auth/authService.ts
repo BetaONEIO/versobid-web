@@ -59,6 +59,9 @@ class AuthService implements AuthServiceInterface {
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
+        options: {
+          captchaToken: formData.captchaToken // Add the reCAPTCHA token
+        }
       });
 
       if (authError) throw authError;
@@ -104,5 +107,3 @@ class AuthService implements AuthServiceInterface {
     }
   }
 }
-
-export const authService = new AuthService();

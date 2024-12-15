@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthFormData } from '../types';
-import { authService } from '../services/auth/authService';
+import { AuthService } from '../services/auth';
 import { useUser } from '../contexts/UserContext';
 import { useNotification } from '../contexts/NotificationContext';
+
+const authService = new AuthService();
 
 export const useAuth = () => {
   const navigate = useNavigate();
@@ -12,12 +14,12 @@ export const useAuth = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const login = async (identifier: string, password: string): Promise<void> => {
+  const login = async (identifier: string, password: string, captchaToken?: string): Promise<void> => {
     setIsLoading(true);
     setError(null);
 
     try {
-      const user = await authService.login(identifier, password);
+      const user = await authService.login(identifier, password, captchaToken);
       userLogin(user);
       addNotification('success', 'Successfully signed in!');
       navigate('/');

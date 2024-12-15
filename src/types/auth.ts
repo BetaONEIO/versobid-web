@@ -6,7 +6,7 @@ export interface AuthFormData {
   name: string;
   username: string;
   acceptedTerms: boolean;
-  captchaValid?: boolean;
+  captchaToken?: string;
 }
 
 export interface AuthState {

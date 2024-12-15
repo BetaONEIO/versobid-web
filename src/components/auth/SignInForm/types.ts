@@ -1,7 +1,7 @@
 export interface SignInFormData {
   identifier: string;
   password: string;
-  captchaValid?: boolean;
+  captchaToken?: string;
 }
 
 export interface FormErrors {
@@ -16,6 +16,6 @@ export interface SignInFormContentProps {
   isLoading: boolean;
   authError: string | null;
   onChange: (field: keyof SignInFormData, value: string) => void;
-  onCaptchaChange: (isValid: boolean) => void;
+  onCaptchaChange: (token: string | null) => void;
   onSubmit: (e: React.FormEvent) => void;
 }

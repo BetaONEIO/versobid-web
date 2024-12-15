@@ -8,7 +8,7 @@ export const useSignInForm = () => {
   const [formData, setFormData] = useState<SignInFormData>({
     identifier: '',
     password: '',
-    captchaValid: false,
+    captchaToken: undefined,
   });
 
   const [errors, setErrors] = useState<FormErrors>({
@@ -25,11 +25,11 @@ export const useSignInForm = () => {
     }));
   };
 
-  const handleCaptchaChange = (isValid: boolean) => {
-    setFormData(prev => ({ ...prev, captchaValid: isValid }));
+  const handleCaptchaChange = (token: string | null) => {
+    setFormData(prev => ({ ...prev, captchaToken: token || undefined }));
     setErrors(prev => ({
       ...prev,
-      captcha: isValid ? null : 'Please complete the security check'
+      captcha: token ? null : 'Please complete the security check'
     }));
   };
 
@@ -40,7 +40,7 @@ export const useSignInForm = () => {
     const newErrors: FormErrors = {
       identifier: validateField('identifier', formData.identifier),
       password: validateField('password', formData.password),
-      captcha: formData.captchaValid ? null : 'Please complete the security check'
+      captcha: formData.captchaToken ? null : 'Please complete the security check'
     };
 
     setErrors(newErrors);
@@ -51,7 +51,7 @@ export const useSignInForm = () => {
     }
 
     try {
-      await login(formData.identifier, formData.password);
+      await login(formData.identifier, formData.password, formData.captchaToken);
     } catch (error) {
       console.error('Login error:', error);
     }

@@ -12,7 +12,7 @@ export const useSignUpForm = () => {
     name: '',
     username: '',
     acceptedTerms: false,
-    captchaValid: false,
+    captchaToken: undefined,
   });
 
   const [errors, setErrors] = useState<FormErrors>({
@@ -43,11 +43,11 @@ export const useSignUpForm = () => {
     }
   };
 
-  const handleCaptchaChange = (isValid: boolean) => {
-    setFormData(prev => ({ ...prev, captchaValid: isValid }));
+  const handleCaptchaChange = (token: string | null) => {
+    setFormData(prev => ({ ...prev, captchaToken: token || undefined }));
     setErrors(prev => ({
       ...prev,
-      captcha: isValid ? null : 'Please complete the security check'
+      captcha: token ? null : 'Please complete the security check'
     }));
   };
 
@@ -61,7 +61,7 @@ export const useSignUpForm = () => {
       email: validateField('email', formData.email),
       password: validateField('password', formData.password),
       acceptedTerms: formData.acceptedTerms ? null : 'You must accept the terms and conditions',
-      captcha: formData.captchaValid ? null : 'Please complete the security check'
+      captcha: formData.captchaToken ? null : 'Please complete the security check'
     };
 
     setErrors(newErrors);
