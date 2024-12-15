@@ -37,7 +37,7 @@ export const SignUpFormContent: React.FC<SignUpFormContentProps> = ({
             id="name"
             label="Full name"
             type="text"
-            value={formData.name}
+            value={formData.name || ''}
             error={errors.name}
             disabled={isLoading}
             onChange={(value) => onChange('name', value)}
@@ -48,7 +48,7 @@ export const SignUpFormContent: React.FC<SignUpFormContentProps> = ({
             id="username"
             label="Username"
             type="text"
-            value={formData.username}
+            value={formData.username || ''}
             error={errors.username}
             disabled={isLoading}
             onChange={(value) => onChange('username', value)}

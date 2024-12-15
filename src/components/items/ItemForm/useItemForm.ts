@@ -1,9 +1,8 @@
 import { useState } from 'react';
 import { ItemFormData } from '../../../types/item';
 import { categories } from '../../../utils/constants';
-import { UseItemFormReturn } from './types';
 
-export const useItemForm = (): UseItemFormReturn => {
+export const useItemForm = () => {
   const [formData, setFormData] = useState<ItemFormData>({
     title: '',
     description: '',
@@ -12,18 +11,12 @@ export const useItemForm = (): UseItemFormReturn => {
     shipping_options: []
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Form submission logic handled by parent component
-  };
-
-  const handleChange = (field: keyof ItemFormData, value: any) => {
+  const handleChange = (field: keyof ItemFormData, value: string | number) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
   return {
     formData,
-    handleSubmit,
     handleChange
   };
 };
