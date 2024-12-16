@@ -25,8 +25,8 @@ export const useSignInForm = () => {
     }));
   };
 
-  const handleCaptchaChange = (token: string | null) => {
-    setFormData(prev => ({ ...prev, captchaToken: token || undefined }));
+  const handleCaptchaChange = (token: string) => {
+    setFormData(prev => ({ ...prev, captchaToken: token }));
     setErrors(prev => ({
       ...prev,
       captcha: token ? null : 'Please complete the security check'

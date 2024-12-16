@@ -1,11 +1,9 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthFormData } from '../types';
-import { AuthService } from '../services/auth';
+import { authService } from '../services/auth';
 import { useUser } from '../contexts/UserContext';
 import { useNotification } from '../contexts/NotificationContext';
-
-const authService = new AuthService();
 
 export const useAuth = () => {
   const navigate = useNavigate();
@@ -50,26 +48,9 @@ export const useAuth = () => {
     }
   };
 
-  const requestPasswordReset = async (email: string): Promise<void> => {
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      await authService.requestPasswordReset(email);
-      addNotification('success', 'Password reset instructions have been sent to your email.');
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to request password reset';
-      setError(message);
-      addNotification('error', message);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   return {
     login,
     signup,
-    requestPasswordReset,
     isLoading,
     error
   };

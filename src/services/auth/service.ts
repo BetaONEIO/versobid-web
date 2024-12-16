@@ -1,11 +1,11 @@
 import { supabase } from '../../lib/supabase';
 import { AuthFormData, User } from '../../types';
 import { profileService } from '../profileService';
-import { emailService } from '../emailService';
+import { emailService } from '../email';
 import { AuthServiceInterface } from './types';
 
 class AuthService implements AuthServiceInterface {
-  async login(identifier: string, password: string): Promise<User> {
+  async login(identifier: string, password: string, captchaToken?: string): Promise<User> {
     try {
       let email = identifier;
       if (!identifier.includes('@')) {
@@ -22,9 +22,17 @@ class AuthService implements AuthServiceInterface {
       const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
         email,
         password,
+        options: {
+          captchaToken
+        }
       });
 
-      if (authError) throw new Error('Invalid credentials');
+      if (authError) {
+        if (authError.message.includes('captcha')) {
+          throw new Error('Please complete the security check');
+        }
+        throw new Error('Invalid credentials');
+      }
       if (!authData.user) throw new Error('User not found');
 
       const profile = await profileService.getProfile(authData.user.id);
@@ -44,6 +52,10 @@ class AuthService implements AuthServiceInterface {
 
   async signup(formData: AuthFormData): Promise<User> {
     try {
+      if (!formData.captchaToken) {
+        throw new Error('Please complete the security check');
+      }
+
       // Check if username is taken
       const { data: existingUser } = await supabase
         .from('profiles')
@@ -60,11 +72,20 @@ class AuthService implements AuthServiceInterface {
         email: formData.email,
         password: formData.password,
         options: {
-          captchaToken: formData.captchaToken // Add the reCAPTCHA token
+          captchaToken: formData.captchaToken,
+          data: {
+            full_name: formData.name,
+            username: formData.username
+          }
         }
       });
 
-      if (authError) throw authError;
+      if (authError) {
+        if (authError.message.includes('captcha')) {
+          throw new Error('Please complete the security check');
+        }
+        throw authError;
+      }
       if (!authData.user) throw new Error('Failed to create user account');
 
       // Create profile
@@ -107,3 +128,6 @@ class AuthService implements AuthServiceInterface {
     }
   }
 }
+
+// Export a singleton instance
+export const authService = new AuthService();
