@@ -1,26 +1,18 @@
+```typescript
 import React from 'react';
-import { ItemFormFields } from './ItemFormFields';
-import { ItemPriceFields } from './ItemPriceFields';
-import { FormActions } from './FormActions';
-import { useAddItemForm } from './useAddItemForm';
+import { BidFormContent } from './BidFormContent';
+import { BidFormProps } from './types';
+import { useBidForm } from './useBidForm';
 
-export const AddItemForm: React.FC = () => {
-  const { formData, handleSubmit, handlePriceChange, handleInputChange } = useAddItemForm();
+export const BidForm: React.FC<BidFormProps> = ({ item, onBidSubmitted }) => {
+  const { formData, handleSubmit, handleChange } = useBidForm(item, onBidSubmitted);
 
   return (
-    <div className="max-w-2xl mx-auto p-6 bg-white dark:bg-gray-800 rounded-lg shadow-md">
-      <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Add New Item</h2>
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <ItemFormFields 
-          formData={formData} 
-          onChange={handleInputChange} 
-        />
-        <ItemPriceFields 
-          formData={formData} 
-          onPriceChange={handlePriceChange} 
-        />
-        <FormActions />
-      </form>
-    </div>
+    <BidFormContent
+      formData={formData}
+      onSubmit={handleSubmit}
+      onChange={handleChange}
+    />
   );
 };
+```

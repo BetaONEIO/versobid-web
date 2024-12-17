@@ -3,7 +3,7 @@ import { User } from '../../../types';
 import { profileService } from '../../profileService';
 
 export const getUserProfile = async (userId: string): Promise<User> => {
-  const profile = await profileService.getProfile(userId);
+  const profile = await profileService.getUserProfile(userId);
   if (!profile) throw new Error('Profile not found');
 
   return {

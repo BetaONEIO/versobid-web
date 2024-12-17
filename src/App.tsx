@@ -9,6 +9,7 @@ import { Privacy } from './pages/Privacy';
 import { Bids } from './pages/Bids';
 import { AddItem } from './pages/AddItem';
 import { Help } from './pages/Help';
+import { Profile } from './pages/Profile';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { UserProvider } from './contexts/UserContext';
 import { NotificationProvider } from './contexts/NotificationContext';
@@ -51,6 +52,14 @@ function AppContent() {
             element={
               <ProtectedRoute>
                 <AddItem />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/profile/:userId"
+            element={
+              <ProtectedRoute>
+                <Profile />
               </ProtectedRoute>
             }
           />

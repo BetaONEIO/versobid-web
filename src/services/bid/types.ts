@@ -1,4 +1,11 @@
-import { Bid, BidStatus } from '../../types/bid';
+```typescript
+import { Bid } from '../../types/bid';
+
+export interface BidServiceResponse {
+  success: boolean;
+  message: string;
+  bid?: Bid;
+}
 
 export interface CreateBidParams {
   itemId: string;
@@ -10,11 +17,6 @@ export interface CreateBidParams {
 
 export interface UpdateBidStatusParams {
   bidId: string;
-  status: BidStatus;
+  status: 'accepted' | 'rejected' | 'countered';
 }
-
-export interface BidServiceResponse {
-  success: boolean;
-  message: string;
-  bid?: Bid;
-}
+```

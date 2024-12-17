@@ -1,11 +1,8 @@
 import { supabase } from '../lib/supabase';
-import { Database } from '../types/supabase';
-
-type Chat = Database['public']['Tables']['bids']['Row'];
-type Message = Database['public']['Tables']['bids']['Row'];
+import { DbBid } from '../types/supabase';
 
 export const chatService = {
-  async getChats(userId: string): Promise<Chat[]> {
+  async getChats(userId: string): Promise<DbBid[]> {
     const { data, error } = await supabase
       .from('bids')
       .select('*')
@@ -13,10 +10,10 @@ export const chatService = {
       .order('created_at', { ascending: false });
 
     if (error) throw error;
-    return data;
+    return data || [];
   },
 
-  async getMessages(chatId: string): Promise<Message[]> {
+  async getMessages(chatId: string): Promise<DbBid[]> {
     const { data, error } = await supabase
       .from('bids')
       .select('*')
@@ -24,6 +21,6 @@ export const chatService = {
       .order('created_at', { ascending: true });
 
     if (error) throw error;
-    return data;
+    return data || [];
   }
 };

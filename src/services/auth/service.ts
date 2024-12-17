@@ -1,10 +1,10 @@
 import { supabase } from '../../lib/supabase';
 import { AuthFormData, User } from '../../types';
-import { profileService } from '../profileService';
 import { emailService } from '../email';
+import { profileService } from '../profileService';
 import { AuthServiceInterface } from './types';
 
-class AuthService implements AuthServiceInterface {
+export class AuthService implements AuthServiceInterface {
   async login(identifier: string, password: string, captchaToken?: string): Promise<User> {
     try {
       let email = identifier;
@@ -35,7 +35,7 @@ class AuthService implements AuthServiceInterface {
       }
       if (!authData.user) throw new Error('User not found');
 
-      const profile = await profileService.getProfile(authData.user.id);
+      const profile = await profileService.getUserProfile(authData.user.id);
       if (!profile) throw new Error('Profile not found');
 
       return {
@@ -91,11 +91,11 @@ class AuthService implements AuthServiceInterface {
       // Create profile
       const profile = await profileService.createProfile({
         id: authData.user.id,
-        email: formData.email,
         username: formData.username,
         full_name: formData.name,
+        email: formData.email,
         created_at: new Date().toISOString(),
-        avatar_url: null,
+        avatar_url: null
       });
 
       // Send welcome email
@@ -120,7 +120,6 @@ class AuthService implements AuthServiceInterface {
       });
       
       if (error) throw error;
-
       await emailService.sendPasswordResetEmail(email, 'reset-token');
     } catch (error) {
       console.error('Password reset request error:', error);
@@ -128,6 +127,3 @@ class AuthService implements AuthServiceInterface {
     }
   }
 }
-
-// Export a singleton instance
-export const authService = new AuthService();

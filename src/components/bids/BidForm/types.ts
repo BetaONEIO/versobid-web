@@ -1,16 +1,20 @@
-import { ItemFormData } from '../../../types/item';
+```typescript
+import { BidFormData } from '../../../types/bid';
 
-export interface ItemFormFieldsProps {
-  formData: ItemFormData;
-  onChange: (field: keyof ItemFormData, value: string | number) => void;
+export interface BidFormProps {
+  formData: BidFormData;
+  onSubmit: (e: React.FormEvent) => void;
+  onChange: (field: keyof BidFormData, value: string | number) => void;
+}
+
+export interface BidFormContentProps {
+  formData: BidFormData;
+  onSubmit: (e: React.FormEvent) => void;
+  onChange: (field: keyof BidFormData, value: string | number) => void;
 }
 
 export interface ItemPriceFieldsProps {
-  formData: ItemFormData;
-  onPriceChange: (value: number) => void;
+  formData: BidFormData;
+  onChange: (field: keyof BidFormData, value: number) => void;
 }
-
-export interface FormActionsProps {
-  onCancel: () => void;
-  isSubmitting?: boolean;
-}
+```

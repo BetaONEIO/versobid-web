@@ -38,11 +38,11 @@ export const userService = {
     // Create profile
     const profile = await profileService.createProfile({
       id: authData.user.id,
+      username: formData.username,
+      full_name: formData.name,
       email: formData.email,
-      username: formData.username || '',
-      full_name: formData.name || '',
       created_at: new Date().toISOString(),
-      avatar_url: null,
+      avatar_url: null
     });
 
     return {
@@ -75,7 +75,7 @@ export const userService = {
     if (authError) throw new Error('Invalid credentials');
     if (!authData.user) throw new Error('User not found');
 
-    const profile = await profileService.getProfile(authData.user.id);
+    const profile = await profileService.getUserProfile(authData.user.id);
     if (!profile) throw new Error('Profile not found');
 
     return {

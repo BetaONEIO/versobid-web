@@ -1,115 +1,76 @@
 import { supabase } from '../../lib/supabase';
-import { emailService } from '../email';
-import { CreateBidParams, UpdateBidStatusParams, BidServiceResponse } from './types';
 
-class BidService {
-  async createBid(params: CreateBidParams): Promise<BidServiceResponse> {
+// Types for the parameters and response
+export interface CreateBidParams {
+  itemId: string;
+  bidderId: string;
+  amount: number;
+  message?: string;
+  shippingOption: string;
+}
+
+export interface CreateBidResponse {
+  success: boolean;
+  message?: string;
+}
+
+export interface UpdateBidStatusResponse {
+  success: boolean;
+  message?: string;
+}
+
+// Bid Service Class
+export class BidService {
+  // Create a new bid
+  async createBid(params: CreateBidParams): Promise<CreateBidResponse> {
     try {
-      const { data: bid, error } = await supabase
+      const { error } = await supabase
         .from('bids')
-        .insert([{
-          item_id: params.itemId,
-          bidder_id: params.bidderId,
-          amount: params.amount,
-          message: params.message,
-          shipping_option: params.shippingOption,
-          status: 'pending',
-          created_at: new Date().toISOString()
-        }])
-        .select()
-        .single();
+        .insert([
+          {
+            item_id: params.itemId,
+            bidder_id: params.bidderId,
+            amount: params.amount,
+            message: params.message,
+            shipping_option: params.shippingOption,
+            status: 'pending',
+            created_at: new Date().toISOString(),
+          },
+        ]);
 
-      if (error) throw error;
-
-      // Notify seller
-      const { data: item } = await supabase
-        .from('items')
-        .select('title, seller_id')
-        .eq('id', params.itemId)
-        .single();
-
-      if (item) {
-        const { data: seller } = await supabase
-          .from('profiles')
-          .select('email')
-          .eq('id', item.seller_id)
-          .single();
-
-        if (seller) {
-          await emailService.sendBidNotificationEmail(
-            seller.email,
-            item.title,
-            params.amount,
-            params.itemId
-          );
-        }
+      if (error) {
+        return { success: false, message: error.message };
       }
 
-      return {
-        success: true,
-        message: 'Bid created successfully',
-        bid
-      };
-    } catch (error) {
-      console.error('Error creating bid:', error);
-      return {
-        success: false,
-        message: 'Failed to create bid'
-      };
+      return { success: true, message: 'Bid created successfully.' };
+    } catch (e) {
+      console.error('Error creating bid:', e);
+      return { success: false, message: 'An unexpected error occurred.' };
     }
   }
 
-  async updateBidStatus({ bidId, status }: UpdateBidStatusParams): Promise<BidServiceResponse> {
+  // Update the status of an existing bid
+  async updateBidStatus(
+    bidId: string,
+    status: 'accepted' | 'rejected' | 'countered'
+  ): Promise<UpdateBidStatusResponse> {
     try {
       const { error } = await supabase
         .from('bids')
         .update({ status })
         .eq('id', bidId);
 
-      if (error) throw error;
-
-      if (status === 'accepted') {
-        const { data: bid } = await supabase
-          .from('bids')
-          .select(`
-            *,
-            items (
-              title,
-              seller_id,
-              profiles (
-                full_name
-              )
-            ),
-            profiles (
-              email
-            )
-          `)
-          .eq('id', bidId)
-          .single();
-
-        if (bid) {
-          await emailService.sendBidAcceptedEmail(
-            bid.profiles.email,
-            bid.items.title,
-            bid.amount,
-            bid.items.profiles.full_name,
-            `/payment/${bidId}`
-          );
-        }
+      if (error) {
+        return { success: false, message: error.message };
       }
 
-      return {
-        success: true,
-        message: `Bid ${status} successfully`
-      };
-    } catch (error) {
-      console.error('Error updating bid status:', error);
-      return {
-        success: false,
-        message: `Failed to update bid status to ${status}`
-      };
+      return { success: true, message: `Bid ${status} successfully.` };
+    } catch (e) {
+      console.error('Error updating bid status:', e);
+      return { success: false, message: `Failed to update bid status to ${status}.` };
     }
   }
 }
 
+// Export a singleton instance of the BidService
 export const bidService = new BidService();

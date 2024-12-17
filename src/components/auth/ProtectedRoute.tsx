@@ -11,6 +11,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const location = useLocation();
 
   if (!auth.isAuthenticated) {
+    // Save the attempted URL for redirecting after login
     return <Navigate to="/signin" state={{ from: location }} replace />;
   }
 
