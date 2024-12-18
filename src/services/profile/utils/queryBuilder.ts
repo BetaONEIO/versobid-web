@@ -7,9 +7,15 @@ export const buildSelectQuery = (fields: string[], relationships?: Record<string
     });
   }
 
-  return query;
+  return sanitizeQuery(query);
 };
 
 export const sanitizeQuery = (query: string): string => {
   return query.replace(/\s+/g, ' ').trim();
+};
+
+export const buildWhereClause = (conditions: Record<string, any>): string => {
+  return Object.entries(conditions)
+    .map(([key, value]) => `${key}.eq.${value}`)
+    .join(',');
 };

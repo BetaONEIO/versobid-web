@@ -1,8 +1,5 @@
-```typescript
-// Status options for bids
 export type BidStatus = 'pending' | 'accepted' | 'rejected' | 'countered';
 
-// Shape of a single bid
 export interface Bid {
   id: string;
   created_at: string;
@@ -12,20 +9,16 @@ export interface Bid {
   message?: string;
   shippingOption: string;
   status: BidStatus;
+  item?: {
+    title: string;
+    description: string;
+  };
 }
 
-// Form data for creating or editing a bid
 export interface BidFormData {
   amount: number;
   message: string;
   shippingOption: string;
-}
-
-// Service response types
-export interface BidServiceResponse {
-  success: boolean;
-  message?: string;
-  bid?: Bid;
 }
 
 export interface CreateBidParams {
@@ -35,4 +28,9 @@ export interface CreateBidParams {
   message?: string;
   shippingOption: string;
 }
-```
+
+export interface BidServiceResponse {
+  success: boolean;
+  message?: string;
+  bid?: Bid;
+}

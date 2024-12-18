@@ -1,4 +1,3 @@
-```typescript
 import React from 'react';
 import { BidFormContent } from './BidFormContent';
 import { BidFormProps } from './types';
@@ -9,10 +8,11 @@ export const BidForm: React.FC<BidFormProps> = ({ item, onBidSubmitted }) => {
 
   return (
     <BidFormContent
+      item={item}
       formData={formData}
       onSubmit={handleSubmit}
       onChange={handleChange}
+      onBidSubmitted={onBidSubmitted}
     />
   );
 };
-```

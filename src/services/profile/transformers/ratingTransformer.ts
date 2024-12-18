@@ -1,18 +1,21 @@
-import { DbRating } from '../../../types/supabase';
 import { Rating } from '../../../types/profile';
 
-export const transformRating = (data: DbRating & { reviewer?: { username: string } }): Rating => {
-  return {
-    id: data.id,
-    rating: data.rating,
-    comment: data.comment,
-    created_at: data.created_at,
-    reviewer_id: data.reviewer_id,
-    reviewer_name: data.reviewer?.username || 'Unknown User'
+interface RawRating {
+  id: string;
+  rating: number;
+  comment: string;
+  created_at: string;
+  reviewer_id: string;
+  reviewer?: {
+    username: string;
   };
-};
+}
 
-export const calculateAverageRating = (ratings: Rating[]): number => {
-  if (ratings.length === 0) return 0;
-  return ratings.reduce((acc, curr) => acc + curr.rating, 0) / ratings.length;
-};
+export const transformRating = (rating: RawRating): Rating => ({
+  id: rating.id,
+  rating: rating.rating,
+  comment: rating.comment,
+  created_at: rating.created_at,
+  reviewer_id: rating.reviewer_id,
+  reviewer_name: rating.reviewer?.username || 'Unknown User'
+});

@@ -1,42 +1,49 @@
-```typescript
 import { supabase } from '../../../lib/supabase';
-import { PostgrestFilterBuilder, PostgrestSingleResponse } from '@supabase/postgrest-js';
-import { Database } from '../../../types/supabase';
+import { PostgrestFilterBuilder } from '@supabase/postgrest-js';
+import { QueryResult } from './types';
 
-type TableName = keyof Database['public']['Tables'];
-type Row<T extends TableName> = Database['public']['Tables'][T]['Row'];
+export const createBaseQuery = <T extends Record<string, any>>(tableName: string) => ({
+  select: async (query: string): Promise<QueryResult<T>> => {
+    try {
+      const response = await supabase
+        .from(tableName)
+        .select(query);
 
-export const createBaseQuery = <T extends TableName>(tableName: T) => ({
-  select: (query: string): PostgrestFilterBuilder<Database, Row<T>, Row<T>[], T> =>
-    supabase
-      .from(tableName)
-      .select(query),
-      
-  selectSingle: (query: string): Promise<PostgrestSingleResponse<Row<T>>> =>
-    supabase
-      .from(tableName)
-      .select(query)
-      .single(),
+      return {
+        data: response.data as T | null,
+        error: response.error
+      };
+    } catch (error) {
+      return {
+        data: null,
+        error: error as Error
+      };
+    }
+  },
 
-  create: (data: Partial<Row<T>>): Promise<PostgrestSingleResponse<Row<T>>> =>
-    supabase
-      .from(tableName)
-      .insert([data])
-      .select()
-      .single(),
+  selectSingle: async (query: string): Promise<QueryResult<T>> => {
+    try {
+      const response = await supabase
+        .from(tableName)
+        .select(query)
+        .single();
 
-  update: (id: string, data: Partial<Row<T>>): Promise<PostgrestSingleResponse<Row<T>>> =>
-    supabase
-      .from(tableName)
-      .update(data)
-      .eq('id', id)
-      .select()
-      .single(),
+      return {
+        data: response.data as T,
+        error: response.error
+      };
+    } catch (error) {
+      return {
+        data: null,
+        error: error as Error
+      };
+    }
+  },
 
-  delete: (id: string) =>
-    supabase
+  where: (column: string, value: any): PostgrestFilterBuilder<any, any, T[]> => {
+    return supabase
       .from(tableName)
-      .delete()
-      .eq('id', id)
+      .select('*')
+      .eq(column, value);
+  }
 });
-```

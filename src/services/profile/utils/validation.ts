@@ -1,4 +1,3 @@
-import { DbProfile } from '../types';
 import { VALIDATION_RULES } from '../constants/validationRules';
 
 export const validateUsername = (username: string): string | null => {
@@ -14,19 +13,23 @@ export const validateUsername = (username: string): string | null => {
   return null;
 };
 
+export const validateEmail = (email: string): string | null => {
+  if (!email.trim()) {
+    return 'Email is required';
+  }
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    return 'Please enter a valid email address';
+  }
+  return null;
+};
+
 export const validateName = (name: string): string | null => {
   if (!name.trim()) {
     return 'Name is required';
   }
   if (!VALIDATION_RULES.NAME.PATTERN.test(name)) {
     return 'Name can only contain letters, spaces, hyphens, and apostrophes';
-  }
-  return null;
-};
-
-export const validateEmail = (email: string): string | null => {
-  if (!email.trim()) {
-    return 'Email is required';
   }
   return null;
 };

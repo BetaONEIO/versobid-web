@@ -1,13 +1,13 @@
-```typescript
 import { profileQueries } from './profileQueries';
 import { itemQueries } from './itemQueries';
 import { bidQueries } from './bidQueries';
+import { createBaseQuery } from './base';
 
 export {
   profileQueries,
   itemQueries,
-  bidQueries
+  bidQueries,
+  createBaseQuery
 };
 
 export * from './types';
-```

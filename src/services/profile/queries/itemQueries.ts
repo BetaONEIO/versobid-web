@@ -1,20 +1,26 @@
-import { createBaseQuery } from './base';
+import { supabase } from '../../../lib/supabase';
 import { DbItem } from '../../../types/supabase';
-import { ITEM_SELECT_FIELDS } from '../constants';
 import { QueryResult } from './types';
-
-const baseQuery = createBaseQuery<'items'>('items');
+import { ITEM_SELECT_FIELDS } from '../constants/queryFields';
 
 export const itemQueries = {
   getUserItems: async (userId: string): Promise<QueryResult<DbItem>> => {
-    const response = await baseQuery
-      .select(ITEM_SELECT_FIELDS)
-      .eq('seller_id', userId)
-      .order('created_at', { ascending: false });
+    try {
+      const response = await supabase
+        .from('items')
+        .select(ITEM_SELECT_FIELDS)
+        .eq('seller_id', userId)
+        .order('created_at', { ascending: false });
 
-    return {
-      data: response.data,
-      error: response.error
-    };
+      return {
+        data: response.data,
+        error: response.error
+      };
+    } catch (error) {
+      return {
+        data: null,
+        error: error as Error
+      };
+    }
   }
 };

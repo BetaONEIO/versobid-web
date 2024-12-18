@@ -1,4 +1,3 @@
-```typescript
 export const PROFILE_SELECT_FIELDS = `
   id,
   username,
@@ -27,4 +26,3 @@ export const ITEM_SELECT_FIELDS = `
   shipping_options,
   created_at
 `;
-```

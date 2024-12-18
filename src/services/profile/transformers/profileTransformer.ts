@@ -1,21 +1,30 @@
-```typescript
 import { DbProfile } from '../../../types/supabase';
-import { UserProfile } from '../../../types/profile';
-import { transformRating } from './ratingTransformer';
+import { UserProfile, Rating } from '../../../types/profile';
 import { calculateAverageRating } from '../utils/calculations';
 
-interface ProfileWithRatings extends DbProfile {
-  ratings?: Array<{
-    id: string;
-    rating: number;
-    comment: string;
-    created_at: string;
-    reviewer_id: string;
-    reviewer?: {
-      username: string;
-    };
-  }>;
+interface RawRating {
+  id: string;
+  rating: number;
+  comment: string;
+  created_at: string;
+  reviewer_id: string;
+  reviewer?: {
+    username: string;
+  };
 }
+
+interface ProfileWithRatings extends DbProfile {
+  ratings?: RawRating[];
+}
+
+const transformRating = (rating: RawRating): Rating => ({
+  id: rating.id,
+  rating: rating.rating,
+  comment: rating.comment,
+  created_at: rating.created_at,
+  reviewer_id: rating.reviewer_id,
+  reviewer_name: rating.reviewer?.username || 'Unknown User'
+});
 
 export const transformProfile = (data: ProfileWithRatings): UserProfile => {
   const ratings = (data.ratings || []).map(transformRating);
@@ -32,4 +41,3 @@ export const transformProfile = (data: ProfileWithRatings): UserProfile => {
     average_rating: calculateAverageRating(ratings)
   };
 };
-```

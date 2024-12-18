@@ -1,21 +1,20 @@
 import React from 'react';
 import { ItemPriceFieldsProps } from './types';
 
-export const ItemPriceFields: React.FC<ItemPriceFieldsProps> = ({ formData, onChange }) => {
+export const ItemPriceFields: React.FC<ItemPriceFieldsProps> = ({ formData, onPriceChange }) => {
   return (
     <div>
-      <label htmlFor="amount" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-        Your Offer ($)
+      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+        Your Offer
       </label>
       <input
-        id="amount"
         type="number"
+        required
         min="0"
         step="0.01"
-        required
+        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white"
         value={formData.amount}
-        onChange={(e) => onChange('amount', Number(e.target.value))}
-        className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+        onChange={(e) => onPriceChange(Number(e.target.value))}
       />
     </div>
   );
