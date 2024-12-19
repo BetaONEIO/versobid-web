@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthFormData } from '../types';
-import { authService } from '../services/auth';
+import { authService } from '../services/auth/authService';
 import { useUser } from '../contexts/UserContext';
 import { useNotification } from '../contexts/NotificationContext';
 
@@ -12,12 +12,12 @@ export const useAuth = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const login = async (identifier: string, password: string, captchaToken?: string): Promise<void> => {
+  const login = async (identifier: string, password: string) => {
     setIsLoading(true);
     setError(null);
 
     try {
-      const user = await authService.login(identifier, password, captchaToken);
+      const user = await authService.login(identifier, password);
       userLogin(user);
       addNotification('success', 'Successfully signed in!');
       navigate('/');
@@ -30,7 +30,7 @@ export const useAuth = () => {
     }
   };
 
-  const signup = async (formData: AuthFormData): Promise<void> => {
+  const signup = async (formData: AuthFormData) => {
     setIsLoading(true);
     setError(null);
 
@@ -48,9 +48,26 @@ export const useAuth = () => {
     }
   };
 
+  const requestPasswordReset = async (email: string) => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      await authService.requestPasswordReset(email);
+      addNotification('success', 'Password reset instructions have been sent to your email.');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to request password reset';
+      setError(message);
+      addNotification('error', message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return {
     login,
     signup,
+    requestPasswordReset,
     isLoading,
     error
   };

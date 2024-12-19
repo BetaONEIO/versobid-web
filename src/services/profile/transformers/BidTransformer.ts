@@ -1,21 +1,20 @@
 import { BaseTransformer } from './BaseTransformer';
-import { DbBid } from '../../../types/supabase';
 import { Bid } from '../../../types/bid';
-import { BidTransformer as IBidTransformer } from '../types/transformerTypes';
+import { Database } from '../../../types/supabase';
 
-export class BidTransformer extends BaseTransformer<DbBid, Bid> implements IBidTransformer {
-  transform(bid: DbBid): Bid {
+type BidRow = Database['public']['Tables']['bids']['Row'];
+
+export class BidTransformer extends BaseTransformer<BidRow, Bid> {
+  transform(data: BidRow): Bid {
     return {
-      id: bid.id,
-      itemId: bid.item_id,
-      bidderId: bid.bidder_id,
-      amount: bid.amount,
-      message: bid.message,
-      shippingOption: bid.shipping_option,
-      status: bid.status,
-      created_at: bid.created_at
+      id: data.id,
+      itemId: data.item_id,
+      bidderId: data.bidder_id,
+      amount: data.amount,
+      message: data.message,
+      shippingOption: data.shipping_option,
+      status: data.status,
+      createdAt: data.created_at
     };
   }
 }
-
-export const bidTransformer = new BidTransformer();

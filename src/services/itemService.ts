@@ -1,5 +1,9 @@
 import { supabase } from '../lib/supabase';
-import { Item } from '../types/item';
+import type { Database } from '../types/supabase';
+
+type Item = Database['public']['Tables']['items']['Row'];
+type ItemInsert = Database['public']['Tables']['items']['Insert'];
+type ItemUpdate = Database['public']['Tables']['items']['Update'];
 
 export const itemService = {
   async getItems(filters?: { category?: string; status?: string }): Promise<Item[]> {
@@ -14,7 +18,7 @@ export const itemService = {
 
     const { data, error } = await query;
     if (error) throw error;
-    return data as Item[];
+    return data;
   },
 
   async getItem(id: string): Promise<Item | null> {
@@ -25,10 +29,10 @@ export const itemService = {
       .single();
 
     if (error) throw error;
-    return data as Item;
+    return data;
   },
 
-  async createItem(item: Omit<Item, 'id' | 'created_at'>): Promise<Item> {
+  async createItem(item: ItemInsert): Promise<Item> {
     const { data, error } = await supabase
       .from('items')
       .insert([item])
@@ -36,10 +40,10 @@ export const itemService = {
       .single();
 
     if (error) throw error;
-    return data as Item;
+    return data;
   },
 
-  async updateItem(id: string, updates: Partial<Item>): Promise<Item> {
+  async updateItem(id: string, updates: ItemUpdate): Promise<Item> {
     const { data, error } = await supabase
       .from('items')
       .update(updates)
@@ -48,7 +52,7 @@ export const itemService = {
       .single();
 
     if (error) throw error;
-    return data as Item;
+    return data;
   },
 
   async deleteItem(id: string): Promise<void> {

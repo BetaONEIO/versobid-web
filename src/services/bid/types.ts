@@ -1,10 +1,4 @@
-import { Bid } from '../../types/bid';
-
-export interface BidServiceResponse {
-  success: boolean;
-  message: string;
-  bid?: Bid;
-}
+import { Bid, BidStatus } from '../../types/bid';
 
 export interface CreateBidParams {
   itemId: string;
@@ -16,5 +10,11 @@ export interface CreateBidParams {
 
 export interface UpdateBidStatusParams {
   bidId: string;
-  status: 'accepted' | 'rejected' | 'countered';
+  status: BidStatus;
+}
+
+export interface BidServiceResponse {
+  success: boolean;
+  message: string;
+  bid?: Bid;
 }

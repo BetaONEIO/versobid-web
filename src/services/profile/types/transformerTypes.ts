@@ -1,13 +1,14 @@
-import { DbItem, DbBid, DbProfile } from '../../../types/supabase';
-import { Item } from '../../../types/item';
-import { Bid } from '../../../types/bid';
-import { UserProfile } from '../../../types/profile';
-
-export interface DataTransformer<T, U> {
+export interface DataTransformer<T extends Record<string, any>, U> {
   transform(data: T): U;
   transformMany(data: T[]): U[];
 }
 
-export interface ProfileTransformer extends DataTransformer<DbProfile, UserProfile> {}
-export interface ItemTransformer extends DataTransformer<DbItem, Item> {}
-export interface BidTransformer extends DataTransformer<DbBid, Bid> {}
+export type ItemTransformer = DataTransformer<
+  Database['public']['Tables']['items']['Row'],
+  Item
+>;
+
+export type BidTransformer = DataTransformer<
+  Database['public']['Tables']['bids']['Row'],
+  Bid
+>;

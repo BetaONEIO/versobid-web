@@ -1,7 +1,9 @@
-export abstract class BaseTransformer<T, U> {
+import { DataTransformer } from '../types/transformerTypes';
+
+export abstract class BaseTransformer<T extends Record<string, any>, U> implements DataTransformer<T, U> {
   abstract transform(data: T): U;
-  
-  transformMany(items: T[]): U[] {
-    return items.map(item => this.transform(item));
+
+  transformMany(data: T[]): U[] {
+    return data.map(item => this.transform(item));
   }
 }

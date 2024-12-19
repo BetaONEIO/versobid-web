@@ -1,19 +1,13 @@
 import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useUser } from '../../contexts/UserContext';
-import { SunIcon, MoonIcon, QuestionMarkCircleIcon, UserIcon } from '@heroicons/react/24/outline';
+import { SunIcon, MoonIcon, QuestionMarkCircleIcon } from '@heroicons/react/24/outline';
 import { RoleToggle } from '../ui/RoleToggle';
 
 export const Header: React.FC = () => {
   const { isDarkMode, toggleDarkMode } = useTheme();
   const { auth, logout } = useUser();
-  const navigate = useNavigate();
-
-  const handleSignOut = () => {
-    logout();
-    navigate('/signin');
-  };
 
   return (
     <header className="bg-white dark:bg-gray-800 shadow">
@@ -39,13 +33,6 @@ export const Header: React.FC = () => {
                 >
                   Add Item
                 </Link>
-                <Link
-                  to={`/profile/${auth.user?.id}`}
-                  className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900 dark:text-gray-100"
-                >
-                  <UserIcon className="h-5 w-5 mr-1" />
-                  Profile
-                </Link>
               </>
             )}
             <Link
@@ -55,6 +42,21 @@ export const Header: React.FC = () => {
               <QuestionMarkCircleIcon className="h-5 w-5 mr-1" />
               Help
             </Link>
+            {!auth.isAuthenticated ? (
+              <Link
+                to="/signin"
+                className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-500 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
+              >
+                Sign In
+              </Link>
+            ) : (
+              <button
+                onClick={logout}
+                className="inline-flex items-center px-3 py-1 text-sm font-medium text-gray-500 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors duration-200"
+              >
+                Log Out
+              </button>
+            )}
           </div>
           <div className="flex items-center space-x-4">
             {auth.isAuthenticated && <RoleToggle />}
@@ -68,21 +70,6 @@ export const Header: React.FC = () => {
                 <MoonIcon className="h-5 w-5" />
               )}
             </button>
-            {auth.isAuthenticated ? (
-              <button
-                onClick={handleSignOut}
-                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
-              >
-                Sign Out
-              </button>
-            ) : (
-              <Link
-                to="/signin"
-                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
-              >
-                Sign In
-              </Link>
-            )}
           </div>
         </div>
       </nav>

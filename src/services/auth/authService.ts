@@ -1,28 +1,18 @@
-import { supabase } from '../lib/supabase';
-import { AuthFormData, User } from '../types';
-import { profileService } from './profileService';
+import { supabase } from '../../lib/supabase';
+import { AuthFormData, User } from '../../types';
+import { profileService } from '../profileService';
+import { emailService } from '../emailService';
 
-export const userService = {
+export const authService = {
   signup: async (formData: AuthFormData): Promise<User> => {
-    // Check if email exists
-    const { data: existingEmail } = await supabase
-      .from('profiles')
-      .select('email')
-      .eq('email', formData.email)
-      .single();
-
-    if (existingEmail) {
-      throw new Error('Email already registered');
-    }
-
-    // Check if username exists
-    const { data: existingUsername } = await supabase
+    // Check if username is taken
+    const { data: existingUser } = await supabase
       .from('profiles')
       .select('username')
       .eq('username', formData.username)
       .single();
 
-    if (existingUsername) {
+    if (existingUser) {
       throw new Error('Username already taken');
     }
 
@@ -44,6 +34,13 @@ export const userService = {
       created_at: new Date().toISOString(),
       avatar_url: null,
     });
+
+    // Send welcome email
+    try {
+      await emailService.sendWelcomeEmail(formData.email, formData.name || '');
+    } catch (error) {
+      console.error('Failed to send welcome email:', error);
+    }
 
     return {
       id: profile.id,
@@ -84,5 +81,20 @@ export const userService = {
       email: profile.email,
       username: profile.username
     };
+  },
+
+  async requestPasswordReset(email: string): Promise<void> {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    
+    if (error) throw error;
+
+    try {
+      await emailService.sendPasswordResetEmail(email, 'reset-token');
+    } catch (error) {
+      console.error('Failed to send password reset email:', error);
+      throw new Error('Failed to send password reset email');
+    }
   }
 };

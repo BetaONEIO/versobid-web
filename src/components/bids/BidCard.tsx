@@ -1,13 +1,14 @@
 import React from 'react';
-import { Bid } from '../../types/bid';
+import { Bid, BidStatus } from '../../types/bid';
+import { Item } from '../../types/item';
 
 interface BidCardProps {
-  bid: Bid;
+  bid: Bid & { item?: Item };
   onSelect?: (bid: Bid) => void;
 }
 
 export const BidCard: React.FC<BidCardProps> = ({ bid, onSelect }) => {
-  const getStatusColor = (status: Bid['status']) => {
+  const getStatusColor = (status: BidStatus) => {
     switch (status) {
       case 'pending':
         return 'bg-yellow-100 text-yellow-800';

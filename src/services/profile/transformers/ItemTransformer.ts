@@ -1,22 +1,21 @@
 import { BaseTransformer } from './BaseTransformer';
-import { DbItem } from '../../../types/supabase';
 import { Item } from '../../../types/item';
-import { ItemTransformer as IItemTransformer } from '../types/transformerTypes';
+import { Database } from '../../../types/supabase';
 
-export class ItemTransformer extends BaseTransformer<DbItem, Item> implements IItemTransformer {
-  transform(item: DbItem): Item {
+type ItemRow = Database['public']['Tables']['items']['Row'];
+
+export class ItemTransformer extends BaseTransformer<ItemRow, Item> {
+  transform(data: ItemRow): Item {
     return {
-      id: item.id,
-      title: item.title,
-      description: item.description,
-      price: item.price,
-      seller_id: item.seller_id,
-      category: item.category,
-      shipping_options: item.shipping_options,
-      status: item.status,
-      created_at: item.created_at
+      id: data.id,
+      title: data.title,
+      description: data.description,
+      price: data.price,
+      seller_id: data.seller_id,
+      category: data.category,
+      shipping_options: data.shipping_options,
+      status: data.status,
+      created_at: data.created_at
     };
   }
 }
-
-export const itemTransformer = new ItemTransformer();

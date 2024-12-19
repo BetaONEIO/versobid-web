@@ -9,7 +9,69 @@ export interface Database {
           full_name: string;
           avatar_url: string | null;
           email: string;
-          bio?: string;
+        };
+        Insert: {
+          id: string;
+          created_at?: string;
+          username: string;
+          full_name: string;
+          avatar_url?: string | null;
+          email: string;
+        };
+        Update: {
+          id?: string;
+          created_at?: string;
+          username?: string;
+          full_name?: string;
+          avatar_url?: string | null;
+          email?: string;
+        };
+      };
+      items: {
+        Row: {
+          id: string;
+          created_at: string;
+          title: string;
+          description: string;
+          price: number;
+          seller_id: string;
+          status: 'active' | 'sold' | 'archived';
+          category: string;
+          shipping_options: {
+            type: 'shipping' | 'pickup';
+            cost?: number;
+            location?: string;
+          }[];
+        };
+        Insert: {
+          id?: string;
+          created_at?: string;
+          title: string;
+          description: string;
+          price: number;
+          seller_id: string;
+          status?: 'active' | 'sold' | 'archived';
+          category: string;
+          shipping_options: {
+            type: 'shipping' | 'pickup';
+            cost?: number;
+            location?: string;
+          }[];
+        };
+        Update: {
+          id?: string;
+          created_at?: string;
+          title?: string;
+          description?: string;
+          price?: number;
+          seller_id?: string;
+          status?: 'active' | 'sold' | 'archived';
+          category?: string;
+          shipping_options?: {
+            type: 'shipping' | 'pickup';
+            cost?: number;
+            location?: string;
+          }[];
         };
       };
       bids: {
@@ -23,41 +85,27 @@ export interface Database {
           shipping_option: string;
           status: 'pending' | 'accepted' | 'rejected' | 'countered';
         };
-      };
-      items: {
-        Row: {
-          id: string;
-          created_at: string;
-          title: string;
-          description: string;
-          price: number;
-          seller_id: string;
-          category: string;
-          shipping_options: ShippingOption[];
-          status: 'active' | 'sold' | 'archived';
+        Insert: {
+          id?: string;
+          created_at?: string;
+          item_id: string;
+          bidder_id: string;
+          amount: number;
+          message?: string;
+          shipping_option: string;
+          status?: 'pending' | 'accepted' | 'rejected' | 'countered';
         };
-      };
-      ratings: {
-        Row: {
-          id: string;
-          rating: number;
-          comment: string;
-          created_at: string;
-          reviewer_id: string;
+        Update: {
+          id?: string;
+          created_at?: string;
+          item_id?: string;
+          bidder_id?: string;
+          amount?: number;
+          message?: string;
+          shipping_option?: string;
+          status?: 'pending' | 'accepted' | 'rejected' | 'countered';
         };
       };
     };
   };
 }
-
-interface ShippingOption {
-  type: 'shipping' | 'pickup';
-  cost?: number;
-  location?: string;
-}
-
-export type Tables = Database['public']['Tables'];
-export type DbProfile = Tables['profiles']['Row'];
-export type DbBid = Tables['bids']['Row'];
-export type DbItem = Tables['items']['Row'];
-export type DbRating = Tables['ratings']['Row'];

@@ -1,12 +1,17 @@
-import { BidStatus } from '../types/bid';
+import { Bid } from '../types/bid';
 
-export const getBidStatusStyles = (status: BidStatus): string => {
-  switch (status) {
-    case 'accepted':
-      return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
-    case 'rejected':
-      return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
-    default:
-      return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
-  }
+export const sortBidsByDate = (bids: Bid[]): Bid[] => {
+  return [...bids].sort((a, b) => {
+    const dateA = new Date(a.createdAt);
+    const dateB = new Date(b.createdAt);
+    return dateB.getTime() - dateA.getTime();
+  });
+};
+
+export const filterBidsByStatus = (bids: Bid[], status: Bid['status']): Bid[] => {
+  return bids.filter(bid => bid.status === status);
+};
+
+export const calculateTotalBidAmount = (bids: Bid[]): number => {
+  return bids.reduce((total, bid) => total + bid.amount, 0);
 };

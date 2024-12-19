@@ -1,59 +1,61 @@
-import { UserProfile } from '../../types/profile';
-import { Item } from '../../types/item';
-import { Bid } from '../../types/bid';
-import { DbItem, DbBid } from '../../types/supabase';
-import { profileQueries } from './queries/profileQueries';
-import { itemQueries } from './queries/itemQueries';
-import { bidQueries } from './queries/bidQueries';
-import { ProfileNotFoundError } from './errors';
-import { validateProfileData } from './validation/profileValidation';
-import { ProfileValidationError } from './errors/ProfileValidationError';
-import { transformProfile } from './transformers/profileTransformer';
-import { itemTransformer } from './transformers/ItemTransformer';
-import { bidTransformer } from './transformers/BidTransformer';
-import { ProfileServiceInterface, ProfileCreateParams, ProfileUpdateParams } from './types/profileTypes';
+import { supabase } from '../../lib/supabase';
+import { Profile } from '../../types/profile';
+import { handleQueryResult, handleSingleResult } from './queries/base';
+import { ItemTransformer } from './transformers/ItemTransformer';
+import { BidTransformer } from './transformers/BidTransformer';
 
-class ProfileService implements ProfileServiceInterface {
-  async getUserProfile(userId: string): Promise<UserProfile> {
-    const { data: profile, error } = await profileQueries.getProfile(userId);
-    if (error) throw error;
-    if (!profile) throw new ProfileNotFoundError(userId);
+const itemTransformer = new ItemTransformer();
+const bidTransformer = new BidTransformer();
 
-    return transformProfile(profile);
+export const profileService = {
+  async getProfile(userId: string): Promise<Profile> {
+    const result = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .single();
+
+    return handleSingleResult(result);
+  },
+
+  async createProfile(profile: Partial<Profile>): Promise<Profile> {
+    const result = await supabase
+      .from('profiles')
+      .insert([profile])
+      .select()
+      .single();
+
+    return handleSingleResult(result);
+  },
+
+  async updateProfile(userId: string, updates: Partial<Profile>): Promise<Profile> {
+    const result = await supabase
+      .from('profiles')
+      .update(updates)
+      .eq('id', userId)
+      .select()
+      .single();
+
+    return handleSingleResult(result);
+  },
+
+  async getProfileItems(userId: string) {
+    const result = await supabase
+      .from('items')
+      .select('*')
+      .eq('seller_id', userId);
+
+    const items = await handleQueryResult(result);
+    return itemTransformer.transformMany(items);
+  },
+
+  async getProfileBids(userId: string) {
+    const result = await supabase
+      .from('bids')
+      .select('*')
+      .eq('bidder_id', userId);
+
+    const bids = await handleQueryResult(result);
+    return bidTransformer.transformMany(bids);
   }
-
-  async createProfile(params: ProfileCreateParams): Promise<UserProfile> {
-    const validationErrors = validateProfileData(params);
-    if (validationErrors.length > 0) {
-      throw new ProfileValidationError(validationErrors);
-    }
-
-    const { data: profile, error } = await profileQueries.create(params);
-    if (error) throw error;
-    if (!profile) throw new Error('Failed to create profile');
-
-    return transformProfile(profile);
-  }
-
-  async updateProfile(params: ProfileUpdateParams): Promise<UserProfile> {
-    const { data: profile, error } = await profileQueries.update(params);
-    if (error) throw error;
-    if (!profile) throw new Error('Failed to update profile');
-
-    return transformProfile(profile);
-  }
-
-  async getUserItems(userId: string): Promise<Item[]> {
-    const { data, error } = await itemQueries.getUserItems(userId);
-    if (error) throw error;
-    return data ? itemTransformer.transformMany(data as DbItem[]) : [];
-  }
-
-  async getUserBids(userId: string): Promise<Bid[]> {
-    const { data, error } = await bidQueries.getUserBids(userId);
-    if (error) throw error;
-    return data ? bidTransformer.transformMany(data as DbBid[]) : [];
-  }
-}
-
-export const profileService = new ProfileService();
+};

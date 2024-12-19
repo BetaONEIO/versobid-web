@@ -3,10 +3,8 @@ import { User } from './user';
 export interface AuthFormData {
   email: string;
   password: string;
-  name: string;
-  username: string;
-  acceptedTerms: boolean;
-  captchaToken?: string;
+  name?: string;
+  username?: string;
 }
 
 export interface AuthState {

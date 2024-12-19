@@ -1,3 +1,4 @@
+```typescript
 import { useState } from 'react';
 import { ItemFormData } from '../../../types/item';
 import { categories } from '../../../utils/constants';
@@ -33,3 +34,4 @@ export const useAddItemForm = () => {
     handleInputChange
   };
 };
+```
