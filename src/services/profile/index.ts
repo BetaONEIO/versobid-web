@@ -1,4 +1,3 @@
-```typescript
 // Export the service
 export { profileService } from './profileService';
 
@@ -17,4 +16,3 @@ export * from './validation';
 // Export constants
 export * from './constants/errorMessages';
 export * from './constants/validationRules';
-```

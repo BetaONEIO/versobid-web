@@ -3,14 +3,14 @@ import { PostgrestFilterBuilder } from '@supabase/postgrest-js';
 import { QueryResult } from './types';
 
 export const createBaseQuery = <T extends Record<string, any>>(tableName: string) => ({
-  select: async (query: string): Promise<QueryResult<T>> => {
+  select: async (query: string): Promise<QueryResult<T[]>> => {
     try {
       const response = await supabase
         .from(tableName)
         .select(query);
 
       return {
-        data: response.data as T | null,
+        data: response.data as T[],
         error: response.error
       };
     } catch (error) {

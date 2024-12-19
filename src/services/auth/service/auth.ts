@@ -15,18 +15,17 @@ export const resolveEmailFromIdentifier = async (identifier: string): Promise<st
 };
 
 export const authenticateUser = async (email: string, password: string, captchaToken?: string) => {
+  if (!captchaToken) {
+    throw new Error('Please complete the security check');
+  }
+
   const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
     email,
     password,
     options: { captchaToken }
   });
 
-  if (authError) {
-    if (authError.message.includes('captcha')) {
-      throw new Error('Please complete the security check');
-    }
-    throw new Error('Invalid credentials');
-  }
+  if (authError) throw authError;
   if (!authData.user) throw new Error('User not found');
 
   return authData;
@@ -37,20 +36,14 @@ export const createAuthUser = async (formData: AuthFormData) => {
     email: formData.email,
     password: formData.password,
     options: {
-      captchaToken: formData.captchaToken,
       data: {
         full_name: formData.name,
         username: formData.username
-      }
+      },
+      captchaToken: formData.captchaToken
     }
   });
 
-  if (authError) {
-    if (authError.message.includes('captcha')) {
-      throw new Error('Please complete the security check');
-    }
-    throw authError;
-  }
-
+  if (authError) throw authError;
   return authData;
 };

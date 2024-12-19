@@ -1,4 +1,3 @@
-```typescript
 import { Bid } from '../../types/bid';
 
 export interface BidServiceResponse {
@@ -19,4 +18,3 @@ export interface UpdateBidStatusParams {
   bidId: string;
   status: 'accepted' | 'rejected' | 'countered';
 }
-```

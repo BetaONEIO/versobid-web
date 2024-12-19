@@ -28,5 +28,25 @@ export const profileQueries = {
         error: error as Error
       };
     }
+  },
+
+  create: async (profile: Partial<DbProfile>): Promise<QueryResult<DbProfile>> => {
+    try {
+      const response = await supabase
+        .from('profiles')
+        .insert([profile])
+        .select()
+        .single();
+
+      return {
+        data: response.data,
+        error: response.error
+      };
+    } catch (error) {
+      return {
+        data: null,
+        error: error as Error
+      };
+    }
   }
 };

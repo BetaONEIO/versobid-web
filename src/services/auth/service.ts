@@ -7,6 +7,10 @@ import { AuthServiceInterface } from './types';
 export class AuthService implements AuthServiceInterface {
   async login(identifier: string, password: string, captchaToken?: string): Promise<User> {
     try {
+      if (!captchaToken) {
+        throw new Error('Please complete the security check');
+      }
+
       let email = identifier;
       if (!identifier.includes('@')) {
         const { data: profile } = await supabase
@@ -27,12 +31,7 @@ export class AuthService implements AuthServiceInterface {
         }
       });
 
-      if (authError) {
-        if (authError.message.includes('captcha')) {
-          throw new Error('Please complete the security check');
-        }
-        throw new Error('Invalid credentials');
-      }
+      if (authError) throw authError;
       if (!authData.user) throw new Error('User not found');
 
       const profile = await profileService.getUserProfile(authData.user.id);
@@ -72,20 +71,15 @@ export class AuthService implements AuthServiceInterface {
         email: formData.email,
         password: formData.password,
         options: {
-          captchaToken: formData.captchaToken,
           data: {
             full_name: formData.name,
             username: formData.username
-          }
+          },
+          captchaToken: formData.captchaToken // Ensure captchaToken is passed here
         }
       });
 
-      if (authError) {
-        if (authError.message.includes('captcha')) {
-          throw new Error('Please complete the security check');
-        }
-        throw authError;
-      }
+      if (authError) throw authError;
       if (!authData.user) throw new Error('Failed to create user account');
 
       // Create profile

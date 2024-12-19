@@ -1,4 +1,4 @@
-import { DbProfile } from '../types';
+import { DbProfile } from '../../types/supabase';
 import { ERROR_MESSAGES } from './constants/errorMessages';
 import { VALIDATION_RULES } from './constants/validationRules';
 

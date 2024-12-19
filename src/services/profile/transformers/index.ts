@@ -1,9 +1,2 @@
-```typescript
-import { transformProfile } from './profileTransformer';
-import { transformRating } from './ratingTransformer';
-
-export {
-  transformProfile,
-  transformRating
-};
-```
+export { transformProfile } from './profileTransformer';
+export { transformRating } from './ratingTransformer';

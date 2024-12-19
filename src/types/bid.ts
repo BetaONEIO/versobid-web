@@ -1,3 +1,5 @@
+import { Item } from './item';
+
 export type BidStatus = 'pending' | 'accepted' | 'rejected' | 'countered';
 
 export interface Bid {
@@ -9,10 +11,7 @@ export interface Bid {
   message?: string;
   shippingOption: string;
   status: BidStatus;
-  item?: {
-    title: string;
-    description: string;
-  };
+  item?: Item;
 }
 
 export interface BidFormData {

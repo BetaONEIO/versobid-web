@@ -1,13 +1,5 @@
-import { profileQueries } from './profileQueries';
-import { itemQueries } from './itemQueries';
-import { bidQueries } from './bidQueries';
-import { createBaseQuery } from './base';
-
-export {
-  profileQueries,
-  itemQueries,
-  bidQueries,
-  createBaseQuery
-};
-
+export { profileQueries } from './profileQueries';
+export { itemQueries } from './itemQueries';
+export { bidQueries } from './bidQueries';
+export { createBaseQuery } from './base';
 export * from './types';

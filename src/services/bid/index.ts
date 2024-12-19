@@ -1,2 +1,5 @@
-export * from './bidService';
-export * from './types';
+// Export service
+export { bidService } from './bidService';
+
+// Export types
+export type { BidServiceResponse, UpdateBidStatusParams } from './types';

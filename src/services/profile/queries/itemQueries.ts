@@ -1,19 +1,21 @@
 import { supabase } from '../../../lib/supabase';
 import { DbItem } from '../../../types/supabase';
-import { QueryResult } from './types';
+import { QueryResult } from '../types/queryTypes';
 import { ITEM_SELECT_FIELDS } from '../constants/queryFields';
+import { buildQuery } from '../utils/queryUtils';
 
 export const itemQueries = {
-  getUserItems: async (userId: string): Promise<QueryResult<DbItem>> => {
+  getUserItems: async (userId: string): Promise<QueryResult<DbItem[]>> => {
     try {
-      const response = await supabase
-        .from('items')
-        .select(ITEM_SELECT_FIELDS)
-        .eq('seller_id', userId)
-        .order('created_at', { ascending: false });
+      const query = buildQuery('items', ITEM_SELECT_FIELDS, {
+        orderBy: 'created_at',
+        ascending: false
+      });
+
+      const response = await query.eq('seller_id', userId);
 
       return {
-        data: response.data,
+        data: response.data as DbItem[],
         error: response.error
       };
     } catch (error) {
