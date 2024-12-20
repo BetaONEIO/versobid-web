@@ -1,16 +1,16 @@
-import { GenericStringError } from '../types/errors';
+import { PostgrestError, PostgrestSingleResponse } from '@supabase/supabase-js';
 
 export async function handleQueryResult<T extends Record<string, any>>(
-  result: { data: T[] | null; error: GenericStringError | null }
+  result: PostgrestSingleResponse<T[]>
 ): Promise<T[]> {
   if (result.error) {
     throw new Error(result.error.message);
   }
-  return result.data as T[] || [];
+  return result.data || [];
 }
 
 export async function handleSingleResult<T extends Record<string, any>>(
-  result: { data: T | null; error: GenericStringError | null }
+  result: PostgrestSingleResponse<T>
 ): Promise<T> {
   if (result.error) {
     throw new Error(result.error.message);
@@ -18,5 +18,5 @@ export async function handleSingleResult<T extends Record<string, any>>(
   if (!result.data) {
     throw new Error('Not found');
   }
-  return result.data as T;
+  return result.data;
 }

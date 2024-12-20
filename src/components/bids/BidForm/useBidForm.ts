@@ -1,4 +1,3 @@
-```typescript
 import { useState } from 'react';
 import { useUser } from '../../../contexts/UserContext';
 import { useNotification } from '../../../contexts/NotificationContext';
@@ -33,7 +32,7 @@ export const useBidForm = (item: Item, onBidSubmitted: () => void) => {
   };
 
   const handleChange = (field: keyof BidFormState, value: string | number) => {
-    setFormData((prev: BidFormState) => ({ ...prev, [field]: value }));
+    setFormData(prev => ({ ...prev, [field]: value }));
   };
 
   return {
@@ -42,4 +41,3 @@ export const useBidForm = (item: Item, onBidSubmitted: () => void) => {
     handleChange
   };
 };
-```

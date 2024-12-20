@@ -1,3 +1,7 @@
+import { Database } from '../../../types/supabase';
+import { Item } from '../../../types/item';
+import { Bid } from '../../../types/bid';
+
 export interface DataTransformer<T extends Record<string, any>, U> {
   transform(data: T): U;
   transformMany(data: T[]): U[];

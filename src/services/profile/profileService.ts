@@ -3,9 +3,13 @@ import { Profile } from '../../types/profile';
 import { handleQueryResult, handleSingleResult } from './queries/base';
 import { ItemTransformer } from './transformers/ItemTransformer';
 import { BidTransformer } from './transformers/BidTransformer';
+import { Database } from '../../types/supabase';
 
 const itemTransformer = new ItemTransformer();
 const bidTransformer = new BidTransformer();
+
+type ItemRow = Database['public']['Tables']['items']['Row'];
+type BidRow = Database['public']['Tables']['bids']['Row'];
 
 export const profileService = {
   async getProfile(userId: string): Promise<Profile> {
@@ -45,7 +49,7 @@ export const profileService = {
       .select('*')
       .eq('seller_id', userId);
 
-    const items = await handleQueryResult(result);
+    const items = await handleQueryResult<ItemRow>(result);
     return itemTransformer.transformMany(items);
   },
 
@@ -55,7 +59,7 @@ export const profileService = {
       .select('*')
       .eq('bidder_id', userId);
 
-    const bids = await handleQueryResult(result);
+    const bids = await handleQueryResult<BidRow>(result);
     return bidTransformer.transformMany(bids);
   }
 };

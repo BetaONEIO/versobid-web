@@ -1,4 +1,4 @@
-import { BaseTransformer } from './BaseTransformer';
+import { BaseTransformer } from '.';
 import { Bid } from '../../../types/bid';
 import { Database } from '../../../types/supabase';
 

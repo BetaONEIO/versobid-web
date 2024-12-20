@@ -1,5 +1,14 @@
-```typescript
-import { ItemFormData } from '../../../types/item';
+export interface FormActionsProps {
+  onCancel: () => void;
+  isSubmitting?: boolean;
+}
+
+export interface ItemFormData {
+  title: string;
+  description: string;
+  price: number;
+  category: string;
+}
 
 export interface ItemFormFieldsProps {
   formData: ItemFormData;
@@ -8,11 +17,5 @@ export interface ItemFormFieldsProps {
 
 export interface ItemPriceFieldsProps {
   formData: ItemFormData;
-  onPriceChange: (value: number) => void;
+  onChange: (field: keyof ItemFormData, value: number) => void;
 }
-
-export interface FormActionsProps {
-  onCancel: () => void;
-  isSubmitting?: boolean;
-}
-```
