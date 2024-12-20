@@ -1,4 +1,4 @@
-import { PostgrestError, PostgrestSingleResponse } from '@supabase/supabase-js';
+import { PostgrestSingleResponse } from '@supabase/supabase-js';
 
 export async function handleQueryResult<T extends Record<string, any>>(
   result: PostgrestSingleResponse<T[]>

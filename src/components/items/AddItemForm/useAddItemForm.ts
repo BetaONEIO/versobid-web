@@ -16,6 +16,10 @@ export const useAddItemForm = () => {
 
   return {
     formData,
-    handleChange
+    handleChange,
+    handleSubmit: () => { /* Add submit logic here */ },
+    handlePriceChange: (field:keyof ItemFormData, value: number) => handleChange(field, value),
+    handleInputChange: (field: keyof ItemFormData, value: string|number) => handleChange(field, value)
+
   };
 };
