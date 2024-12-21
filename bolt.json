@@ -1,0 +1,6 @@
+{
+  "workspaces": ["packages/*"],
+  "project": {
+    "appFiles": ["src/index.ts", "src/app.ts"]
+  }
+}
