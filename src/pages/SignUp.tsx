@@ -28,7 +28,10 @@ export const SignUp: React.FC = () => {
 
     setLoading(true);
     try {
-      await userService.signup(formData);
+      await userService.signup({
+        ...formData,
+        username: formData.username || formData.email.split('@')[0]
+      });
       addNotification('success', 'Account created successfully! Please check your email to verify your account.');
       navigate('/signin');
     } catch (error) {
@@ -43,11 +46,6 @@ export const SignUp: React.FC = () => {
   const validateForm = (): boolean => {
     if (!formData.email.trim()) {
       addNotification('error', 'Email is required');
-      return false;
-    }
-
-    if (!formData.username.trim()) {
-      addNotification('error', 'Username is required');
       return false;
     }
 
@@ -95,7 +93,6 @@ export const SignUp: React.FC = () => {
             <input
               id="username"
               type="text"
-              required
               value={formData.username}
               onChange={(e) => setFormData((prev) => ({ ...prev, username: e.target.value }))}
               className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white"

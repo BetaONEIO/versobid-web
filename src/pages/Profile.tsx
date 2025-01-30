@@ -23,7 +23,8 @@ export const Profile: React.FC = () => {
   React.useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const data = await profileService.getProfileByUsername(username!);
+        if (!username) return;
+        const data = await profileService.getProfileByUsername(username, auth.user?.id);
         setProfile(data);
       } catch (error) {
         addNotification('error', 'Failed to load profile');
@@ -33,7 +34,7 @@ export const Profile: React.FC = () => {
     };
 
     fetchProfile();
-  }, [username, addNotification]);
+  }, [username, addNotification, auth.user?.id]);
 
   const handleAvatarClick = () => {
     if (isOwnProfile && fileInputRef.current) {
@@ -47,13 +48,13 @@ export const Profile: React.FC = () => {
 
     try {
       setUploading(true);
-      const avatarUrl = await profileService.uploadAvatar(file);
+      const avatarUrl = await profileService.uploadAvatar(file, auth.user.id);
       await profileService.updateProfile(auth.user.id, { avatar_url: avatarUrl });
       setProfile(prev => prev ? { ...prev, avatar_url: avatarUrl } : null);
       addNotification('success', 'Profile picture updated successfully');
     } catch (error) {
-      console.error('Error uploading avatar:', error);
       addNotification('error', 'Failed to update profile picture');
+      setSelectedImage(null);
     } finally {
       setUploading(false);
     }

@@ -1,48 +1,24 @@
 import { supabase } from '../../lib/supabase';
 import { Notification, NotificationType } from '../../types/notification';
-import { Database } from '../../types/supabase';
-import {
-  NotificationRow,
-  NotificationInsert,
-  NotificationUpdate,
-} from './types';
+import { Database } from '../../types/database';
 import { NotificationError } from './errors';
 import { NOTIFICATION_ERRORS } from './constants';
+import { validateNotification } from './validators';
+import { CreateNotificationParams } from './types';
 
-const validNotificationTypes: NotificationType[] = [
-  'success',
-  'error',
-  'info',
-  'warning',
-  'bid_received',
-  'bid_accepted',
-  'bid_rejected',
-  'payment_received',
-  'shipping_update',
-  'item_sold',
-  'email_verification',
-  'onboarding_reminder',
-];
+type NotificationRow = Database['public']['Tables']['notifications']['Row'];
+type NotificationInsert = Database['public']['Tables']['notifications']['Insert'];
+type NotificationUpdate = Database['public']['Tables']['notifications']['Update'];
 
-const isValidNotificationType = (type: string): type is NotificationType => {
-  return validNotificationTypes.includes(type as NotificationType);
-};
-
-const transformNotification = (row: NotificationRow): Notification => {
-  if (!isValidNotificationType(row.type)) {
-    throw new NotificationError(`Invalid notification type: ${row.type}`);
-  }
-
-  return {
-    id: row.id,
-    type: row.type,
-    message: row.message,
-    read: row.read,
-    user_id: row.user_id,
-    created_at: row.created_at,
-    data: row.data,
-  };
-};
+const transformNotification = (row: NotificationRow): Notification => ({
+  id: row.id,
+  type: row.type as NotificationType,
+  message: row.message,
+  read: row.read,
+  user_id: row.user_id,
+  created_at: row.created_at,
+  data: row.data || undefined
+});
 
 export const notificationService = {
   async getNotifications(): Promise<Notification[]> {
@@ -66,19 +42,18 @@ export const notificationService = {
     return (data || []).map(transformNotification);
   },
 
-  async createNotification(
-    notification: Omit<Notification, 'id' | 'created_at'>
-  ): Promise<Notification> {
-    if (!isValidNotificationType(notification.type)) {
-      throw new NotificationError(NOTIFICATION_ERRORS.INVALID_TYPE);
+  async createNotification(params: CreateNotificationParams): Promise<Notification> {
+    const errors = validateNotification(params);
+    if (errors.length > 0) {
+      throw new NotificationError(errors.join(', '));
     }
 
     const notificationData: NotificationInsert = {
-      user_id: notification.user_id,
-      type: notification.type,
-      message: notification.message,
-      read: notification.read || false, // Default to false if not provided
-      data: notification.data,
+      user_id: params.user_id,
+      type: params.type,
+      message: params.message,
+      read: false,
+      data: params.data || null
     };
 
     const { data, error } = await supabase
@@ -129,17 +104,5 @@ export const notificationService = {
       console.error('Error marking all notifications as read:', error);
       throw new NotificationError(error.message);
     }
-  },
-
-  async deleteNotification(notificationId: string): Promise<void> {
-    const { error } = await supabase
-      .from('notifications')
-      .delete()
-      .eq('id', notificationId);
-
-    if (error) {
-      console.error('Error deleting notification:', error);
-      throw new NotificationError(error.message);
-    }
-  },
+  }
 };
