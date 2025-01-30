@@ -1,6 +1,4 @@
-import React, { useState } from 'react';
-import { postcodeService } from '../../../services/postcode/postcodeService';
-import { useNotification } from '../../../contexts/NotificationContext';
+import React from 'react';
 
 interface PostcodeLookupProps {
   value: string;
@@ -17,9 +15,6 @@ export const PostcodeLookup: React.FC<PostcodeLookupProps> = ({
   label = 'Postcode',
   className = ''
 }) => {
-  const { addNotification } = useNotification();
-  const [isValidating, setIsValidating] = useState(false);
-
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value.toUpperCase();
     onChange(newValue);
@@ -28,25 +23,10 @@ export const PostcodeLookup: React.FC<PostcodeLookupProps> = ({
   const handleBlur = async () => {
     if (!value) return;
     
-    setIsValidating(true);
-    try {
-      const isValid = await postcodeService.validate(value);
-      onValidated(isValid);
-      
-      if (!isValid) {
-        addNotification('error', 'Please enter a valid UK postcode');
-      } else {
-        const details = await postcodeService.lookup(value);
-        if (details) {
-          onChange(details.postcode); // Use formatted postcode
-        }
-      }
-    } catch (error) {
-      addNotification('error', 'Failed to validate postcode');
-      onValidated(false);
-    } finally {
-      setIsValidating(false);
-    }
+    // Here you would typically validate the postcode with an API
+    // For now, we'll just do basic format validation
+    const isValid = /^[A-Z]{1,2}[0-9][A-Z0-9]? ?[0-9][A-Z]{2}$/i.test(value);
+    onValidated(isValid);
   };
 
   return (
@@ -54,22 +34,15 @@ export const PostcodeLookup: React.FC<PostcodeLookupProps> = ({
       <label className="block text-sm text-gray-600 dark:text-gray-400">
         {label}
       </label>
-      <div className="relative mt-1">
-        <input
-          type="text"
-          value={value}
-          onChange={handleChange}
-          onBlur={handleBlur}
-          className="block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-          placeholder="e.g. SW1A 1AA"
-          required
-        />
-        {isValidating && (
-          <div className="absolute right-2 top-2">
-            <div className="animate-spin h-5 w-5 border-2 border-indigo-500 rounded-full border-t-transparent"></div>
-          </div>
-        )}
-      </div>
+      <input
+        type="text"
+        value={value}
+        onChange={handleChange}
+        onBlur={handleBlur}
+        className="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+        placeholder="e.g. SW1A 1AA"
+        required
+      />
     </div>
   );
 };
