@@ -12,12 +12,6 @@ if (!validateEnv()) {
 const supabaseUrl = getEnvVar('VITE_SUPABASE_URL', true)!;
 const supabaseAnonKey = getEnvVar('VITE_SUPABASE_ANON_KEY', true)!;
 
-console.log('[Supabase] Initializing client with config:', {
-  url: supabaseUrl,
-  hasAnonKey: !!supabaseAnonKey,
-  timestamp: new Date().toISOString()
-});
-
 // Create Supabase client with enhanced configuration
 export const supabase = createClient<Database>(
   supabaseUrl,

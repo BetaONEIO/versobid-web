@@ -7,5 +7,23 @@ export const mockProducts = [
     brand: "Dyson",
     description: "Cordless vacuum with laser dust detection",
     category: "Home & Garden"
+  },
+  {
+    title: "iPhone 13 Pro",
+    imageUrl: "https://example.com/iphone13.jpg",
+    price: 999.99,
+    condition: "New",
+    brand: "Apple",
+    description: "Latest iPhone with Pro camera system",
+    category: "Electronics"
+  },
+  {
+    title: "Sony WH-1000XM4",
+    imageUrl: "https://example.com/sony-headphones.jpg",
+    price: 349.99,
+    condition: "New",
+    brand: "Sony",
+    description: "Wireless noise-cancelling headphones",
+    category: "Electronics"
   }
 ];
