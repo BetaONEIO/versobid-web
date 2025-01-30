@@ -25,7 +25,7 @@ export const Profile: React.FC = () => {
     const fetchProfile = async () => {
       try {
         if (!username) return;
-        const data = await profileService.getProfileByUsername(username, auth.user?.id);
+        const data = await profileService.getProfileByUsername(username);
         setProfile(data);
       } catch (error) {
         addNotification('error', 'Failed to load profile');
@@ -35,7 +35,7 @@ export const Profile: React.FC = () => {
     };
 
     fetchProfile();
-  }, [username, addNotification, auth.user?.id]);
+  }, [username, addNotification]);
 
   const handleAvatarClick = () => {
     if (isOwnProfile && fileInputRef.current) {

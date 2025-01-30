@@ -1,4 +1,3 @@
-```tsx
 import React, { useState } from 'react';
 import { SearchResult } from '../../types/search';
 import { formatCurrency } from '../../utils/formatters';
@@ -112,4 +111,3 @@ export const SearchSuggestions: React.FC<SearchSuggestionsProps> = ({
     </div>
   );
 };
-```

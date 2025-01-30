@@ -1,4 +1,3 @@
-```tsx
 import React, { useState } from 'react';
 import { useUser } from '../../contexts/UserContext';
 import { useNotification } from '../../contexts/NotificationContext';
@@ -164,4 +163,3 @@ export const AddCustomResult: React.FC<AddCustomResultProps> = ({ searchQuery, o
     </div>
   );
 };
-```
