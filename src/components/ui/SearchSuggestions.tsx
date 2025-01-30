@@ -40,7 +40,7 @@ export const SearchSuggestions: React.FC<SearchSuggestionsProps> = ({
     );
   }
 
-  if (!suggestions.length) {
+  if (!suggestions.length && searchQuery.length >= 3) {
     return (
       <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 rounded-md shadow-lg">
         <div className="p-4">
@@ -56,6 +56,10 @@ export const SearchSuggestions: React.FC<SearchSuggestionsProps> = ({
         </div>
       </div>
     );
+  }
+
+  if (!suggestions.length) {
+    return null;
   }
 
   return (
