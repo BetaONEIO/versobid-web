@@ -1,9 +1,8 @@
 import { supabase } from '../lib/supabase';
 import { Notification, NotificationType } from '../types/notification';
-import { Database } from '../types/supabase';
+import { Database } from '../types/database';
 
 type NotificationRow = Database['public']['Tables']['notifications']['Row'];
-type NotificationInsert = Database['public']['Tables']['notifications']['Insert'];
 
 const transformNotification = (row: NotificationRow): Notification => ({
   id: row.id,
@@ -12,7 +11,7 @@ const transformNotification = (row: NotificationRow): Notification => ({
   read: row.read,
   user_id: row.user_id,
   created_at: row.created_at,
-  data: row.data
+  data: row.data || undefined
 });
 
 export const notificationService = {

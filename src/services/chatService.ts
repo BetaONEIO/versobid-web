@@ -1,5 +1,5 @@
 import { supabase } from '../lib/supabase';
-import { Database } from '../types/supabase';
+import { Database } from '../types/database';
 import { Bid } from '../types/bid';
 
 type BidRow = Database['public']['Tables']['bids']['Row'];
@@ -9,10 +9,10 @@ const transformBid = (row: BidRow): Bid => ({
   item_id: row.item_id,
   bidder_id: row.bidder_id,
   amount: row.amount,
-  message: row.message,
+  message: row.message || '',
   status: row.status,
   created_at: row.created_at,
-  counter_amount: row.counter_amount
+  counter_amount: row.counter_amount || undefined
 });
 
 export const chatService = {
