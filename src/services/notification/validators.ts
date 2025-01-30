@@ -1,5 +1,11 @@
 import { CreateNotificationParams } from './types';
-import { NotificationType } from '../../types/notification';
+
+const VALID_NOTIFICATION_TYPES = [
+  'success', 'error', 'info', 'warning',
+  'bid_received', 'bid_accepted', 'bid_rejected',
+  'payment_received', 'shipping_update', 'item_sold',
+  'email_verification', 'onboarding_reminder'
+] as const;
 
 export const validateNotification = (params: CreateNotificationParams): string[] => {
   const errors: string[] = [];
@@ -12,9 +18,8 @@ export const validateNotification = (params: CreateNotificationParams): string[]
     errors.push('Message is required');
   }
 
-  const validTypes = Object.values(NotificationType);
-  if (!validTypes.includes(params.type)) {
-    errors.push(`Invalid notification type. Must be one of: ${validTypes.join(', ')}`);
+  if (!VALID_NOTIFICATION_TYPES.includes(params.type as any)) {
+    errors.push(`Invalid notification type. Must be one of: ${VALID_NOTIFICATION_TYPES.join(', ')}`);
   }
 
   if (params.data && typeof params.data !== 'object') {

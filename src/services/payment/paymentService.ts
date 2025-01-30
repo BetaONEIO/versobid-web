@@ -88,6 +88,28 @@ class PaymentServiceImpl implements PaymentService {
     if (notificationError) throw new PaymentError(notificationError.message);
   }
 
+  async confirmShipping(paymentId: string): Promise<void> {
+    const { data: payment, error: fetchError } = await supabase
+      .from('payments')
+      .select('*')
+      .eq('id', paymentId)
+      .single();
+
+    if (fetchError) throw new PaymentError(fetchError.message);
+    if (!payment) throw new PaymentError(PAYMENT_ERRORS.PAYMENT_NOT_FOUND);
+
+    if (payment.shipping_confirmed === true) {
+      throw new PaymentError(PAYMENT_ERRORS.ALREADY_CONFIRMED);
+    }
+
+    const { error: updateError } = await supabase
+      .from('payments')
+      .update({ shipping_confirmed: true })
+      .eq('id', paymentId);
+
+    if (updateError) throw new PaymentError(updateError.message);
+  }
+
   async getPaymentById(paymentId: string): Promise<PaymentTransaction> {
     const { data, error } = await supabase
       .from('payments')

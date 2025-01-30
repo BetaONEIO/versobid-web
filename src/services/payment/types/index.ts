@@ -1,12 +1,19 @@
-// Re-export all types with explicit naming to avoid conflicts
-export * from './validation';
-export * from './provider';
+export type { 
+  PaymentValidationResult,
+  PaymentValidationOptions,
+  PaymentValidationError
+} from './validation';
 
-// Explicitly re-export renamed types from './payment' to avoid conflicts
-export { 
+export type {
+  PaymentProvider,
+  PaymentConfig,
+  PaymentProviderOptions
+} from './provider';
+
+export type {
   PaymentDetails,
   PaymentService,
-  PaymentStatus as PaymentStatusType,
-  PaymentTransaction as PaymentTransactionType,
-  PaymentTransactionMetadata as TransactionMetadata
+  PaymentStatus,
+  PaymentTransaction,
+  PaymentTransactionMetadata
 } from './payment';
