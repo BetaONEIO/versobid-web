@@ -3,6 +3,7 @@ import { Notification, NotificationType } from '../types/notification';
 import { Database } from '../types/database';
 
 type NotificationRow = Database['public']['Tables']['notifications']['Row'];
+type NotificationInsert = Database['public']['Tables']['notifications']['Insert'];
 
 const transformNotification = (row: NotificationRow): Notification => ({
   id: row.id,

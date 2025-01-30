@@ -14,10 +14,12 @@ export const SearchBar: React.FC = () => {
   const navigate = useNavigate();
   const wrapperRef = useRef<HTMLDivElement>(null);
 
-  // Handle click outside to close suggestions
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (wrapperRef.current && !wrapperRef.current.contains(event.target as Node)) {
+      if (
+        wrapperRef.current &&
+        !wrapperRef.current.contains(event.target as Node)
+      ) {
         setShowSuggestions(false);
       }
     };
@@ -26,9 +28,8 @@ export const SearchBar: React.FC = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Debounced search function
   const searchProducts = debounce(async (searchQuery: string) => {
-    if (searchQuery.length < 3) {
+    if (searchQuery.trim().length < 3) {
       setSuggestions([]);
       setLoading(false);
       return;
@@ -36,8 +37,10 @@ export const SearchBar: React.FC = () => {
 
     setLoading(true);
     try {
-      const results = await googleShoppingService.searchProducts(searchQuery);
-      setSuggestions(results.results || []);
+      const results = await googleShoppingService.searchProducts(
+        searchQuery.trim()
+      );
+      setSuggestions(results?.results || []);
     } catch (error) {
       console.error('Search error:', error);
       setSuggestions([]);
@@ -49,14 +52,20 @@ export const SearchBar: React.FC = () => {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setQuery(value);
-    setShowSuggestions(true);
+
+    if (!showSuggestions) {
+      setShowSuggestions(true);
+    }
+
     searchProducts(value);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (query.trim()) {
-      navigate(`/listings?search=${encodeURIComponent(query.trim())}`);
+    const trimmedQuery = query.trim();
+
+    if (trimmedQuery) {
+      navigate(`/listings?search=${encodeURIComponent(trimmedQuery)}`);
       setShowSuggestions(false);
     }
   };
@@ -81,6 +90,7 @@ export const SearchBar: React.FC = () => {
         <button
           type="submit"
           className="absolute right-3 top-2.5"
+          aria-label="Search"
         >
           <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
         </button>
@@ -91,6 +101,7 @@ export const SearchBar: React.FC = () => {
           suggestions={suggestions}
           onSelect={handleSuggestionSelect}
           loading={loading}
+          searchQuery={query}
         />
       )}
     </div>

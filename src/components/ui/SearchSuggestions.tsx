@@ -1,18 +1,24 @@
-import React from 'react';
+```tsx
+import React, { useState } from 'react';
 import { SearchResult } from '../../types/search';
 import { formatCurrency } from '../../utils/formatters';
+import { AddCustomResult } from './AddCustomResult';
 
 interface SearchSuggestionsProps {
   suggestions: SearchResult[];
   onSelect: (suggestion: SearchResult) => void;
   loading: boolean;
+  searchQuery: string;
 }
 
 export const SearchSuggestions: React.FC<SearchSuggestionsProps> = ({
   suggestions,
   onSelect,
-  loading
+  loading,
+  searchQuery
 }) => {
+  const [showAddCustom, setShowAddCustom] = useState(false);
+
   if (loading) {
     return (
       <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 rounded-md shadow-lg">
@@ -24,8 +30,33 @@ export const SearchSuggestions: React.FC<SearchSuggestionsProps> = ({
     );
   }
 
+  if (showAddCustom) {
+    return (
+      <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 rounded-md shadow-lg">
+        <AddCustomResult 
+          searchQuery={searchQuery}
+          onClose={() => setShowAddCustom(false)}
+        />
+      </div>
+    );
+  }
+
   if (!suggestions.length) {
-    return null;
+    return (
+      <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 rounded-md shadow-lg">
+        <div className="p-4">
+          <p className="text-gray-600 dark:text-gray-300 text-center mb-4">
+            No results found for "{searchQuery}"
+          </p>
+          <button
+            onClick={() => setShowAddCustom(true)}
+            className="w-full px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700"
+          >
+            Add This Item
+          </button>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -69,7 +100,16 @@ export const SearchSuggestions: React.FC<SearchSuggestionsProps> = ({
             </div>
           </li>
         ))}
+        <li className="p-4 bg-gray-50 dark:bg-gray-700">
+          <button
+            onClick={() => setShowAddCustom(true)}
+            className="w-full px-4 py-2 text-sm font-medium text-indigo-600 bg-white dark:bg-gray-800 border border-indigo-600 rounded-md hover:bg-indigo-50 dark:hover:bg-gray-700"
+          >
+            Can't find what you're looking for? Add it here
+          </button>
+        </li>
       </ul>
     </div>
   );
 };
+```
