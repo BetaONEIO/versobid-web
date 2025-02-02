@@ -1,5 +1,5 @@
-import React, { useRef, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import React, { useRef } from 'react';
+import { useParams } from 'react-router-dom';
 import { useUser } from '../contexts/UserContext';
 import { useNotification } from '../contexts/NotificationContext';
 import { profileService } from '../services/profileService';
@@ -16,7 +16,6 @@ export const Profile: React.FC = () => {
   const [profile, setProfile] = React.useState<ProfileType | null>(null);
   const [loading, setLoading] = React.useState(true);
   const [uploading, setUploading] = React.useState(false);
-  const [selectedImage, setSelectedImage] = useState<File | null>(null);
 
   const isOwnProfile = auth.user?.username === username;
   const defaultAvatar = '/default-avatar.png';
@@ -24,8 +23,7 @@ export const Profile: React.FC = () => {
   React.useEffect(() => {
     const fetchProfile = async () => {
       try {
-        if (!username) return;
-        const data = await profileService.getProfileByUsername(username);
+        const data = await profileService.getProfileByUsername(username!);
         setProfile(data);
       } catch (error) {
         addNotification('error', 'Failed to load profile');
@@ -49,13 +47,13 @@ export const Profile: React.FC = () => {
 
     try {
       setUploading(true);
-      const avatarUrl = await profileService.uploadAvatar(file, auth.user.id);
+      const avatarUrl = await profileService.uploadAvatar(file);
+      await profileService.updateProfile(auth.user.id, { avatar_url: avatarUrl });
       setProfile(prev => prev ? { ...prev, avatar_url: avatarUrl } : null);
       addNotification('success', 'Profile picture updated successfully');
-      setSelectedImage(null);
     } catch (error) {
+      console.error('Error uploading avatar:', error);
       addNotification('error', 'Failed to update profile picture');
-      setSelectedImage(null);
     } finally {
       setUploading(false);
     }

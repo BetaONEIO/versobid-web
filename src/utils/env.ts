@@ -2,11 +2,11 @@ import { z } from 'zod';
 
 // Environment variable schema
 const envSchema = z.object({
-  VITE_SUPABASE_URL: z.string().url('Invalid Supabase URL').min(1, 'Supabase URL is required'),
-  VITE_SUPABASE_ANON_KEY: z.string().min(1, 'Supabase anon key is required'),
+  VITE_SUPABASE_URL: z.string().url('Invalid Supabase URL'),
+  VITE_SUPABASE_ANON_KEY: z.string().min(20, 'Invalid Supabase anon key'),
   VITE_PAYPAL_CLIENT_ID: z.string().optional(),
   VITE_SERPAPI_KEY: z.string().optional(),
-  VITE_RESEND_API_KEY: z.string().optional()
+  VITE_RESEND_API_KEY: z.string().min(20, 'Invalid Resend API key').optional()
 });
 
 // Type for validated env
@@ -29,21 +29,13 @@ export const validateEnv = (): boolean => {
       VITE_RESEND_API_KEY: import.meta.env.VITE_RESEND_API_KEY
     };
 
-    // Log environment check (but don't expose sensitive data)
-    console.log('Environment check:', {
-      hasSupabaseUrl: !!env.VITE_SUPABASE_URL,
-      hasSupabaseKey: !!env.VITE_SUPABASE_ANON_KEY,
-      hasPaypalClientId: !!env.VITE_PAYPAL_CLIENT_ID,
-      hasSerpApiKey: !!env.VITE_SERPAPI_KEY,
-      hasResendApiKey: !!env.VITE_RESEND_API_KEY
-    });
-
     // Validate env
     const result = envSchema.safeParse(env);
 
     if (!result.success) {
-      const errors = result.error.errors.map(e => `${e.path}: ${e.message}`);
-      console.error('Environment validation failed:', errors.join(', '));
+      console.error('Environment validation failed:', 
+        result.error.errors.map(e => `${e.path}: ${e.message}`).join(', ')
+      );
       return false;
     }
 
