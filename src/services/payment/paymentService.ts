@@ -2,7 +2,6 @@ import { supabase } from '../../lib/supabase';
 import {
   PaymentDetails,
   PaymentService,
-  PaymentInsert,
   PaymentTransaction,
   PaymentStatus,
 } from './types/payment';
@@ -10,11 +9,11 @@ import { validatePaymentDetails } from './validators';
 import { calculateShippingDeadline, transformPaymentRow } from './utils';
 import { PaymentError, PaymentValidationError } from './errors';
 import { PAYMENT_ERRORS } from './constants';
-import { Database } from '../../types/supabase';
+import { Database } from '../../types/database';
 
-type NotificationInsert =
-  Database['public']['Tables']['notifications']['Insert'];
+type NotificationInsert = Database['public']['Tables']['notifications']['Insert'];
 type ItemUpdate = Database['public']['Tables']['items']['Update'];
+type PaymentInsert = Database['public']['Tables']['payments']['Insert'];
 
 class PaymentServiceImpl implements PaymentService {
   async createPayPalOrder(
@@ -53,12 +52,12 @@ class PaymentServiceImpl implements PaymentService {
       transaction_id: details.transactionId,
       status: 'completed',
       provider: 'paypal',
-      shipping_deadline: calculateShippingDeadline(),
+      shipping_deadline: calculateShippingDeadline()
     };
 
     const { error: paymentError } = await supabase
       .from('payments')
-      .insert([paymentData]);
+      .insert(paymentData);
 
     if (paymentError) throw new PaymentError(paymentError.message);
 
@@ -73,14 +72,13 @@ class PaymentServiceImpl implements PaymentService {
     const notification: NotificationInsert = {
       user_id: details.sellerId,
       type: 'payment_received',
-      message:
-        'Payment received for item. Please ship within 7 days to avoid negative rating.',
+      message: 'Payment received for item. Please ship within 7 days.',
       data: {
         amount: details.amount,
         currency: details.currency,
         transaction_id: details.transactionId,
-        shipping_deadline: calculateShippingDeadline(),
-      },
+        shipping_deadline: calculateShippingDeadline()
+      }
     };
 
     const { error: notificationError } = await supabase
@@ -95,12 +93,11 @@ class PaymentServiceImpl implements PaymentService {
       .from('payments')
       .select('*')
       .eq('id', paymentId)
-      .maybeSingle();
+      .single();
 
     if (fetchError) throw new PaymentError(fetchError.message);
     if (!payment) throw new PaymentError(PAYMENT_ERRORS.PAYMENT_NOT_FOUND);
 
-    // Check if `shipping_confirmed` exists and is true
     if (payment.shipping_confirmed === true) {
       throw new PaymentError(PAYMENT_ERRORS.ALREADY_CONFIRMED);
     }
@@ -118,7 +115,7 @@ class PaymentServiceImpl implements PaymentService {
       .from('payments')
       .select('*')
       .eq('id', paymentId)
-      .maybeSingle();
+      .single();
 
     if (error) throw new PaymentError(error.message);
     if (!data) throw new PaymentError(PAYMENT_ERRORS.PAYMENT_NOT_FOUND);

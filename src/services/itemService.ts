@@ -1,6 +1,6 @@
 import { supabase } from '../lib/supabase';
 import { Item, ItemFilters } from '../types/item';
-import { Database } from '../types/supabase';
+import { Database } from '../types/database';
 
 type ItemRow = Database['public']['Tables']['items']['Row'];
 type ItemInsert = Database['public']['Tables']['items']['Insert'];
@@ -18,7 +18,7 @@ const transformItem = (row: ItemRow, seller_username?: string): Item => ({
   status: row.status,
   created_at: row.created_at,
   seller_username: seller_username,
-  image_url: row.image_url
+  image_url: row.image_url || undefined
 });
 
 export const itemService = {
@@ -33,6 +33,7 @@ export const itemService = {
           )
         `);
 
+      // Apply filters
       if (filters?.search) query = query.ilike('title', `%${filters.search}%`);
       if (filters?.category) query = query.eq('category', filters.category);
       if (filters?.status) query = query.eq('status', filters.status);

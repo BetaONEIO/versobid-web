@@ -17,3 +17,8 @@ export interface AuthResponse {
   message: string;
   user?: User;
 }
+
+export interface AuthError {
+  message: string;
+  status?: number;
+}

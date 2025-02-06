@@ -15,11 +15,13 @@ export interface User {
   };
   payment_setup?: boolean;
   onboarding_completed?: boolean;
+  rating?: number;
 }
 
 export type UserRole = 'buyer' | 'seller';
 
 // Type for Supabase user with additional fields
-export interface ExtendedSupabaseUser extends SupabaseUser {
+export interface ExtendedSupabaseUser extends Omit<SupabaseUser, 'confirmed_at'> {
   email_verified: boolean;
+  confirmed_at?: string | null;
 }

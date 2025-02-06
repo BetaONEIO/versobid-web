@@ -6,7 +6,10 @@ import { UserManagement } from '../components/admin/UserManagement';
 import { ActivityLog } from '../components/admin/ActivityLog';
 import { EnvVarsTest } from '../components/test/EnvVarsTest';
 import { User } from '../types/user';
-import { Database } from '../types/supabase';
+import { supabase } from '../lib/supabase';
+import { Database } from '../types/database';
+
+type ProfileRow = Database['public']['Tables']['profiles']['Row'];
 
 interface AdminActivity {
   id: string;
@@ -18,8 +21,6 @@ interface AdminActivity {
     username: string;
   };
 }
-
-type ProfileRow = Database['public']['Tables']['profiles']['Row'];
 
 export const Admin: React.FC = () => {
   const { auth } = useUser();

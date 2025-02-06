@@ -18,6 +18,7 @@ export interface Database {
           } | null;
           payment_setup?: boolean;
           onboarding_completed?: boolean;
+          rating?: number;
         };
         Insert: {
           id: string;
@@ -35,6 +36,7 @@ export interface Database {
           } | null;
           payment_setup?: boolean;
           onboarding_completed?: boolean;
+          rating?: number;
         };
         Update: {
           id?: string;
@@ -52,13 +54,14 @@ export interface Database {
           } | null;
           payment_setup?: boolean;
           onboarding_completed?: boolean;
+          rating?: number;
         };
       };
       items: {
         Row: {
           id: string;
           title: string;
-          description: string;
+          description: string | null;
           min_price: number;
           max_price: number;
           seller_id: string;
@@ -66,12 +69,13 @@ export interface Database {
           shipping_options: any[];
           status: 'active' | 'completed' | 'archived';
           created_at: string;
-          image_url?: string;
+          image_url?: string | null;
+          archived_reason?: string | null;
         };
         Insert: {
           id?: string;
           title: string;
-          description: string;
+          description?: string | null;
           min_price: number;
           max_price: number;
           seller_id: string;
@@ -79,12 +83,13 @@ export interface Database {
           shipping_options?: any[];
           status?: 'active' | 'completed' | 'archived';
           created_at?: string;
-          image_url?: string;
+          image_url?: string | null;
+          archived_reason?: string | null;
         };
         Update: {
           id?: string;
           title?: string;
-          description?: string;
+          description?: string | null;
           min_price?: number;
           max_price?: number;
           seller_id?: string;
@@ -92,7 +97,8 @@ export interface Database {
           shipping_options?: any[];
           status?: 'active' | 'completed' | 'archived';
           created_at?: string;
-          image_url?: string;
+          image_url?: string | null;
+          archived_reason?: string | null;
         };
       };
       bids: {
@@ -134,7 +140,7 @@ export interface Database {
           type: string;
           message: string;
           read: boolean;
-          data: any;
+          data: Record<string, any> | null;
           created_at: string;
         };
         Insert: {
@@ -143,7 +149,7 @@ export interface Database {
           type: string;
           message: string;
           read?: boolean;
-          data?: any;
+          data?: Record<string, any> | null;
           created_at?: string;
         };
         Update: {
@@ -152,7 +158,7 @@ export interface Database {
           type?: string;
           message?: string;
           read?: boolean;
-          data?: any;
+          data?: Record<string, any> | null;
           created_at?: string;
         };
       };

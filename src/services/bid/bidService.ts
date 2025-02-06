@@ -1,10 +1,10 @@
 import { supabase } from '../../lib/supabase';
 import { Bid, BidStatus } from '../../types/bid';
-import { Database } from '../../types/supabase';
+import { Database } from '../../types/database';
 
+type BidRow = Database['public']['Tables']['bids']['Row'];
 type BidInsert = Database['public']['Tables']['bids']['Insert'];
 type BidUpdate = Database['public']['Tables']['bids']['Update'];
-type BidRow = Database['public']['Tables']['bids']['Row'];
 
 interface BidWithRelations extends BidRow {
   bidder?: {
@@ -13,7 +13,7 @@ interface BidWithRelations extends BidRow {
   item?: {
     id: string;
     title: string;
-    description: string;
+    description: string | null;
     min_price: number;
     max_price: number;
     seller_id: string;
@@ -33,149 +33,155 @@ const transformBid = (data: BidWithRelations): Bid => ({
   created_at: data.created_at,
   counter_amount: data.counter_amount || undefined,
   bidder: data.bidder,
-  item: data.item,
+  item: data.item && {
+    id: data.item.id,
+    title: data.item.title,
+    description: data.item.description || undefined,
+    minPrice: data.item.min_price,
+    maxPrice: data.item.max_price,
+    seller_id: data.item.seller_id,
+    category: data.item.category,
+    status: data.item.status,
+    created_at: data.item.created_at
+  }
 });
 
 export const bidService = {
   async createBid(
-    bid: Omit<Bid, 'id' | 'created_at' | 'status'>
-  ): Promise<Bid> {
-    const bidData: BidInsert = {
-      item_id: bid.item_id,
-      bidder_id: bid.bidder_id,
-      amount: bid.amount,
-      message: bid.message || null,
-      status: 'pending',
-    };
+    itemId: string,
+    amount: number,
+    message?: string
+  ): Promise<Bid | null> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return null;
 
-    const { data, error } = await supabase
-      .from('bids')
-      .insert([bidData])
-      .select(
-        `
-        *,
-        bidder:profiles(username),
-        item:items(
-          id,
-          title,
-          description,
-          min_price,
-          max_price,
-          seller_id,
-          category,
-          status,
-          created_at
-        )
-      `
-      )
-      .single();
+      const bidData: BidInsert = {
+        item_id: itemId,
+        bidder_id: user.id,
+        amount,
+        message: message || null,
+        status: 'pending'
+      };
 
-    if (error) {
-      console.error('Error creating bid:', error);
-      throw new Error('Failed to create bid');
+      const { data, error } = await supabase
+        .from('bids')
+        .insert(bidData)
+        .select(`
+          *,
+          bidder:profiles(username),
+          item:items(
+            id,
+            title,
+            description,
+            min_price,
+            max_price,
+            seller_id,
+            category,
+            status,
+            created_at
+          )
+        `)
+        .single();
+
+      if (error || !data) return null;
+      return transformBid(data as BidWithRelations);
+    } catch {
+      return null;
     }
-
-    if (!data) {
-      throw new Error('No bid data returned');
-    }
-
-    return transformBid(data);
   },
 
   async updateBidStatus(
     bidId: string,
     status: BidStatus,
-    counterAmount?: number
-  ): Promise<void> {
-    const updateData: BidUpdate = {
-      status,
-      ...(counterAmount !== undefined && { counter_amount: counterAmount }),
-    };
+    counterOffer?: number
+  ): Promise<boolean> {
+    try {
+      const updateData: BidUpdate = {
+        status,
+        ...(counterOffer !== undefined && { counter_amount: counterOffer })
+      };
 
-    const { error } = await supabase
-      .from('bids')
-      .update(updateData)
-      .eq('id', bidId);
+      const { error } = await supabase
+        .from('bids')
+        .update(updateData)
+        .eq('id', bidId);
 
-    if (error) {
-      console.error('Error updating bid status:', error);
-      throw new Error('Failed to update bid status');
+      return !error;
+    } catch {
+      return false;
     }
   },
 
   async getBidsForItem(userId: string): Promise<Bid[]> {
-    const { data, error } = await supabase
-      .from('bids')
-      .select(
-        `
-        *,
-        bidder:profiles(username),
-        item:items(
-          id,
-          title,
-          description,
-          min_price,
-          max_price,
-          seller_id,
-          category,
-          status,
-          created_at
-        )
-      `
-      )
-      .eq('bidder_id', userId)
-      .order('created_at', { ascending: false });
+    try {
+      const { data, error } = await supabase
+        .from('bids')
+        .select(`
+          *,
+          bidder:profiles(username),
+          item:items(
+            id,
+            title,
+            description,
+            min_price,
+            max_price,
+            seller_id,
+            category,
+            status,
+            created_at
+          )
+        `)
+        .eq('bidder_id', userId)
+        .order('created_at', { ascending: false });
 
-    if (error) {
-      console.error('Error fetching bids for item:', error);
-      throw new Error('Failed to fetch bids for item');
+      if (error) return [];
+      return (data || []).map(bid => transformBid(bid as BidWithRelations));
+    } catch {
+      return [];
     }
-
-    return (data || []).map(transformBid);
   },
 
   async getReceivedBids(userId: string): Promise<Bid[]> {
-    const { data, error } = await supabase
-      .from('bids')
-      .select(
-        `
-        *,
-        bidder:profiles(username),
-        item:items!inner(
-          id,
-          title,
-          description,
-          min_price,
-          max_price,
-          seller_id,
-          category,
-          status,
-          created_at
-        )
-      `
-      )
-      .eq('item.seller_id', userId)
-      .order('created_at', { ascending: false });
+    try {
+      const { data, error } = await supabase
+        .from('bids')
+        .select(`
+          *,
+          bidder:profiles(username),
+          item:items!inner(
+            id,
+            title,
+            description,
+            min_price,
+            max_price,
+            seller_id,
+            category,
+            status,
+            created_at
+          )
+        `)
+        .eq('item.seller_id', userId)
+        .order('created_at', { ascending: false });
 
-    if (error) {
-      console.error('Error fetching received bids:', error);
-      throw new Error('Failed to fetch received bids');
-    }
-
-    return (data || []).map(transformBid);
-  },
-
-  async respondToCounter(bidId: string, accept: boolean): Promise<void> {
-    const status = accept ? 'accepted' : 'rejected';
-
-    const { error } = await supabase
-      .from('bids')
-      .update({ status })
-      .eq('id', bidId);
-
-    if (error) {
-      console.error('Error responding to counter bid:', error);
-      throw new Error('Failed to respond to counter bid');
+      if (error) return [];
+      return (data || []).map(bid => transformBid(bid as BidWithRelations));
+    } catch {
+      return [];
     }
   },
+
+  async respondToCounter(bidId: string, accept: boolean): Promise<boolean> {
+    try {
+      const status = accept ? 'accepted' : 'rejected';
+      const { error } = await supabase
+        .from('bids')
+        .update({ status })
+        .eq('id', bidId);
+
+      return !error;
+    } catch {
+      return false;
+    }
+  }
 };
