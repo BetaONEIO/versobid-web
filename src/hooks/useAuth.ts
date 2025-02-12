@@ -12,39 +12,51 @@ export const useAuth = () => {
   const { login: loginUser } = useUser();
   const { addNotification } = useNotification();
 
-  const handleAuthResponse = async (response: any) => {
-    if (response.error) {
-      throw response.error;
+  const checkExistingUser = async (email: string, username: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('email, username')
+        .or(`email.eq.${email},username.eq.${username}`)
+        .maybeSingle();
+
+      if (error && error.code !== 'PGRST116') {
+        throw error;
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Error checking existing user:', error);
+      return null;
+    }
+  };
+
+  const waitForProfile = async (userId: string, maxAttempts = 15): Promise<any> => {
+    for (let i = 0; i < maxAttempts; i++) {
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', userId)
+          .maybeSingle();
+
+        if (error && error.code !== 'PGRST116') {
+          throw error;
+        }
+
+        if (data) {
+          return data;
+        }
+      } catch (error) {
+        console.warn(`Attempt ${i + 1}/${maxAttempts} failed:`, error);
+      }
+
+      // Exponential backoff with jitter
+      const delay = Math.min(1000 * Math.pow(2, i) + Math.random() * 1000, 10000);
+      await new Promise(resolve => setTimeout(resolve, delay));
     }
 
-    if (!response.data?.user) {
-      throw new Error('No user data returned');
-    }
-
-    // Wait for the trigger to complete
-    await new Promise(resolve => setTimeout(resolve, 2000));
-
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', response.data.user.id)
-      .single();
-
-    if (profileError || !profile) {
-      throw new Error('Failed to fetch profile');
-    }
-
-    return {
-      id: response.data.user.id,
-      email: response.data.user.email!,
-      username: profile.username,
-      name: profile.full_name,
-      is_admin: profile.is_admin || false,
-      email_verified: response.data.user.email_confirmed_at !== null,
-      shipping_address: profile.shipping_address,
-      payment_setup: profile.payment_setup,
-      onboarding_completed: profile.onboarding_completed
-    };
+    throw new Error('Profile creation timed out. Please try again.');
   };
 
   const signup = async (formData: AuthFormData) => {
@@ -52,17 +64,14 @@ export const useAuth = () => {
     setError(null);
 
     try {
-      // Check if email or username exists
-      const { data: existingUser, error: checkError } = await supabase
-        .from('profiles')
-        .select('email, username')
-        .or(`email.eq.${formData.email},username.eq.${formData.username}`)
-        .maybeSingle();
-
-      if (checkError) {
-        throw new Error('Failed to check existing user');
+      // Basic validation
+      if (!formData.email || !formData.password || !formData.username) {
+        throw new Error('All fields are required');
       }
 
+      // Check for existing user
+      const existingUser = await checkExistingUser(formData.email, formData.username);
+      
       if (existingUser) {
         if (existingUser.email === formData.email) {
           throw new Error('Email already exists');
@@ -72,56 +81,54 @@ export const useAuth = () => {
         }
       }
 
-      // Create auth user with retry logic
-      let retryCount = 0;
-      const maxRetries = 3;
-      let signUpResponse;
-
-      while (retryCount < maxRetries) {
-        try {
-          signUpResponse = await supabase.auth.signUp({
-            email: formData.email,
-            password: formData.password,
-            options: {
-              data: {
-                username: formData.username,
-                full_name: formData.name || formData.username
-              }
-            }
-          });
-
-          if (!signUpResponse.error) break;
-
-          if (signUpResponse.error.message.includes('already registered')) {
-            throw new Error('Email already registered');
-          }
-
-          retryCount++;
-          await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
-        } catch (error) {
-          if (error instanceof Error && error.message.includes('already registered')) {
-            throw error;
-          }
-          if (retryCount === maxRetries - 1) throw error;
-          retryCount++;
-          await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
+      // Create auth user
+      const { data: authData, error: signUpError } = await supabase.auth.signUp({
+        email: formData.email,
+        password: formData.password,
+        options: {
+          data: {
+            username: formData.username,
+            full_name: formData.name || formData.username
+          },
+          emailRedirectTo: `${window.location.origin}/auth/callback`
         }
+      });
+
+      if (signUpError) {
+        if (signUpError.message.includes('Database error')) {
+          throw new Error('Unable to create account. Please try again in a few moments.');
+        }
+        throw signUpError;
       }
 
-      if (!signUpResponse || signUpResponse.error) {
-        throw new Error('Failed to create account after multiple attempts');
+      if (!authData.user) {
+        throw new Error('No user data returned');
       }
 
-      // Wait for profile creation
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Wait for profile to be created
+      const profile = await waitForProfile(authData.user.id);
 
-      const user = await handleAuthResponse(signUpResponse);
+      // Login the user
+      const user = {
+        id: authData.user.id,
+        email: authData.user.email!,
+        username: profile.username,
+        name: profile.full_name,
+        is_admin: false,
+        email_verified: false,
+        shipping_address: null,
+        payment_setup: false,
+        onboarding_completed: false
+      };
+
       loginUser(user);
-      addNotification('success', 'Account created successfully! Please verify your email.');
+      addNotification('success', 'Account created successfully! Please check your email to verify your account.');
       navigate('/');
     } catch (error) {
       console.error('Signup error:', error);
-      const message = error instanceof Error ? error.message : 'Failed to create account';
+      const message = error instanceof Error 
+        ? error.message 
+        : 'An unexpected error occurred. Please try again.';
       setError(message);
       addNotification('error', message);
     } finally {
@@ -134,12 +141,40 @@ export const useAuth = () => {
     setError(null);
 
     try {
-      const response = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
       });
 
-      const user = await handleAuthResponse(response);
+      if (error) throw error;
+      if (!data.user) throw new Error('No user data returned');
+
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', data.user.id)
+        .maybeSingle();
+
+      if (profileError) {
+        throw new Error('Failed to fetch profile');
+      }
+
+      if (!profile) {
+        throw new Error('Profile not found');
+      }
+
+      const user = {
+        id: data.user.id,
+        email: data.user.email!,
+        username: profile.username,
+        name: profile.full_name,
+        is_admin: profile.is_admin || false,
+        email_verified: data.user.email_confirmed_at !== null,
+        shipping_address: profile.shipping_address,
+        payment_setup: profile.payment_setup,
+        onboarding_completed: profile.onboarding_completed
+      };
+
       loginUser(user);
       
       // Check for intended route
