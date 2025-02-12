@@ -1,10 +1,10 @@
 import { supabase } from '../../lib/supabase';
 import { Bid, BidStatus } from '../../types/bid';
-import { Database } from '../../types/database';
+import { Database } from '../../types/supabase';
 
-type BidRow = Database['public']['Tables']['bids']['Row'];
 type BidInsert = Database['public']['Tables']['bids']['Insert'];
 type BidUpdate = Database['public']['Tables']['bids']['Update'];
+type BidRow = Database['public']['Tables']['bids']['Row'];
 
 interface BidWithRelations extends BidRow {
   bidder?: {
@@ -13,7 +13,7 @@ interface BidWithRelations extends BidRow {
   item?: {
     id: string;
     title: string;
-    description: string | null;
+    description: string;
     min_price: number;
     max_price: number;
     seller_id: string;
@@ -29,44 +29,33 @@ const transformBid = (data: BidWithRelations): Bid => ({
   bidder_id: data.bidder_id,
   amount: data.amount,
   message: data.message || '',
-  status: data.status,
+  status: data.status as BidStatus,
   created_at: data.created_at,
   counter_amount: data.counter_amount || undefined,
   bidder: data.bidder,
   item: data.item && {
-    id: data.item.id,
-    title: data.item.title,
-    description: data.item.description || undefined,
+    ...data.item,
     minPrice: data.item.min_price,
-    maxPrice: data.item.max_price,
-    seller_id: data.item.seller_id,
-    category: data.item.category,
-    status: data.item.status,
-    created_at: data.item.created_at
+    maxPrice: data.item.max_price
   }
 });
 
 export const bidService = {
   async createBid(
-    itemId: string,
-    amount: number,
-    message?: string
+    bid: Omit<Bid, 'id' | 'created_at' | 'status'>
   ): Promise<Bid | null> {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return null;
-
       const bidData: BidInsert = {
-        item_id: itemId,
-        bidder_id: user.id,
-        amount,
-        message: message || null,
+        item_id: bid.item_id,
+        bidder_id: bid.bidder_id,
+        amount: bid.amount,
+        message: bid.message || null,
         status: 'pending'
       };
 
       const { data, error } = await supabase
         .from('bids')
-        .insert(bidData)
+        .insert([bidData])
         .select(`
           *,
           bidder:profiles(username),
@@ -85,8 +74,10 @@ export const bidService = {
         .single();
 
       if (error || !data) return null;
+
       return transformBid(data as BidWithRelations);
-    } catch {
+    } catch (error) {
+      console.error('Error creating bid:', error);
       return null;
     }
   },
@@ -94,12 +85,12 @@ export const bidService = {
   async updateBidStatus(
     bidId: string,
     status: BidStatus,
-    counterOffer?: number
+    counterAmount?: number
   ): Promise<boolean> {
     try {
       const updateData: BidUpdate = {
         status,
-        ...(counterOffer !== undefined && { counter_amount: counterOffer })
+        ...(counterAmount !== undefined && { counter_amount: counterAmount })
       };
 
       const { error } = await supabase
@@ -108,7 +99,8 @@ export const bidService = {
         .eq('id', bidId);
 
       return !error;
-    } catch {
+    } catch (error) {
+      console.error('Error updating bid status:', error);
       return false;
     }
   },
@@ -136,8 +128,9 @@ export const bidService = {
         .order('created_at', { ascending: false });
 
       if (error) return [];
-      return (data || []).map(bid => transformBid(bid as BidWithRelations));
-    } catch {
+      return (data || []).map(item => transformBid(item as BidWithRelations));
+    } catch (error) {
+      console.error('Error fetching bids:', error);
       return [];
     }
   },
@@ -165,8 +158,9 @@ export const bidService = {
         .order('created_at', { ascending: false });
 
       if (error) return [];
-      return (data || []).map(bid => transformBid(bid as BidWithRelations));
-    } catch {
+      return (data || []).map(item => transformBid(item as BidWithRelations));
+    } catch (error) {
+      console.error('Error fetching received bids:', error);
       return [];
     }
   },
@@ -180,7 +174,8 @@ export const bidService = {
         .eq('id', bidId);
 
       return !error;
-    } catch {
+    } catch (error) {
+      console.error('Error responding to counter bid:', error);
       return false;
     }
   }

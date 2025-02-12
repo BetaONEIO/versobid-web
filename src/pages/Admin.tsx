@@ -6,10 +6,8 @@ import { UserManagement } from '../components/admin/UserManagement';
 import { ActivityLog } from '../components/admin/ActivityLog';
 import { EnvVarsTest } from '../components/test/EnvVarsTest';
 import { User } from '../types/user';
+import { Database } from '../types/supabase';
 import { supabase } from '../lib/supabase';
-import { Database } from '../types/database';
-
-type ProfileRow = Database['public']['Tables']['profiles']['Row'];
 
 interface AdminActivity {
   id: string;
@@ -22,6 +20,8 @@ interface AdminActivity {
   };
 }
 
+type ProfileRow = Database['public']['Tables']['profiles']['Row'];
+
 export const Admin: React.FC = () => {
   const { auth } = useUser();
   const [users, setUsers] = useState<User[]>([]);
@@ -32,23 +32,16 @@ export const Admin: React.FC = () => {
   useEffect(() => {
     const checkAdminStatus = async () => {
       try {
-        // Fetch admin status
-        const { data: profile, error: profileError } = await supabase
+        if (!auth.user?.id) return;
+
+        const { data: profile } = await supabase
           .from('profiles')
           .select('is_admin')
-          .eq('id', auth.user?.id)
+          .eq('id', auth.user.id)
           .maybeSingle<ProfileRow>();
 
-        if (profileError) {
-          console.error('Error fetching admin profile:', profileError);
-          setLoading(false);
-          return;
-        }
-
-        setIsAdmin(profile?.is_admin || false);
-
         if (profile?.is_admin) {
-          // Fetch users and activities concurrently
+          setIsAdmin(true);
           const [usersData, activitiesData] = await Promise.all([
             adminService.getAllUsers(),
             adminService.getActivityLog(),
@@ -64,9 +57,7 @@ export const Admin: React.FC = () => {
       }
     };
 
-    if (auth.user?.id) {
-      checkAdminStatus();
-    }
+    checkAdminStatus();
   }, [auth.user?.id]);
 
   if (loading) {

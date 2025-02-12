@@ -16,7 +16,6 @@ export interface PaymentDetails {
 export interface PaymentService {
   createPayPalOrder: (paymentDetails: PaymentDetails) => Promise<{ id: string }>;
   recordPayment: (details: PaymentDetails) => Promise<void>;
-  confirmShipping: (paymentId: string) => Promise<void>;
   getPaymentById: (paymentId: string) => Promise<PaymentTransaction>;
   getPaymentsByUser: (userId: string) => Promise<PaymentTransaction[]>;
 }
