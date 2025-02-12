@@ -94,7 +94,7 @@ export const itemService = {
     }
   },
 
-  async deleteListing(id: string, reason: string): Promise<boolean> {
+  async deleteListing(id: string): Promise<boolean> {
     try {
       const updateData: ItemUpdate = {
         status: 'archived'

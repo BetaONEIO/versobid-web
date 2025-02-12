@@ -1,6 +1,5 @@
 import { supabase } from '../lib/supabase';
 import { AuthFormData, User } from '../types';
-import { SupabaseAuthUser } from './auth/types/supabaseTypes';
 
 export const userService = {
   async signup(formData: AuthFormData): Promise<User> {

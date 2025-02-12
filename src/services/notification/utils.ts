@@ -1,6 +1,8 @@
-import { NotificationRow } from './types';
 import { Notification, NotificationType } from '../../types/notification';
 import { NOTIFICATION_DEFAULTS } from './constants';
+import { Database } from '../../types/supabase';
+
+type NotificationRow = Database['public']['Tables']['notifications']['Row'];
 
 export const transformNotification = (row: NotificationRow): Notification => {
   if (!isValidNotificationType(row.type)) {

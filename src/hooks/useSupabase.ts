@@ -3,9 +3,6 @@ import { supabase } from '../lib/supabase';
 import { useUser } from '../contexts/UserContext';
 import { useNotification } from '../contexts/NotificationContext';
 import { User } from '../types/user';
-import { Database } from '../types/supabase';
-
-type ProfileRow = Database['public']['Tables']['profiles']['Row'];
 
 export const useSupabase = () => {
   const { login, logout } = useUser();
