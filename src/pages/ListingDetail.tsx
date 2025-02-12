@@ -23,9 +23,9 @@ export const ListingDetail: React.FC = () => {
     setShowDeleteModal(true);
   };
 
-  const handleDeleteConfirm = async (reason: string) => {
+  const handleDeleteConfirm = async () => {
     try {
-      await itemService.deleteListing(id!, reason);
+      await itemService.deleteListing(id!);
       addNotification('success', 'Listing deleted successfully');
       navigate('/listings');
     } catch (error) {

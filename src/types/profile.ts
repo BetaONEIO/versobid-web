@@ -14,5 +14,4 @@ export interface Profile {
   } | null;
   payment_setup?: boolean;
   onboarding_completed?: boolean;
-  rating?: number;
 }

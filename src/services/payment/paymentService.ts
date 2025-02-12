@@ -2,18 +2,17 @@ import { supabase } from '../../lib/supabase';
 import {
   PaymentDetails,
   PaymentService,
+  PaymentInsert,
   PaymentTransaction,
-  PaymentStatus,
 } from './types/payment';
 import { validatePaymentDetails } from './validators';
-import { calculateShippingDeadline, transformPaymentRow } from './utils';
+import { transformPaymentRow } from './utils';
 import { PaymentError, PaymentValidationError } from './errors';
 import { PAYMENT_ERRORS } from './constants';
-import { Database } from '../../types/database';
+import { Database } from '../../types/supabase';
 
 type NotificationInsert = Database['public']['Tables']['notifications']['Insert'];
 type ItemUpdate = Database['public']['Tables']['items']['Update'];
-type PaymentInsert = Database['public']['Tables']['payments']['Insert'];
 
 class PaymentServiceImpl implements PaymentService {
   async createPayPalOrder(
@@ -51,8 +50,7 @@ class PaymentServiceImpl implements PaymentService {
       seller_id: details.sellerId,
       transaction_id: details.transactionId,
       status: 'completed',
-      provider: 'paypal',
-      shipping_deadline: calculateShippingDeadline()
+      provider: 'paypal'
     };
 
     const { error: paymentError } = await supabase
@@ -72,12 +70,11 @@ class PaymentServiceImpl implements PaymentService {
     const notification: NotificationInsert = {
       user_id: details.sellerId,
       type: 'payment_received',
-      message: 'Payment received for item. Please ship within 7 days.',
+      message: 'Payment received for item',
       data: {
         amount: details.amount,
         currency: details.currency,
-        transaction_id: details.transactionId,
-        shipping_deadline: calculateShippingDeadline()
+        transaction_id: details.transactionId
       }
     };
 
@@ -86,28 +83,6 @@ class PaymentServiceImpl implements PaymentService {
       .insert([notification]);
 
     if (notificationError) throw new PaymentError(notificationError.message);
-  }
-
-  async confirmShipping(paymentId: string): Promise<void> {
-    const { data: payment, error: fetchError } = await supabase
-      .from('payments')
-      .select('*')
-      .eq('id', paymentId)
-      .single();
-
-    if (fetchError) throw new PaymentError(fetchError.message);
-    if (!payment) throw new PaymentError(PAYMENT_ERRORS.PAYMENT_NOT_FOUND);
-
-    if (payment.shipping_confirmed === true) {
-      throw new PaymentError(PAYMENT_ERRORS.ALREADY_CONFIRMED);
-    }
-
-    const { error: updateError } = await supabase
-      .from('payments')
-      .update({ shipping_confirmed: true })
-      .eq('id', paymentId);
-
-    if (updateError) throw new PaymentError(updateError.message);
   }
 
   async getPaymentById(paymentId: string): Promise<PaymentTransaction> {
@@ -131,7 +106,25 @@ class PaymentServiceImpl implements PaymentService {
       .order('created_at', { ascending: false });
 
     if (error) throw new PaymentError(error.message);
-    return (data || []).map(transformPaymentRow);
+    return (data || []).map(row => transformPaymentRow(row));
+  }
+
+  async confirmShipping(paymentId: string): Promise<void> {
+    const { data, error } = await supabase
+      .from('payments')
+      .select('shipping_confirmed')
+      .eq('id', paymentId)
+      .single();
+
+    if (error) throw new PaymentError(error.message);
+    if (!data) throw new PaymentError(PAYMENT_ERRORS.PAYMENT_NOT_FOUND);
+
+    const { error: updateError } = await supabase
+      .from('payments')
+      .update({ shipping_confirmed: true })
+      .eq('id', paymentId);
+
+    if (updateError) throw new PaymentError(updateError.message);
   }
 }
 

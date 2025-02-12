@@ -1,9 +1,8 @@
 import { Resend } from 'resend';
 import { emailRenderer } from './emailRenderer';
-import { EmailOptions, EmailService, EmailSendResult } from './types/email';
+import { EmailOptions, EmailService } from './types/email';
 import { emailLogger } from './emailLogger';
 import { EmailError, EmailValidationError } from './errors';
-import { validateEmailRequest } from './validation';
 import { EMAIL_ERRORS, EMAIL_DEFAULTS } from './constants';
 import { formatCurrency } from '../../utils/formatters';
 import { getAppUrl } from '../../utils/email/emailUtils';
@@ -148,3 +147,25 @@ class EmailServiceImpl implements EmailService {
 }
 
 export const emailService = new EmailServiceImpl();
+
+function validateEmailRequest(options: EmailOptions): string[] {
+  const errors: string[] = [];
+
+  if (!options.to || !options.to.includes('@')) {
+    errors.push(EMAIL_ERRORS.INVALID_RECIPIENT);
+  }
+
+  if (!options.subject) {
+    errors.push('Email subject is required');
+  }
+
+  if (!options.templateName) {
+    errors.push(EMAIL_ERRORS.INVALID_TEMPLATE);
+  }
+
+  if (!options.params || typeof options.params !== 'object') {
+    errors.push(EMAIL_ERRORS.MISSING_PARAMS);
+  }
+
+  return errors;
+}

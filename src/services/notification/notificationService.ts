@@ -1,10 +1,6 @@
 import { supabase } from '../../lib/supabase';
 import { Notification, NotificationType } from '../../types/notification';
-import { Database } from '../../types/database';
-import { NotificationError } from './errors';
-import { NOTIFICATION_ERRORS } from './constants';
-import { validateNotification } from './validators';
-import { CreateNotificationParams } from './types';
+import { Database } from '../../types/supabase';
 
 type NotificationRow = Database['public']['Tables']['notifications']['Row'];
 type NotificationInsert = Database['public']['Tables']['notifications']['Insert'];
@@ -17,7 +13,7 @@ const transformNotification = (row: NotificationRow): Notification => ({
   read: row.read,
   user_id: row.user_id,
   created_at: row.created_at,
-  data: row.data || undefined
+  data: row.data
 });
 
 export const notificationService = {
@@ -36,53 +32,53 @@ export const notificationService = {
 
     if (error) {
       console.error('Error fetching notifications:', error);
-      throw new NotificationError(error.message);
+      return [];
     }
 
-    return (data || []).map(transformNotification);
+    return (data || []).map(row => transformNotification(row as NotificationRow));
   },
 
-  async createNotification(params: CreateNotificationParams): Promise<Notification> {
-    const errors = validateNotification(params);
-    if (errors.length > 0) {
-      throw new NotificationError(errors.join(', '));
-    }
+  async createNotification(
+    notification: Omit<Notification, 'id' | 'created_at'>
+  ): Promise<Notification | null> {
+    try {
+      const notificationData: NotificationInsert = {
+        user_id: notification.user_id,
+        type: notification.type,
+        message: notification.message,
+        read: notification.read || false,
+        data: notification.data
+      };
 
-    const notificationData: NotificationInsert = {
-      user_id: params.user_id,
-      type: params.type,
-      message: params.message,
-      read: false,
-      data: params.data || null
-    };
+      const { data, error } = await supabase
+        .from('notifications')
+        .insert([notificationData])
+        .select()
+        .single();
 
-    const { data, error } = await supabase
-      .from('notifications')
-      .insert([notificationData])
-      .select()
-      .single();
+      if (error) throw error;
+      if (!data) return null;
 
-    if (error) {
+      return transformNotification(data as NotificationRow);
+    } catch (error) {
       console.error('Error creating notification:', error);
-      throw new NotificationError(error.message);
+      return null;
     }
-
-    if (!data) throw new NotificationError(NOTIFICATION_ERRORS.CREATION_FAILED);
-
-    return transformNotification(data);
   },
 
   async markAsRead(notificationId: string): Promise<void> {
-    const updateData: NotificationUpdate = { read: true };
+    try {
+      const updateData: NotificationUpdate = { read: true };
 
-    const { error } = await supabase
-      .from('notifications')
-      .update(updateData)
-      .eq('id', notificationId);
+      const { error } = await supabase
+        .from('notifications')
+        .update(updateData)
+        .eq('id', notificationId);
 
-    if (error) {
+      if (error) throw error;
+    } catch (error) {
       console.error('Error marking notification as read:', error);
-      throw new NotificationError(error.message);
+      throw error;
     }
   },
 
@@ -93,16 +89,18 @@ export const notificationService = {
       return;
     }
 
-    const updateData: NotificationUpdate = { read: true };
+    try {
+      const updateData: NotificationUpdate = { read: true };
 
-    const { error } = await supabase
-      .from('notifications')
-      .update(updateData)
-      .eq('user_id', authData.user.id);
+      const { error } = await supabase
+        .from('notifications')
+        .update(updateData)
+        .eq('user_id', authData.user.id);
 
-    if (error) {
+      if (error) throw error;
+    } catch (error) {
       console.error('Error marking all notifications as read:', error);
-      throw new NotificationError(error.message);
+      throw error;
     }
   }
 };

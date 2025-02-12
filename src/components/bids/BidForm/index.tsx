@@ -12,21 +12,15 @@ interface BidFormProps {
 }
 
 export const BidForm: React.FC<BidFormProps> = ({ item, onBidSubmitted }) => {
-  const { auth, role } = useUser();
+  const { auth } = useUser();
   const { addNotification } = useNotification();
-  const [amount, setAmount] = useState<number>(role === 'seller' ? 0 : item.minPrice);
+  const [amount, setAmount] = useState<number>(item.minPrice);
   const [message, setMessage] = useState('');
   const [submitted, setSubmitted] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!auth.user) return;
-
-    // For buyers, validate against price range
-    if (role === 'buyer' && (amount < item.minPrice || amount > item.maxPrice)) {
-      addNotification('error', `Please enter an amount between £${item.minPrice} and £${item.maxPrice}`);
-      return;
-    }
 
     try {
       await bidService.createBid(item.id, amount, message);

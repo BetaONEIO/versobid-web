@@ -20,7 +20,6 @@ import { NotificationProvider } from './contexts/NotificationContext';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { NotificationList } from './components/ui/NotificationList';
 import { VerificationBanner } from './components/ui/VerificationBanner';
-import { DatabaseTest } from './components/test/DatabaseTest';
 
 // PayPal configuration
 const paypalOptions = {
@@ -32,7 +31,7 @@ const paypalOptions = {
   components: 'buttons'
 };
 
-const App = () => {
+const App: React.FC = () => {
   return (
     <Router>
       <ThemeProvider>
@@ -43,9 +42,6 @@ const App = () => {
                 <VerificationBanner />
                 <Header />
                 <main className="flex-grow max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-                  {/* Database test only shown in development */}
-                  {import.meta.env.DEV && <DatabaseTest />}
-                  
                   <Routes>
                     <Route path="/" element={<Home />} />
                     <Route path="/signin" element={<SignIn />} />
