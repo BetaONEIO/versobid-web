@@ -21,8 +21,8 @@ export const useAuth = () => {
       throw new Error('No user data returned');
     }
 
-    // Wait a moment for the trigger to complete
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    // Wait for the trigger to complete
+    await new Promise(resolve => setTimeout(resolve, 2000));
 
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
@@ -52,11 +52,11 @@ export const useAuth = () => {
     setError(null);
 
     try {
-      // Check if email or username exists using parameterized query
+      // Check if email or username exists
       const { data: existingUser, error: checkError } = await supabase
         .from('profiles')
         .select('email, username')
-        .or(`email.eq."${formData.email}",username.eq."${formData.username}"`)
+        .or(`email.eq.${formData.email},username.eq.${formData.username}`)
         .maybeSingle();
 
       if (checkError) {
@@ -72,54 +72,56 @@ export const useAuth = () => {
         }
       }
 
-      // Create auth user
-      const { data, error: signUpError } = await supabase.auth.signUp({
-        email: formData.email,
-        password: formData.password,
-        options: {
-          data: {
-            username: formData.username,
-            full_name: formData.name || formData.username
-          }
-        }
-      });
+      // Create auth user with retry logic
+      let retryCount = 0;
+      const maxRetries = 3;
+      let signUpResponse;
 
-      if (signUpError) throw signUpError;
-      if (!data.user) throw new Error('No user data returned');
+      while (retryCount < maxRetries) {
+        try {
+          signUpResponse = await supabase.auth.signUp({
+            email: formData.email,
+            password: formData.password,
+            options: {
+              data: {
+                username: formData.username,
+                full_name: formData.name || formData.username
+              }
+            }
+          });
+
+          if (!signUpResponse.error) break;
+
+          if (signUpResponse.error.message.includes('already registered')) {
+            throw new Error('Email already registered');
+          }
+
+          retryCount++;
+          await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
+        } catch (error) {
+          if (error instanceof Error && error.message.includes('already registered')) {
+            throw error;
+          }
+          if (retryCount === maxRetries - 1) throw error;
+          retryCount++;
+          await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
+        }
+      }
+
+      if (!signUpResponse || signUpResponse.error) {
+        throw new Error('Failed to create account after multiple attempts');
+      }
 
       // Wait for profile creation
       await new Promise(resolve => setTimeout(resolve, 2000));
 
-      // Verify profile was created
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', data.user.id)
-        .single();
-
-      if (profileError || !profile) {
-        throw new Error('Failed to create profile');
-      }
-
-      // Login the user
-      const user = {
-        id: data.user.id,
-        email: data.user.email!,
-        username: profile.username,
-        name: profile.full_name,
-        is_admin: false,
-        email_verified: false,
-        shipping_address: null,
-        payment_setup: false,
-        onboarding_completed: false
-      };
-
+      const user = await handleAuthResponse(signUpResponse);
       loginUser(user);
-      addNotification('success', 'Account created successfully!');
+      addNotification('success', 'Account created successfully! Please verify your email.');
       navigate('/');
-    } catch (err) {
-      console.error('Signup error:', err);
-      const message = err instanceof Error ? err.message : 'Failed to create account';
+    } catch (error) {
+      console.error('Signup error:', error);
+      const message = error instanceof Error ? error.message : 'Failed to create account';
       setError(message);
       addNotification('error', message);
     } finally {
@@ -150,9 +152,9 @@ export const useAuth = () => {
       }
       
       addNotification('success', 'Signed in successfully!');
-    } catch (err) {
-      console.error('Login error:', err);
-      setError(err instanceof Error ? err.message : 'Failed to sign in');
+    } catch (error) {
+      console.error('Login error:', error);
+      setError(error instanceof Error ? error.message : 'Failed to sign in');
       addNotification('error', 'Failed to sign in');
     } finally {
       setIsLoading(false);
