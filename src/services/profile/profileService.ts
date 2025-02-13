@@ -23,6 +23,7 @@ const transformProfile = (row: ProfileRow): Profile => ({
   shipping_address: row.shipping_address,
   payment_setup: row.payment_setup || false,
   onboarding_completed: row.onboarding_completed || false,
+  rating: null
 });
 
 export const profileService: ProfileService = {

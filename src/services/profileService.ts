@@ -9,12 +9,12 @@ type ProfileUpdate = Database['public']['Tables']['profiles']['Update'];
 const transformProfile = (row: ProfileRow): Profile => ({
   id: row.id,
   created_at: row.created_at,
-  username: row.username,
-  full_name: row.full_name,
+  username: row.username || '',
+  full_name: row.full_name || '',
   avatar_url: row.avatar_url,
-  email: row.email,
+  email: row.email || '',
   is_admin: row.is_admin || false,
-  shipping_address: row.shipping_address,
+  shipping_address: row.shipping_address || null,
   payment_setup: row.payment_setup,
   onboarding_completed: row.onboarding_completed
 });

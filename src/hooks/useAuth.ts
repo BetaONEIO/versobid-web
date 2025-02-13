@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '../lib/supabase';
+import { supabase } from "../integrations/supabase/client";
+
 import { useUser } from '../contexts/UserContext';
 import { useNotification } from '../contexts/NotificationContext';
 import { AuthFormData } from '../types/auth';
@@ -23,13 +24,14 @@ export const useAuth = () => {
 
     // Wait for the trigger to complete
     await new Promise(resolve => setTimeout(resolve, 2000));
-
+    
+    console.log(response.data)
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('*')
       .eq('id', response.data.user.id)
       .single();
-
+    console.log("porofile",profile)
     if (profileError || !profile) {
       throw new Error('Failed to fetch profile');
     }
@@ -50,19 +52,20 @@ export const useAuth = () => {
   const signup = async (formData: AuthFormData) => {
     setIsLoading(true);
     setError(null);
-
+  
     try {
-      // Check if email or username exists
+      // Check if email or username exists (Uncomment if you want this validation)
+      /*
       const { data: existingUser, error: checkError } = await supabase
         .from('profiles')
         .select('email, username')
         .or(`email.eq.${formData.email},username.eq.${formData.username}`)
         .maybeSingle();
-
+  
       if (checkError) {
         throw new Error('Failed to check existing user');
       }
-
+  
       if (existingUser) {
         if (existingUser.email === formData.email) {
           throw new Error('Email already exists');
@@ -71,31 +74,34 @@ export const useAuth = () => {
           throw new Error('Username already taken');
         }
       }
-
+      */
+  
       // Create auth user with retry logic
       let retryCount = 0;
       const maxRetries = 3;
       let signUpResponse;
-
+  console.log(123123)
       while (retryCount < maxRetries) {
         try {
+          // Attempt to sign up the user
           signUpResponse = await supabase.auth.signUp({
             email: formData.email,
             password: formData.password,
             options: {
               data: {
                 username: formData.username,
-                full_name: formData.name || formData.username
+                full_name: formData.name || formData.username,
               }
             }
           });
-
+          console.log(signUpResponse)
+          // Check for sign-up errors
           if (!signUpResponse.error) break;
-
+  
           if (signUpResponse.error.message.includes('already registered')) {
             throw new Error('Email already registered');
           }
-
+  
           retryCount++;
           await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
         } catch (error) {
@@ -107,18 +113,41 @@ export const useAuth = () => {
           await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
         }
       }
-
+  
       if (!signUpResponse || signUpResponse.error) {
         throw new Error('Failed to create account after multiple attempts');
       }
-
-      // Wait for profile creation
-      await new Promise(resolve => setTimeout(resolve, 2000));
-
-      const user = await handleAuthResponse(signUpResponse);
-      loginUser(user);
+  
+      console.log("signUpResponse", signUpResponse);
+  
+      // Insert user data into profiles table after successful signup
+      const { data, error: profileError } = await supabase
+        .from('profiles')
+        .insert([{
+          id: signUpResponse.data.user?.id,
+          created_at: new Date().toISOString(),
+          username: signUpResponse.data.user?.user_metadata?.username,
+          full_name: signUpResponse.data.user?.user_metadata?.full_name,
+          avatar_url: '',
+          is_admin: false,
+          rating: 0,
+          shipping_address: null,
+          payment_setup: false,
+          onboarding_completed: false,
+          email: signUpResponse.data.user?.email
+        }])
+        .select()
+        .single();
+  
+      if (profileError) {
+        throw new Error('Failed to save profile: ' + profileError.message);
+      }
+  
+      console.log("Profile data saved:", data);
       addNotification('success', 'Account created successfully! Please verify your email.');
-      navigate('/');
+      // Redirect or navigate to another page if needed
+      // navigate('/');
+  
     } catch (error) {
       console.error('Signup error:', error);
       const message = error instanceof Error ? error.message : 'Failed to create account';
@@ -130,6 +159,7 @@ export const useAuth = () => {
   };
 
   const login = async (email: string, password: string) => {
+    console.log("email,password",email, password)
     setIsLoading(true);
     setError(null);
 
@@ -138,7 +168,7 @@ export const useAuth = () => {
         email,
         password
       });
-
+    
       const user = await handleAuthResponse(response);
       loginUser(user);
       

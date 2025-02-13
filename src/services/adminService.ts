@@ -16,9 +16,9 @@ export const adminService = {
       
       return (data || []).map((profile: ProfileRow): User => ({
         id: profile.id,
-        name: profile.full_name,
-        email: profile.email,
-        username: profile.username,
+        name: profile.full_name || '',
+        email: profile.email || '',
+        username: profile.username || '',
         is_admin: profile.is_admin || false,
         email_verified: false
       }));

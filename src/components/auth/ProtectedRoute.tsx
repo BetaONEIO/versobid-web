@@ -12,6 +12,8 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
 
   useEffect(() => {
     // If user is not authenticated, save the attempted route
+
+    console.log("auth",auth,"location",location)
     if (!auth.isAuthenticated) {
       localStorage.setItem('intendedRoute', location.pathname + location.search);
     }

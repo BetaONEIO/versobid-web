@@ -7,10 +7,10 @@ export interface Profile {
   email: string;
   is_admin?: boolean;
   shipping_address?: {
-    street: string;
-    city: string;
-    postcode: string;
-    country: string;
+    street: string | null;
+    city: string | null;
+    postcode: string | null;
+    country: string | null;
   } | null;
   payment_setup?: boolean;
   onboarding_completed?: boolean;
