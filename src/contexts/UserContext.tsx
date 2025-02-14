@@ -41,87 +41,33 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const checkSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
-        try {
-          const { data: profile, error } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', session.user.id)
-            .maybeSingle();
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single();
 
-          if (error && error.code !== 'PGRST116') {
-            throw error;
-          }
-
-          if (profile) {
-            setAuth({
-              isAuthenticated: true,
-              user: {
-                id: profile.id,
-                name: profile.full_name,
-                email: profile.email,
-                username: profile.username,
-                is_admin: profile.is_admin || false,
-                email_verified: session.user.email_confirmed_at !== null,
-                shipping_address: profile.shipping_address,
-                payment_setup: profile.payment_setup,
-                onboarding_completed: profile.onboarding_completed
-              }
-            });
-          } else {
-            // Profile doesn't exist yet, wait for it
-            let attempts = 0;
-            const maxAttempts = 5;
-            const checkProfile = async () => {
-              while (attempts < maxAttempts) {
-                const { data: retryProfile, error: retryError } = await supabase
-                  .from('profiles')
-                  .select('*')
-                  .eq('id', session.user.id)
-                  .maybeSingle();
-
-                if (retryError && retryError.code !== 'PGRST116') {
-                  throw retryError;
-                }
-
-                if (retryProfile) {
-                  setAuth({
-                    isAuthenticated: true,
-                    user: {
-                      id: retryProfile.id,
-                      name: retryProfile.full_name,
-                      email: retryProfile.email,
-                      username: retryProfile.username,
-                      is_admin: retryProfile.is_admin || false,
-                      email_verified: session.user.email_confirmed_at !== null,
-                      shipping_address: retryProfile.shipping_address,
-                      payment_setup: retryProfile.payment_setup,
-                      onboarding_completed: retryProfile.onboarding_completed
-                    }
-                  });
-                  return;
-                }
-
-                attempts++;
-                // Exponential backoff with jitter
-                const delay = Math.min(1000 * Math.pow(2, attempts) + Math.random() * 1000, 10000);
-                await new Promise(resolve => setTimeout(resolve, delay));
-              }
-            };
-
-            checkProfile().catch(error => {
-              console.error('Error checking profile:', error);
-              addNotification('error', 'Failed to load user profile');
-            });
-          }
-        } catch (error) {
-          console.error('Error fetching profile:', error);
-          addNotification('error', 'Failed to load user profile');
+        if (profile) {
+          setAuth({
+            isAuthenticated: true,
+            user: {
+              id: profile.id,
+              name: profile.full_name,
+              email: profile.email,
+              username: profile.username,
+              is_admin: profile.is_admin || false,
+              email_verified: session.user.email_confirmed_at !== null,
+              shipping_address: profile.shipping_address,
+              payment_setup: profile.payment_setup,
+              onboarding_completed: profile.onboarding_completed
+            }
+          });
         }
       }
     };
 
     checkSession();
-  }, [addNotification]);
+  }, []);
 
   const toggleRole = () => {
     const newRole = role === 'buyer' ? 'seller' : 'buyer';

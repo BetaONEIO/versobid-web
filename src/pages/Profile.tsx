@@ -48,7 +48,14 @@ export const Profile: React.FC = () => {
     try {
       setUploading(true);
       const avatarUrl = await profileService.uploadAvatar(file, auth.user.id);
-      await profileService.updateProfile(auth.user.id, { avatar_url: avatarUrl });
+      await profileService.updateProfile(auth.user.id, {
+        avatar_url: avatarUrl,
+        rating: 0,
+        is_admin: false,
+        full_name: '',
+        email: '',
+        username: ''
+      });
       setProfile(prev => prev ? { ...prev, avatar_url: avatarUrl } : null);
       addNotification('success', 'Profile picture updated successfully');
     } catch (error) {

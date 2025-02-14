@@ -19,7 +19,14 @@ export const isValidName = (name: string): boolean => {
 };
 
 export const sanitizeProfile = (profile: Partial<Profile>): ProfileUpdate => {
-  const sanitized: ProfileUpdate = {};
+  const sanitized: ProfileUpdate = {
+    username: '',
+    avatar_url: null,
+    rating: null,
+    is_admin: false,
+    full_name: '',
+    email: ''
+  };
 
   if (profile.username) {
     sanitized.username = profile.username.trim().toLowerCase();

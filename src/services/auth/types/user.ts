@@ -8,11 +8,11 @@ export interface AuthUser {
   is_admin: boolean;
   email_verified: boolean;
   shipping_address?: {
-    street: string;
-    city: string;
-    postcode: string;
-    country: string;
-  };
+    street: string | null;
+    city: string | null;
+    postcode: string | null;
+    country: string | null;
+  } | null | undefined;
   payment_setup?: boolean;
   onboarding_completed?: boolean;
 }

@@ -57,7 +57,15 @@ export const Onboarding: React.FC = () => {
     }
 
     try {
-      const update: ProfileUpdate = { shipping_address: address };
+      const update: ProfileUpdate = {
+        shipping_address: address,
+        avatar_url: null,
+        rating: 0,
+        is_admin: false,
+        full_name: '',
+        email: '',
+        username: ''
+      };
 
       const { error } = await supabase
         .from('profiles')
@@ -84,6 +92,12 @@ export const Onboarding: React.FC = () => {
       const update: ProfileUpdate = {
         payment_setup: true,
         onboarding_completed: true,
+        avatar_url: null,
+        rating: 0,
+        is_admin: false,
+        full_name: '',
+        email: '',
+        username: ''
       };
 
       const { error } = await supabase
