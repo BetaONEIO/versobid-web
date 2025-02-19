@@ -26,7 +26,7 @@ export const profileService = {
         .from('profiles')
         .select('*')
         .eq('username', username)
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error('Error fetching profile by username:', error);
@@ -46,7 +46,7 @@ export const profileService = {
         .from('profiles')
         .select('*')
         .eq('id', userId)
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error('Error fetching profile:', error);
@@ -56,7 +56,7 @@ export const profileService = {
       return data ? transformProfile(data) : null;
     } catch (error) {
       console.error('Unexpected error in getProfile:', error);
-      throw error;
+      return null;
     }
   },
 

@@ -13,6 +13,14 @@ export interface ShippingOption {
   location?: PickupLocation;
 }
 
+// Service details interface
+export interface ServiceDetails {
+  rateType: 'hourly' | 'fixed' | 'project';
+  availability: string;
+  location: string;
+  remote: boolean;
+}
+
 // Form data interface
 export interface ItemFormData {
   title: string;
@@ -23,6 +31,8 @@ export interface ItemFormData {
   shipping_options: ShippingOption[];
   condition?: 'new' | 'like-new' | 'good' | 'fair' | 'poor';
   image_url?: string;
+  type?: 'item' | 'service';
+  service_details?: ServiceDetails;
 }
 
 // Item filters interface
@@ -32,6 +42,7 @@ export interface ItemFilters {
   seller_id?: string;
   exclude_seller?: string;
   search?: string;
+  type?: 'item' | 'service';
 }
 
 // Main item interface

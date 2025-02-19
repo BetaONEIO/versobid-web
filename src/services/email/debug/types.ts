@@ -5,7 +5,7 @@ export interface DiagnosticResult {
 }
 
 export interface EmailSystemConfig {
-  brevoApiKey: string;
+  resendApiKey: string;
   testEmail: string;
 }
 

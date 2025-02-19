@@ -28,6 +28,9 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
   const navigate = useNavigate();
   const { addNotification } = useNotification();
 
+  // Check if PayPal is configured
+  const isPayPalConfigured = !!import.meta.env.VITE_PAYPAL_CLIENT_ID;
+
   const handlePaymentSuccess = async (transactionId: string) => {
     try {
       await paymentService.recordPayment({
@@ -62,33 +65,41 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
         </div>
 
         <div className="mt-4">
-          <PayPalButtons
-            style={{ layout: "vertical" }}
-            createOrder={(_, actions) => {
-              return actions.order.create({
-                intent: "CAPTURE",
-                purchase_units: [{
-                  amount: {
-                    value: amount.toFixed(2),
-                    currency_code: "GBP"
-                  },
-                  description: `Payment for ${itemTitle}`
-                }]
-              });
-            }}
-            onApprove={async (_, actions) => {
-              if (actions.order) {
-                const details = await actions.order.capture();
-                if (details.id) {
-                  await handlePaymentSuccess(details.id);
+          {isPayPalConfigured ? (
+            <PayPalButtons
+              style={{ layout: "vertical" }}
+              createOrder={(_, actions) => {
+                return actions.order.create({
+                  intent: "CAPTURE",
+                  purchase_units: [{
+                    amount: {
+                      value: amount.toFixed(2),
+                      currency_code: "GBP"
+                    },
+                    description: `Payment for ${itemTitle}`
+                  }]
+                });
+              }}
+              onApprove={async (_, actions) => {
+                if (actions.order) {
+                  const details = await actions.order.capture();
+                  if (details.id) {
+                    await handlePaymentSuccess(details.id);
+                  }
                 }
-              }
-            }}
-            onError={(err) => {
-              console.error('PayPal error:', err);
-              addNotification('error', 'Payment failed. Please try again.');
-            }}
-          />
+              }}
+              onError={(err) => {
+                console.error('PayPal error:', err);
+                addNotification('error', 'Payment failed. Please try again.');
+              }}
+            />
+          ) : (
+            <div className="text-center p-4 bg-yellow-50 dark:bg-yellow-900 rounded-md">
+              <p className="text-yellow-800 dark:text-yellow-200">
+                PayPal payment is currently unavailable. Please contact support for alternative payment methods.
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </Modal>

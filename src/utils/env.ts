@@ -6,7 +6,7 @@ const envSchema = z.object({
   VITE_SUPABASE_ANON_KEY: z.string().min(20, 'Invalid Supabase anon key'),
   VITE_PAYPAL_CLIENT_ID: z.string().optional(),
   VITE_SERPAPI_KEY: z.string().optional(),
-  VITE_RESEND_API_KEY: z.string().min(20, 'Invalid Resend API key').optional()
+  VITE_RESEND_API_KEY: z.string().optional()
 });
 
 // Type for validated env
@@ -71,4 +71,4 @@ export const getEnvVar = <T extends keyof EnvSchema>(
 // Helper to check if all required vars are set
 export const hasRequiredEnvVars = (): boolean => {
   return validateEnv() && !!getEnvVar('VITE_SUPABASE_URL') && !!getEnvVar('VITE_SUPABASE_ANON_KEY');
-};
+}

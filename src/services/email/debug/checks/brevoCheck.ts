@@ -1,4 +1,4 @@
-import { DiagnosticResult } from '../types.js';
+import { DiagnosticResult } from '../types';
 
 export async function checkBrevoConnection(apiKey: string): Promise<DiagnosticResult> {
   try {

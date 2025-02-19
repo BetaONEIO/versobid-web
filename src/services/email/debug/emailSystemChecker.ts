@@ -1,17 +1,25 @@
-import { supabase } from '../../../lib/supabase';
+import { createClient } from '@supabase/supabase-js';
 import { DiagnosticResult } from './types';
 import { checkDatabaseConnection } from './checks/databaseCheck';
-import { checkBrevoConnection } from './checks/brevoCheck';
+import { checkResendConnection } from './checks/resendCheck';
 import { Database } from '../../../types/supabase';
-import { SupabaseClient } from '@supabase/supabase-js';
 
 export class EmailSystemChecker {
-  private readonly brevoKey: string;
-  private readonly supabase: SupabaseClient<Database>;
+  private readonly resendKey: string | null;
+  private readonly supabase: ReturnType<typeof createClient<Database>>;
 
-  constructor(brevoKey: string) {
-    this.brevoKey = brevoKey;
-    this.supabase = supabase;
+  constructor(resendKey: string | undefined) {
+    this.resendKey = resendKey || null;
+    
+    // Create Supabase client
+    const supabaseUrl = process.env.VITE_SUPABASE_URL;
+    const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY;
+
+    if (!supabaseUrl || !supabaseKey) {
+      throw new Error('Missing Supabase credentials');
+    }
+
+    this.supabase = createClient<Database>(supabaseUrl, supabaseKey);
   }
 
   async runDiagnostics(): Promise<void> {
@@ -24,14 +32,23 @@ export class EmailSystemChecker {
         () => checkDatabaseConnection(this.supabase)
       );
 
-      // Check Brevo API connection
-      const brevoResult = await this.runCheck(
-        'Brevo API Connection',
-        () => checkBrevoConnection(this.brevoKey)
-      );
+      // Check Resend API connection if key is available
+      let resendResult: DiagnosticResult;
+      if (this.resendKey) {
+        resendResult = await this.runCheck(
+          'Resend API Connection',
+          () => checkResendConnection(this.resendKey)
+        );
+      } else {
+        resendResult = {
+          success: false,
+          message: 'Resend API key not configured'
+        };
+        console.warn('⚠️ Resend API key not configured');
+      }
 
       // Final summary
-      this.printSummary([dbResult, brevoResult]);
+      this.printSummary([dbResult, resendResult]);
     } catch (error) {
       console.error('\n❌ Email system check failed:', error);
       throw error;

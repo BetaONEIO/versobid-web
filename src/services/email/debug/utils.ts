@@ -1,10 +1,6 @@
-export const formatDiagnosticMessage = (step: number, message: string): string => {
-  return `${step}. ${message}`;
-};
-
-export const validateConfig = (config: { brevoApiKey?: string }): void => {
-  if (!config.brevoApiKey) {
-    throw new Error('Missing Brevo API key in configuration');
+export const validateConfig = (config: { resendApiKey?: string }): void => {
+  if (!config.resendApiKey) {
+    throw new Error('Missing Resend API key in configuration');
   }
 };
 
