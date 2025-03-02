@@ -4,18 +4,17 @@ import { SearchBar } from '../components/ui/SearchBar';
 import { useListings } from '../hooks/useListings';
 import { useUser } from '../contexts/UserContext';
 import { formatCurrency } from '../utils/formatters';
-import { googleShoppingService } from '../services/shopping/googleShoppingService';
+import { ebayService } from '../services/ebay/ebayService';
 import { SearchResult } from '../types/search';
+import { useNotification } from '../contexts/NotificationContext';
 
 export const Listings: React.FC = () => {
   const [searchParams] = useSearchParams();
   const searchQuery = searchParams.get('search');
   const { listings, loading, error } = useListings();
   const { role } = useUser();
-  const [searchResults, setSearchResults] = useState<{
-    results: SearchResult[];
-    priceAnalysis?: any;
-  } | null>(null);
+  const { addNotification } = useNotification();
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [searching, setSearching] = useState(false);
 
   useEffect(() => {
@@ -23,20 +22,25 @@ export const Listings: React.FC = () => {
       if (searchQuery) {
         setSearching(true);
         try {
-          const results = await googleShoppingService.searchProducts(searchQuery);
+          const results = await ebayService.searchItems(searchQuery);
           setSearchResults(results);
+          
+          if (results.length === 0) {
+            addNotification('info', 'No results found for your search');
+          }
         } catch (err) {
           console.error('Search error:', err);
+          addNotification('error', 'Failed to perform search. Please try again.');
         } finally {
           setSearching(false);
         }
       } else {
-        setSearchResults(null);
+        setSearchResults([]);
       }
     };
 
     performSearch();
-  }, [searchQuery]);
+  }, [searchQuery, addNotification]);
 
   if (loading || searching) {
     return (
@@ -87,69 +91,51 @@ export const Listings: React.FC = () => {
           )}
         </div>
 
-        {/* Price Analysis */}
-        {searchResults?.priceAnalysis && (
-          <div className="mb-8 p-4 bg-blue-50 dark:bg-blue-900 rounded-lg">
-            <h2 className="text-lg font-semibold mb-2">Market Price Analysis</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <p className="text-sm text-gray-600 dark:text-gray-300">Suggested Range:</p>
-                <p className="font-medium">
-                  {formatCurrency(searchResults.priceAnalysis.suggestedRange.minPrice)} - {formatCurrency(searchResults.priceAnalysis.suggestedRange.maxPrice)}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-600 dark:text-gray-300">Average Market Price:</p>
-                <p className="font-medium">{formatCurrency(searchResults.priceAnalysis.suggestedRange.marketPrice)}</p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-600 dark:text-gray-300">Based on:</p>
-                <p className="font-medium">{searchResults.priceAnalysis.basedOn} similar items</p>
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* Results Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {searchResults ? (
-            // Show search results
-            searchResults.results.map((result, index) => (
-              <div key={index} className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
-                {result.imageUrl && (
-                  <div className="h-48 bg-gray-100 dark:bg-gray-700">
-                    <img 
-                      src={result.imageUrl} 
-                      alt={result.title}
-                      className="w-full h-full object-contain"
-                    />
+          {searchQuery ? (
+            searchResults.length > 0 ? (
+              // Show eBay search results
+              searchResults.map((result, index) => (
+                <div key={index} className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
+                  {result.imageUrl && (
+                    <div className="h-48 bg-gray-100 dark:bg-gray-700">
+                      <img 
+                        src={result.imageUrl} 
+                        alt={result.title}
+                        className="w-full h-full object-contain"
+                        onError={(e) => {
+                          const img = e.target as HTMLImageElement;
+                          img.style.display = 'none';
+                        }}
+                      />
+                    </div>
+                  )}
+                  <div className="p-4">
+                    <h3 className="text-lg font-semibold mb-2">{result.title}</h3>
+                    {result.price && (
+                      <p className="text-xl font-bold text-indigo-600 dark:text-indigo-400">
+                        {formatCurrency(result.price)}
+                      </p>
+                    )}
+                    {result.condition && (
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                        Condition: {result.condition}
+                      </p>
+                    )}
+                    {result.shortDescription && (
+                      <p className="mt-2 text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
+                        {result.shortDescription}
+                      </p>
+                    )}
                   </div>
-                )}
-                <div className="p-4">
-                  <h3 className="text-lg font-semibold mb-2">{result.title}</h3>
-                  {result.price && (
-                    <p className="text-xl font-bold text-indigo-600 dark:text-indigo-400">
-                      {formatCurrency(result.price)}
-                    </p>
-                  )}
-                  {result.brand && (
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      Brand: {result.brand}
-                    </p>
-                  )}
-                  {result.condition && (
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      Condition: {result.condition}
-                    </p>
-                  )}
-                  {result.shortDescription && (
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-2 line-clamp-2">
-                      {result.shortDescription}
-                    </p>
-                  )}
                 </div>
+              ))
+            ) : (
+              <div className="col-span-3 text-center py-8">
+                <p className="text-gray-500 dark:text-gray-400">No results found for "{searchQuery}"</p>
               </div>
-            ))
+            )
           ) : (
             // Show user's listings
             listings.map((listing) => (

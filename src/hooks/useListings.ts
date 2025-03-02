@@ -13,9 +13,10 @@ export const useListings = () => {
     try {
       let filters;
       if (role === 'buyer') {
-        // Buyers see their own listings
+        // Buyers see their own listings (items they want to buy)
         filters = { 
           seller_id: auth.user?.id,
+          status: 'active', // Only show active listings
           search
         };
       } else {
@@ -30,6 +31,7 @@ export const useListings = () => {
       const items = await itemService.getItems(filters);
       setListings(items);
     } catch (err) {
+      console.error('Failed to fetch listings:', err);
       setError('Failed to fetch listings');
     } finally {
       setLoading(false);
@@ -49,5 +51,5 @@ export const useListings = () => {
     fetchListings(query);
   };
 
-  return { listings, loading, error, searchListings };
+  return { listings, loading, error, searchListings, refreshListings: fetchListings };
 };

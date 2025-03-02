@@ -1,5 +1,4 @@
 import React from 'react';
-import { PayPalButtons } from '@paypal/react-paypal-js';
 import { useNavigate } from 'react-router-dom';
 import { useNotification } from '../../contexts/NotificationContext';
 import { Modal } from '../ui/Modal';
@@ -31,7 +30,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
   // Check if PayPal is configured
   const isPayPalConfigured = !!import.meta.env.VITE_PAYPAL_CLIENT_ID;
 
-  const handlePaymentSuccess = async (transactionId: string) => {
+  const handlePayment = async () => {
     try {
       await paymentService.recordPayment({
         amount,
@@ -39,14 +38,13 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
         itemId,
         buyerId,
         sellerId,
-        transactionId
+        transactionId: `manual-${Date.now()}`
       });
-
-      navigate(`/payment/success?transaction_id=${transactionId}&amount=${amount}&item_title=${encodeURIComponent(itemTitle)}`);
+      
+      navigate(`/payment/success?amount=${amount}&item_title=${encodeURIComponent(itemTitle)}`);
       onClose();
     } catch (error) {
-      console.error('Failed to record payment:', error);
-      addNotification('error', 'Payment recorded but failed to update system. Please contact support.');
+      addNotification('error', 'Payment failed. Please try again.');
     }
   };
 
@@ -65,38 +63,22 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
         </div>
 
         <div className="mt-4">
-          {isPayPalConfigured ? (
-            <PayPalButtons
-              style={{ layout: "vertical" }}
-              createOrder={(_, actions) => {
-                return actions.order.create({
-                  intent: "CAPTURE",
-                  purchase_units: [{
-                    amount: {
-                      value: amount.toFixed(2),
-                      currency_code: "GBP"
-                    },
-                    description: `Payment for ${itemTitle}`
-                  }]
-                });
-              }}
-              onApprove={async (_, actions) => {
-                if (actions.order) {
-                  const details = await actions.order.capture();
-                  if (details.id) {
-                    await handlePaymentSuccess(details.id);
-                  }
-                }
-              }}
-              onError={(err) => {
-                console.error('PayPal error:', err);
-                addNotification('error', 'Payment failed. Please try again.');
-              }}
-            />
-          ) : (
+          {!isPayPalConfigured ? (
             <div className="text-center p-4 bg-yellow-50 dark:bg-yellow-900 rounded-md">
-              <p className="text-yellow-800 dark:text-yellow-200">
-                PayPal payment is currently unavailable. Please contact support for alternative payment methods.
+              <p className="text-yellow-800 dark:text-yellow-200 mb-4">
+                PayPal payment is currently unavailable.
+              </p>
+              <button
+                onClick={handlePayment}
+                className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
+              >
+                Process Manual Payment
+              </button>
+            </div>
+          ) : (
+            <div className="text-center p-4">
+              <p className="text-gray-600 dark:text-gray-400">
+                PayPal integration temporarily disabled. Please check back later.
               </p>
             </div>
           )}

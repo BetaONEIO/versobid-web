@@ -5,6 +5,7 @@ import { adminService } from '../services/adminService';
 import { UserManagement } from '../components/admin/UserManagement';
 import { ActivityLog } from '../components/admin/ActivityLog';
 import { EnvVarsTest } from '../components/test/EnvVarsTest';
+import { SupabaseConnectionTest } from '../components/test/SupabaseConnectionTest';
 import { User } from '../types/user';
 import { Database } from '../types/supabase';
 import { supabase } from '../lib/supabase';
@@ -77,6 +78,10 @@ export const Admin: React.FC = () => {
       <h1 className="text-2xl font-bold mb-6">Admin Dashboard</h1>
 
       <div className="space-y-8">
+        <section>
+          <SupabaseConnectionTest />
+        </section>
+
         <section>
           <EnvVarsTest />
         </section>

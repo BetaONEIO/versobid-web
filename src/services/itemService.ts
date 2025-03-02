@@ -28,21 +28,37 @@ export const itemService = {
         .from('items')
         .select(`
           *,
-          seller:profiles!seller_id (
+          seller:profiles!inner(
             username
           )
         `);
 
-      if (filters?.search) query = query.ilike('title', `%${filters.search}%`);
-      if (filters?.category) query = query.eq('category', filters.category);
-      if (filters?.status) query = query.eq('status', filters.status);
-      if (filters?.seller_id) query = query.eq('seller_id', filters.seller_id);
-      if (filters?.exclude_seller) query = query.neq('seller_id', filters.exclude_seller);
+      if (filters?.search) {
+        query = query.ilike('title', `%${filters.search}%`);
+      }
+      if (filters?.category) {
+        query = query.eq('category', filters.category);
+      }
+      if (filters?.status) {
+        query = query.eq('status', filters.status);
+      }
+      if (filters?.seller_id) {
+        query = query.eq('seller_id', filters.seller_id);
+      }
+      if (filters?.exclude_seller) {
+        query = query.neq('seller_id', filters.exclude_seller);
+      }
 
-      const { data, error } = await query;
-      if (error) return [];
+      const { data, error } = await query.order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching items:', error);
+        return [];
+      }
+
       return (data || []).map(item => transformItem(item, item.seller?.username));
-    } catch {
+    } catch (error) {
+      console.error('Error in getItems:', error);
       return [];
     }
   },
@@ -53,16 +69,21 @@ export const itemService = {
         .from('items')
         .select(`
           *,
-          seller:profiles!seller_id (
+          seller:profiles!inner(
             username
           )
         `)
         .eq('id', id)
         .single();
 
-      if (error || !data) return null;
+      if (error || !data) {
+        console.error('Error fetching item:', error);
+        return null;
+      }
+
       return transformItem(data, data.seller?.username);
-    } catch {
+    } catch (error) {
+      console.error('Error in getItem:', error);
       return null;
     }
   },
@@ -84,12 +105,22 @@ export const itemService = {
       const { data, error } = await supabase
         .from('items')
         .insert(itemData)
-        .select()
+        .select(`
+          *,
+          seller:profiles!inner(
+            username
+          )
+        `)
         .single();
 
-      if (error || !data) return null;
-      return transformItem(data);
-    } catch {
+      if (error || !data) {
+        console.error('Error creating item:', error);
+        return null;
+      }
+
+      return transformItem(data, data.seller?.username);
+    } catch (error) {
+      console.error('Error in createItem:', error);
       return null;
     }
   },
@@ -105,8 +136,14 @@ export const itemService = {
         .update(updateData)
         .eq('id', id);
 
-      return !error;
-    } catch {
+      if (error) {
+        console.error('Error deleting listing:', error);
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Error in deleteListing:', error);
       return false;
     }
   },
@@ -119,9 +156,14 @@ export const itemService = {
         .eq('item_id', itemId)
         .eq('status', 'pending');
 
-      if (error) return false;
+      if (error) {
+        console.error('Error checking pending bids:', error);
+        return false;
+      }
+
       return (count || 0) > 0;
-    } catch {
+    } catch (error) {
+      console.error('Error in checkPendingBids:', error);
       return false;
     }
   }
