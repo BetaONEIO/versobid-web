@@ -4,6 +4,9 @@ import { supabase } from "../lib/supabase";
 import { useUser } from '../contexts/UserContext';
 import { useNotification } from '../contexts/NotificationContext';
 import { AuthFormData } from '../types/auth';
+import { sendWelcomeEmail } from '../utils/email/emailUtils';
+import { v4 as uuidv4 } from 'uuid';
+
 
 export const useAuth = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -163,14 +166,12 @@ export const useAuth = () => {
         throw new Error('Please fill in all required fields');
       }
 
-      console.log('Starting signup process...');
       let retryCount = 0;
       const maxRetries = 3;
       let signUpResponse;
 
       while (retryCount < maxRetries) {
         try {
-          console.log(`Signup attempt ${retryCount + 1}/${maxRetries}`);
           signUpResponse = await supabase.auth.signUp({
             email: formData.email,
             password: formData.password,
@@ -191,7 +192,6 @@ export const useAuth = () => {
             throw new Error('Email already registered');
           }
   
-          console.log(`Signup failed, retrying... (${retryCount + 1}/${maxRetries})`);
           retryCount++;
           await new Promise(resolve => setTimeout(resolve, Math.pow(2, retryCount) * 1000));
         } catch (error) {
@@ -207,7 +207,21 @@ export const useAuth = () => {
       if (!signUpResponse || signUpResponse.error) {
         throw new Error('Failed to create account after multiple attempts');
       }
+
+      const user = signUpResponse.data.user;
+      if (!user) throw new Error('User not created');
+    
+      const token = uuidv4();
+      const expiresAt = new Date(Date.now() + 60 * 60 * 1000 * 9999).toISOString(); // 1 hour * 9999
+    
+      // Save token in your verification table
+      await supabase.from('email_verifications').insert({
+        user_id: user.id,
+        token,
+        expires_at: expiresAt,
+      });
   
+      await sendWelcomeEmail(formData.email, formData.name || formData.username, token);
       addNotification('success', 'Account created successfully! Please verify your email.');
       navigate('/signin');
   
