@@ -7,7 +7,7 @@ import { SignIn } from './pages/SignIn';
 import { SignUp } from './pages/SignUp';
 import { Listings } from './pages/Listings';
 import { ListingDetail } from './pages/ListingDetail';
-import { AddItem } from './pages/AddItem';
+import { AddItem } from './pages';
 import { Help } from './pages/Help';
 import { Admin } from './pages/Admin';
 import { BidsReceived } from './pages/BidsReceived';
@@ -29,7 +29,7 @@ const App: React.FC = () => {
             <div className="min-h-screen bg-gray-100 dark:bg-gray-900 flex flex-col">
               <VerificationBanner />
               <Header />
-              <main className="flex-grow max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+              <main className="flex-grow max-w-7xl mx-auto py-6 sm:px-6 lg:px-8 w-full">
                 <Routes>
                   <Route path="/" element={<Home />} />
                   <Route path="/signin" element={<SignIn />} />
