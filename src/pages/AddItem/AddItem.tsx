@@ -1,13 +1,14 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Tab } from '@headlessui/react';
-import { WantedItemForm } from '../components/items/WantedItemForm';
-import { ServiceItemForm } from '../components/items/ServiceItemForm';
+import { WantedItemForm } from './components';
+import { ServiceItemForm } from '../../components/items/ServiceItemForm';
+// import { WantedItemForm } from '../../components/items/WantedItemForm';
 
 function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(' ');
 }
 
-export const AddItem: React.FC = () => {
+const AddItem: React.FC = () => {
   const [categories] = useState(['Item', 'Service']);
 
   return (
@@ -45,3 +46,5 @@ export const AddItem: React.FC = () => {
     </div>
   );
 };
+
+export default AddItem;
