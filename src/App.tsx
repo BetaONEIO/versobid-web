@@ -5,9 +5,7 @@ import { Footer } from './components/layout/Footer';
 import { Home } from './pages/Home';
 import { SignIn } from './pages/SignIn';
 import { SignUp } from './pages/SignUp';
-import { Listings } from './pages/Listings';
-import { ListingDetail } from './pages/ListingDetail';
-import { AddItem } from './pages';
+import { AddItem, Listing, Bids } from './pages';
 import { Help } from './pages/Help';
 import { Admin } from './pages/Admin';
 import { BidsReceived } from './pages/BidsReceived';
@@ -38,18 +36,18 @@ const App: React.FC = () => {
                   <Route path="/profile/:username" element={<Profile />} />
                   <Route path="/payment/success" element={<PaymentSuccess />} />
                   <Route
-                    path="/listings"
+                    path="/listings/*"
                     element={
                       <ProtectedRoute>
-                        <Listings />
+                        <Listing />
                       </ProtectedRoute>
                     }
                   />
                   <Route
-                    path="/listings/:id"
+                    path="/bids/*"
                     element={
                       <ProtectedRoute>
-                        <ListingDetail />
+                        <Bids />
                       </ProtectedRoute>
                     }
                   />

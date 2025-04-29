@@ -23,9 +23,9 @@ export const ItemForm: React.FC = () => {
         description: formData.description,
         minPrice: formData.minPrice,
         maxPrice: formData.maxPrice,
-        seller_id: auth.user.id,
+        sellerId: auth.user.id,
         category: formData.category,
-        shipping_options: formData.shipping_options,
+        shippingOptions: formData.shippingOptions,
         status: 'active'
       });
       addNotification('success', 'Item listed successfully!');

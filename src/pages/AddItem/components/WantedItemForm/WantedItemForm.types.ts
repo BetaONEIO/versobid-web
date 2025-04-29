@@ -38,9 +38,3 @@ export interface SuggestionItemType {
   brand: string;
   condition: string;
 }
-
-export interface ShippingOption {
-  type: ShippingType;
-  cost?: number;
-  location?: PickupLocation;
-}

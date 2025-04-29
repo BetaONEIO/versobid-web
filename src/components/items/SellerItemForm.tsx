@@ -32,9 +32,9 @@ export const SellerItemForm: React.FC = () => {
     try {
       await itemService.createItem({
         ...formData,
-        seller_id: auth.user.id,
+        sellerId: auth.user.id,
         status: 'active',
-        shipping_options: []
+        shippingOptions: []
       });
       addNotification('success', 'Item listed successfully!');
       navigate('/listings');

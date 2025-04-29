@@ -28,11 +28,11 @@ export interface ItemFormData {
   minPrice: number;
   maxPrice: number;
   category: string;
-  shipping_options: ShippingOption[];
+  shippingOptions: ShippingOption[];
   condition?: 'new' | 'like-new' | 'good' | 'fair' | 'poor';
-  image_url?: string;
+  imageUrl?: string;
   type?: 'item' | 'service';
-  service_details?: ServiceDetails;
+  serviceDetails?: ServiceDetails | null;
 }
 
 // Item filters interface
@@ -46,13 +46,12 @@ export interface ItemFilters {
 }
 
 // Main item interface
-export interface Item extends Omit<ItemFormData, 'shipping_options'> {
+export interface Item extends ItemFormData {
   id: string;
-  seller_id: string;
-  shipping_options: ShippingOption[];
+  sellerId: string;
   status: 'active' | 'completed' | 'archived';
-  created_at: string;
-  seller_username?: string;
-  archived_reason?: string;
-  archived_at?: string;
+  createdAt: string;
+  sellerUsername?: string;
+  archivedReason?: string;
+  archivedAt?: string;
 }

@@ -11,10 +11,10 @@ export const ListingCard: React.FC<ListingCardProps> = ({ listing }) => {
   return (
     <Link to={`/listings/${listing.id}`}>
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-lg transition-shadow">
-        {listing.image_url && (
+        {listing.imageUrl && (
           <div className="w-full h-48 overflow-hidden rounded-t-lg">
             <img
-              src={listing.image_url}
+              src={listing.imageUrl}
               alt={listing.title}
               className="w-full h-full object-cover"
               onError={(e) => {
@@ -42,7 +42,7 @@ export const ListingCard: React.FC<ListingCardProps> = ({ listing }) => {
               </span>
             </div>
             <div className="text-sm text-gray-500 dark:text-gray-400">
-              Posted by: {listing.seller_username}
+              Posted by: {listing.sellerUsername}
             </div>
           </div>
         </div>

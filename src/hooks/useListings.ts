@@ -9,6 +9,7 @@ export const useListings = () => {
   const [error, setError] = useState<string | null>(null);
   const { role, auth } = useUser();
 
+  // berhubungan dengan backend untuk get list item
   const fetchListings = async (search?: string) => {
     try {
       let filters;

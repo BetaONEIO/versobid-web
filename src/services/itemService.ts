@@ -12,13 +12,13 @@ const transformItem = (row: ItemRow, seller_username?: string): Item => ({
   description: row.description || '',
   minPrice: row.min_price,
   maxPrice: row.max_price,
-  seller_id: row.seller_id,
+  sellerId: row.seller_id,
   category: row.category,
-  shipping_options: row.shipping_options || [],
+  shippingOptions: row.shipping_options || [],
   status: row.status,
-  created_at: row.created_at,
-  seller_username: seller_username,
-  image_url: row.image_url
+  createdAt: row.created_at,
+  sellerUsername: seller_username,
+  imageUrl: row.image_url
 });
 
 export const itemService = {
@@ -88,18 +88,18 @@ export const itemService = {
     }
   },
 
-  async createItem(item: Omit<Item, 'id' | 'created_at'>): Promise<Item | null> {
+  async createItem(item: Omit<Item, 'id' | 'createdAt'>): Promise<Item | null> {
     try {
       const itemData: ItemInsert = {
         title: item.title,
         description: item.description,
         min_price: item.minPrice,
         max_price: item.maxPrice,
-        seller_id: item.seller_id,
+        seller_id: item.sellerId,
         category: item.category,
-        shipping_options: item.shipping_options,
+        shipping_options: item.shippingOptions,
         status: item.status,
-        image_url: item.image_url
+        image_url: item.imageUrl
       };
 
       const { data, error } = await supabase

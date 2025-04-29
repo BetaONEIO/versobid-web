@@ -1,8 +1,8 @@
-import { ShippingOption, InputsType } from "../WantedItemForm/WantedItemForm.types"
+import { ShippingType, InputsType } from "../WantedItemForm/WantedItemForm.types"
 import { UseFormSetValue, UseFormRegister  } from 'react-hook-form';
 
 export interface DeliveryOptionPropsTypes {
-  shippingData: ShippingOption[]
+  shippingData: ShippingType[]
   setValue: UseFormSetValue<InputsType>;
   register: UseFormRegister<InputsType>;
 }

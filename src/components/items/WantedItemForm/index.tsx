@@ -37,7 +37,7 @@ export const WantedItemForm: React.FC = () => {
         </div>
 
         <DeliveryOptions 
-          options={formData.shipping_options} 
+          options={formData.shippingOptions} 
           onChange={handleDeliveryChange} 
         />
         
