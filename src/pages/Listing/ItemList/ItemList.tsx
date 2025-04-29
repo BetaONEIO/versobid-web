@@ -1,17 +1,23 @@
-import React, { useEffect, useState } from 'react';
-import { useSearchParams, Link } from 'react-router-dom';
-import { SearchBar } from '../components/ui/SearchBar';
-import { useListings } from '../hooks/useListings';
-import { useUser } from '../contexts/UserContext';
-import { formatCurrency } from '../utils/formatters';
-import { ebayService } from '../services/ebay/ebayService';
-import { SearchResult } from '../types/search';
-import { useNotification } from '../contexts/NotificationContext';
+import React, { useEffect, useState } from "react";
+import { useSearchParams, Link } from "react-router-dom";
 
-export const Listings: React.FC = () => {
+import { SearchBar } from "../../../components/ui/SearchBar";
+import { useListings } from "../../../hooks/useListings";
+
+import { useUser } from "../../../contexts/UserContext";
+import { useNotification } from "../../../contexts/NotificationContext";
+
+import { formatCurrency } from "../../../utils/formatters";
+import { ebayService } from "../../../services/ebay/ebayService";
+import { SearchResult } from "../../../types/search";
+
+import { MockList } from "./mockList";
+
+const ItemList: React.FC = () => {
   const [searchParams] = useSearchParams();
-  const searchQuery = searchParams.get('search');
-  const { listings, loading, error } = useListings();
+  const searchQuery = searchParams.get("search");
+  // const { listings, loading, error } = useListings(); // berhubungan dengan backend di dalamnya - listing untuk replace mock data
+  const { loading, error } = useListings(); // berhubungan dengan backend di dalamnya
   const { role } = useUser();
   const { addNotification } = useNotification();
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
@@ -22,15 +28,19 @@ export const Listings: React.FC = () => {
       if (searchQuery) {
         setSearching(true);
         try {
+          // berhubungan dengan backend untuk get search item
           const results = await ebayService.searchItems(searchQuery);
           setSearchResults(results);
-          
+
           if (results.length === 0) {
-            addNotification('info', 'No results found for your search');
+            addNotification("info", "No results found for your search");
           }
         } catch (err) {
-          console.error('Search error:', err);
-          addNotification('error', 'Failed to perform search. Please try again.');
+          console.error("Search error:", err);
+          addNotification(
+            "error",
+            "Failed to perform search. Please try again."
+          );
         } finally {
           setSearching(false);
         }
@@ -72,14 +82,14 @@ export const Listings: React.FC = () => {
         {/* Header Section */}
         <div className="flex flex-col space-y-4">
           <h1 className="text-2xl font-bold">
-            {searchQuery 
-              ? `Search Results for "${searchQuery}"` 
-              : role === 'buyer' 
-                ? 'My Listings'
-                : 'Current active items'}
+            {searchQuery
+              ? `Search Results for "${searchQuery}"`
+              : role === "buyer"
+              ? "My Listings"
+              : "Current active items"}
           </h1>
-          
-          {role === 'buyer' && (
+
+          {role === "buyer" && (
             <div>
               <Link
                 to="/items/add"
@@ -97,22 +107,27 @@ export const Listings: React.FC = () => {
             searchResults.length > 0 ? (
               // Show eBay search results
               searchResults.map((result, index) => (
-                <div key={index} className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
+                <div
+                  key={index}
+                  className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden"
+                >
                   {result.imageUrl && (
                     <div className="h-48 bg-gray-100 dark:bg-gray-700">
-                      <img 
-                        src={result.imageUrl} 
+                      <img
+                        src={result.imageUrl}
                         alt={result.title}
                         className="w-full h-full object-contain"
                         onError={(e) => {
                           const img = e.target as HTMLImageElement;
-                          img.style.display = 'none';
+                          img.style.display = "none";
                         }}
                       />
                     </div>
                   )}
                   <div className="p-4">
-                    <h3 className="text-lg font-semibold mb-2">{result.title}</h3>
+                    <h3 className="text-lg font-semibold mb-2">
+                      {result.title}
+                    </h3>
                     {result.price && (
                       <p className="text-xl font-bold text-indigo-600 dark:text-indigo-400">
                         {formatCurrency(result.price)}
@@ -133,14 +148,16 @@ export const Listings: React.FC = () => {
               ))
             ) : (
               <div className="col-span-3 text-center py-8">
-                <p className="text-gray-500 dark:text-gray-400">No results found for "{searchQuery}"</p>
+                <p className="text-gray-500 dark:text-gray-400">
+                  No results found for "{searchQuery}"
+                </p>
               </div>
             )
           ) : (
             // Show user's listings
-            listings.map((listing) => (
-              <Link 
-                key={listing.id} 
+            MockList.map((listing) => (
+              <Link
+                key={listing.id}
                 to={`/listings/${listing.id}`}
                 className="bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-lg transition-shadow"
               >
@@ -154,16 +171,19 @@ export const Listings: React.FC = () => {
                   <p className="text-gray-600 dark:text-gray-300 mb-4 line-clamp-2">
                     {listing.description}
                   </p>
-                  <div className="flex justify-between items-center">
+                  <div className="flex flex-col justify-between items-start">
                     <div>
-                      <span className="text-sm text-gray-500 dark:text-gray-400">Budget:</span>
+                      <span className="text-sm text-gray-500 dark:text-gray-400">
+                        Budget:
+                      </span>
                       <span className="ml-2 text-lg font-bold text-indigo-600 dark:text-indigo-400">
-                        {formatCurrency(listing.minPrice)} - {formatCurrency(listing.maxPrice)}
+                        {formatCurrency(listing.minPrice)} -{" "}
+                        {formatCurrency(listing.maxPrice)}
                       </span>
                     </div>
-                    {listing.seller_username && (
+                    {listing.sellerUsername && (
                       <div className="text-sm text-gray-500 dark:text-gray-400">
-                        Posted by: {listing.seller_username}
+                        Posted by: {listing.sellerUsername}
                       </div>
                     )}
                   </div>
@@ -176,3 +196,5 @@ export const Listings: React.FC = () => {
     </div>
   );
 };
+
+export default ItemList;

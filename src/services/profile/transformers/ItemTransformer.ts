@@ -22,11 +22,11 @@ export class ItemTransformer extends BaseTransformer<ItemRow, Item> {
       description: data.description,
       minPrice: data.min_price,
       maxPrice: data.max_price,
-      seller_id: data.seller_id,
+      sellerId: data.seller_id,
       category: data.category,
-      shipping_options: data.shipping_options,
+      shippingOptions: data.shipping_options,
       status: data.status,
-      created_at: data.created_at
+      createdAt: data.created_at
     };
   }
 }

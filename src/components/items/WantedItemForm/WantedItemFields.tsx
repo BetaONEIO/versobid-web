@@ -75,7 +75,7 @@ export const WantedItemFields: React.FC<WantedItemFieldsProps> = ({ formData, on
     try {
       const url = await storageService.uploadImage(file, auth.user.id);
       setImageUrl(url);
-      onChange('image_url', url);
+      onChange('imageUrl', url);
       addNotification('success', 'Image uploaded successfully');
     } catch (error) {
       addNotification('error', 'Failed to upload image');

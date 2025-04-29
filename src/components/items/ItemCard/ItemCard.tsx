@@ -31,7 +31,7 @@ export const ItemCard: React.FC<ItemCardProps> = ({ item }) => {
               </span>
             </div>
             <div className="text-sm text-gray-500 dark:text-gray-400">
-              Posted by: {item.seller_username}
+              Posted by: {item.sellerUsername}
             </div>
           </div>
         </div>

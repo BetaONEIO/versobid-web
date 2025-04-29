@@ -16,7 +16,7 @@ export const useWantedItemForm = () => {
     minPrice: 0,
     maxPrice: 0,
     category: categories[0],
-    shipping_options: []
+    shippingOptions: []
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -26,7 +26,7 @@ export const useWantedItemForm = () => {
     try {
       await itemService.createItem({
         ...formData,
-        seller_id: auth.user.id,
+        sellerId: auth.user.id,
         status: 'active'
       });
       addNotification('success', 'Wanted item posted successfully!');
@@ -49,7 +49,7 @@ export const useWantedItemForm = () => {
     });
   };
 
-  const handleDeliveryChange = (shipping_options: ItemFormData['shipping_options']) => {
+  const handleDeliveryChange = (shipping_options: ItemFormData['shippingOptions']) => {
     setFormData(prev => ({ ...prev, shipping_options }));
   };
 

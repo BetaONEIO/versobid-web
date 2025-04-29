@@ -9,7 +9,7 @@ export const useAddItemForm = () => {
     minPrice: 0,
     maxPrice: 0,
     category: categories[0],
-    shipping_options: []
+    shippingOptions: []
   });
 
   const handleChange = (field: keyof ItemFormData, value: string | number) => {
