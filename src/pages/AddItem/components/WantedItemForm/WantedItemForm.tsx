@@ -15,7 +15,7 @@ import { useNotification } from "../../../../contexts/NotificationContext";
 
 import { categories } from "../../../../utils/constants";
 
-import { mockProducts } from "../../../../services/shopping/mockData";
+import { searchProducts } from "../../../../services/shopping/mockData";
 
 import SuggestionItem from "../SuggestionItem";
 import DeliveryOption from "../DeliveryOption";
@@ -64,7 +64,7 @@ const WantedItemForm = () => {
 
   const searchSuggestion = useCallback(() => {
     if (!isEmpty(title)) {
-      const result = mockProducts?.filter((item) =>
+      const result = searchProducts?.filter((item) =>
         item.title?.toLowerCase().includes(title?.toLowerCase())
       );
       return result;

@@ -1,5 +1,5 @@
 import { SearchResult } from './types';
-import { mockProducts } from '../shopping/mockData';
+import { searchProducts } from '../shopping/mockData';
 
 export async function searchItems(query: string): Promise<SearchResult[]> {
   if (!query || query.length < 3) {
@@ -8,7 +8,7 @@ export async function searchItems(query: string): Promise<SearchResult[]> {
 
   try {
     // Filter mock data based on search query
-    const results = mockProducts
+    const results = searchProducts
       .filter(product => 
         product.title.toLowerCase().includes(query.toLowerCase()) ||
         product.description.toLowerCase().includes(query.toLowerCase()) ||
