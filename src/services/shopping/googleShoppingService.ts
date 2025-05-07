@@ -1,5 +1,5 @@
 import { SearchResult } from '../../types/search';
-import { mockProducts } from './mockData';
+import { searchProducts } from './mockData';
 
 interface SearchResponse {
   results: SearchResult[];
@@ -32,7 +32,7 @@ class GoogleShoppingService {
   private searchMockProducts(query: string): SearchResult[] {
     const searchTerms = query.toLowerCase().split(' ');
     
-    return mockProducts
+    return searchProducts
       .filter(product => {
         const searchText = `${product.title} ${product.brand} ${product.description} ${product.category}`.toLowerCase();
         return searchTerms.every(term => searchText.includes(term));
