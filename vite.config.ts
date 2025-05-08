@@ -36,9 +36,14 @@ export default defineConfig(({ mode }) => {
       strictPort: true,
       host: '0.0.0.0',
       cors: true,
+      allowedHosts: [
+        '52e8800c-a685-4197-a774-7c16b49835dd-00-19fuicwr8frnw.spock.replit.dev',
+        '.replit.dev'
+      ],
       hmr: {
         clientPort: 443,
-        timeout: 5000
+        timeout: 5000,
+        host: '0.0.0.0'
       },
       watch: {
         usePolling: true
