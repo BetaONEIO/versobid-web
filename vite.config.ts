@@ -34,9 +34,10 @@ export default defineConfig(({ mode }) => {
     server: {
       port: 5173,
       strictPort: true,
-      host: true,
+      host: '0.0.0.0',
       hmr: {
-        clientPort: 443
+        clientPort: 443,
+        host: '0.0.0.0'
       }
     },
     define: {
