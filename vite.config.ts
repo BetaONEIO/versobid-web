@@ -39,6 +39,10 @@ export default defineConfig(({ mode }) => {
         clientPort: 443,
         host: '0.0.0.0',
         protocol: 'wss'
+      },
+      fs: {
+        strict: false,
+        allow: ['.']
       }
     },
     preview: {
