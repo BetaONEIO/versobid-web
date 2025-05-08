@@ -34,10 +34,14 @@ export default defineConfig(({ mode }) => {
     server: {
       port: 5173,
       strictPort: true,
-      host: '0.0.0.0',
+      host: true,
       hmr: {
         clientPort: 443,
-        host: '0.0.0.0'
+        host: '0.0.0.0',
+        protocol: 'wss'
+      },
+      watch: {
+        usePolling: true
       }
     },
     define: {
