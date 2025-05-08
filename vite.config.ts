@@ -34,16 +34,16 @@ export default defineConfig(({ mode }) => {
     server: {
       port: 5173,
       strictPort: true,
-      host: true,
-      allowedHosts: ['52e8800c-a685-4197-a774-7c16b49835dd-00-19fuicwr8frnw.spock.replit.dev'],
+      host: '0.0.0.0',
       hmr: {
         clientPort: 443,
         host: '0.0.0.0',
         protocol: 'wss'
-      },
-      watch: {
-        usePolling: true
       }
+    },
+    preview: {
+      port: 5173,
+      host: '0.0.0.0'
     },
     define: {
       __APP_ENV__: JSON.stringify(env.APP_ENV)
