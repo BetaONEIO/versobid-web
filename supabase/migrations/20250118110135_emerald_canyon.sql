@@ -1,77 +1,18 @@
--- Add onboarding fields to profiles table
-ALTER TABLE profiles
-ADD COLUMN IF NOT EXISTS shipping_address JSONB,
-ADD COLUMN IF NOT EXISTS payment_setup BOOLEAN DEFAULT false,
-ADD COLUMN IF NOT EXISTS onboarding_completed BOOLEAN DEFAULT false;
-
--- Create index for onboarding status
-CREATE INDEX IF NOT EXISTS idx_profiles_onboarding_completed ON profiles(onboarding_completed);
-
--- Create function to check onboarding status
-CREATE OR REPLACE FUNCTION check_onboarding_status(user_id UUID)
-RETURNS BOOLEAN AS $$
-BEGIN
-  RETURN EXISTS (
-    SELECT 1 FROM profiles
-    WHERE id = user_id
-    AND shipping_address IS NOT NULL
-    AND payment_setup = true
-    AND onboarding_completed = true
-  );
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
--- Add RLS policy for onboarding fields
-CREATE POLICY "Users can update their own onboarding status"
-  ON profiles
-  FOR UPDATE
-  TO authenticated
-  USING (auth.uid() = id)
-  WITH CHECK (auth.uid() = id);
-
--- Create function to complete onboarding
-CREATE OR REPLACE FUNCTION complete_onboarding(user_id UUID)
-RETURNS BOOLEAN AS $$
-BEGIN
-  UPDATE profiles
-  SET onboarding_completed = true
-  WHERE id = user_id;
-  
-  RETURN FOUND;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
--- Add notification for incomplete onboarding
-CREATE OR REPLACE FUNCTION notify_incomplete_onboarding()
-RETURNS TRIGGER AS $$
-BEGIN
-  IF NEW.onboarding_completed = false THEN
-    INSERT INTO notifications (
-      user_id,
-      type,
-      message,
-      data
-    ) VALUES (
-      NEW.id,
-      'onboarding_reminder',
-      'Complete your profile setup to start using all features',
-      jsonb_build_object(
-        'onboarding_step', 
-        CASE 
-          WHEN NEW.shipping_address IS NULL THEN 'address'
-          WHEN NEW.payment_setup = false THEN 'payment'
-          ELSE 'incomplete'
-        END
-      )
-    );
-  END IF;
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
--- Create trigger for incomplete onboarding notifications
-DROP TRIGGER IF EXISTS notify_incomplete_onboarding_trigger ON profiles;
-CREATE TRIGGER notify_incomplete_onboarding_trigger
-  AFTER INSERT ON profiles
-  FOR EACH ROW
-  EXECUTE FUNCTION notify_incomplete_onboarding();
+-- Add onboarding fields to profiles table\nALTER TABLE profiles\nADD COLUMN IF NOT EXISTS shipping_address JSONB,\nADD COLUMN IF NOT EXISTS payment_setup BOOLEAN DEFAULT false,\nADD COLUMN IF NOT EXISTS onboarding_completed BOOLEAN DEFAULT false;
+\n\n-- Create index for onboarding status\nCREATE INDEX IF NOT EXISTS idx_profiles_onboarding_completed ON profiles(onboarding_completed);
+\n\n-- Create function to check onboarding status\nCREATE OR REPLACE FUNCTION check_onboarding_status(user_id UUID)\nRETURNS BOOLEAN AS $$\nBEGIN\n  RETURN EXISTS (\n    SELECT 1 FROM profiles\n    WHERE id = user_id\n    AND shipping_address IS NOT NULL\n    AND payment_setup = true\n    AND onboarding_completed = true\n  );
+\nEND;
+\n$$ LANGUAGE plpgsql SECURITY DEFINER;
+\n\n-- Add RLS policy for onboarding fields\nCREATE POLICY "Users can update their own onboarding status"\n  ON profiles\n  FOR UPDATE\n  TO authenticated\n  USING (auth.uid() = id)\n  WITH CHECK (auth.uid() = id);
+\n\n-- Create function to complete onboarding\nCREATE OR REPLACE FUNCTION complete_onboarding(user_id UUID)\nRETURNS BOOLEAN AS $$\nBEGIN\n  UPDATE profiles\n  SET onboarding_completed = true\n  WHERE id = user_id;
+\n  \n  RETURN FOUND;
+\nEND;
+\n$$ LANGUAGE plpgsql SECURITY DEFINER;
+\n\n-- Add notification for incomplete onboarding\nCREATE OR REPLACE FUNCTION notify_incomplete_onboarding()\nRETURNS TRIGGER AS $$\nBEGIN\n  IF NEW.onboarding_completed = false THEN\n    INSERT INTO notifications (\n      user_id,\n      type,\n      message,\n      data\n    ) VALUES (\n      NEW.id,\n      'onboarding_reminder',\n      'Complete your profile setup to start using all features',\n      jsonb_build_object(\n        'onboarding_step', \n        CASE \n          WHEN NEW.shipping_address IS NULL THEN 'address'\n          WHEN NEW.payment_setup = false THEN 'payment'\n          ELSE 'incomplete'\n        END\n      )\n    );
+\n  END IF;
+\n  RETURN NEW;
+\nEND;
+\n$$ LANGUAGE plpgsql SECURITY DEFINER;
+\n\n-- Create trigger for incomplete onboarding notifications\nDROP TRIGGER IF EXISTS notify_incomplete_onboarding_trigger ON profiles;
+\nCREATE TRIGGER notify_incomplete_onboarding_trigger\n  AFTER INSERT ON profiles\n  FOR EACH ROW\n  EXECUTE FUNCTION notify_incomplete_onboarding();
+;

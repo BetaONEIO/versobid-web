@@ -1,110 +1,30 @@
--- Drop existing trigger and function
-DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
-DROP FUNCTION IF EXISTS handle_new_user();
-
--- Create improved user creation handler with better error handling
-CREATE OR REPLACE FUNCTION handle_new_user()
-RETURNS trigger
-SECURITY DEFINER
-SET search_path = public
-LANGUAGE plpgsql
-AS $$
-DECLARE
-  username text;
-  full_name text;
-  base_username text;
-  counter integer := 0;
-BEGIN
-  -- Extract or generate base username from email
-  base_username := REGEXP_REPLACE(SPLIT_PART(NEW.email, '@', 1), '[^a-zA-Z0-9_]', '_', 'g');
-  
-  -- Get username from metadata or use base_username
-  username := COALESCE(NEW.raw_user_meta_data->>'username', base_username);
-  
-  -- Get full name from metadata or use username
-  full_name := COALESCE(NEW.raw_user_meta_data->>'full_name', username);
-
-  -- Ensure username is at least 3 characters
-  IF length(username) < 3 THEN
-    username := username || LPAD(floor(random() * 1000)::text, 3, '0');
-  END IF;
-
-  -- Try to insert profile with unique username
-  LOOP
-    BEGIN
-      INSERT INTO public.profiles (
-        id,
-        email,
-        username,
-        full_name,
-        created_at,
-        is_admin,
-        avatar_url,
-        shipping_address,
-        payment_setup,
-        onboarding_completed
-      ) VALUES (
-        NEW.id,
-        NEW.email,
-        CASE 
-          WHEN counter = 0 THEN username
-          ELSE username || '_' || counter::text
-        END,
-        full_name,
-        NOW(),
-        false,
-        null,
-        null,
-        false,
-        false
-      );
-      
-      -- If we get here, insert was successful
-      RETURN NEW;
-      
-    EXCEPTION 
-      WHEN unique_violation THEN
-        -- Only retry 5 times
-        IF counter >= 5 THEN
-          RAISE EXCEPTION 'Could not generate unique username after 5 attempts';
-        END IF;
-        counter := counter + 1;
-        CONTINUE;
-      WHEN OTHERS THEN
-        -- Log any other errors but don't prevent user creation
-        INSERT INTO auth_errors (
-          user_id,
-          email,
-          error,
-          details
-        ) VALUES (
-          NEW.id,
-          NEW.email,
-          SQLERRM,
-          jsonb_build_object(
-            'state', SQLSTATE,
-            'username', username,
-            'full_name', full_name,
-            'attempt', counter
-          )
-        );
-        RETURN NEW;
-    END;
-  END LOOP;
-END;
-$$;
-
--- Recreate trigger
-CREATE TRIGGER on_auth_user_created
-  AFTER INSERT ON auth.users
-  FOR EACH ROW
-  EXECUTE FUNCTION handle_new_user();
-
--- Ensure proper grants
-GRANT USAGE ON SCHEMA public TO authenticated;
-GRANT ALL ON ALL TABLES IN SCHEMA public TO authenticated;
-GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO authenticated;
-
--- Create index for auth_errors if it doesn't exist
-CREATE INDEX IF NOT EXISTS idx_auth_errors_user_id ON auth_errors(user_id);
-CREATE INDEX IF NOT EXISTS idx_auth_errors_created_at ON auth_errors(created_at);
+-- Drop existing trigger and function\nDROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+\nDROP FUNCTION IF EXISTS handle_new_user();
+\n\n-- Create improved user creation handler with better error handling\nCREATE OR REPLACE FUNCTION handle_new_user()\nRETURNS trigger\nSECURITY DEFINER\nSET search_path = public\nLANGUAGE plpgsql\nAS $$\nDECLARE\n  username text;
+\n  full_name text;
+\n  base_username text;
+\n  counter integer := 0;
+\nBEGIN\n  -- Extract or generate base username from email\n  base_username := REGEXP_REPLACE(SPLIT_PART(NEW.email, '@', 1), '[^a-zA-Z0-9_]', '_', 'g');
+\n  \n  -- Get username from metadata or use base_username\n  username := COALESCE(NEW.raw_user_meta_data->>'username', base_username);
+\n  \n  -- Get full name from metadata or use username\n  full_name := COALESCE(NEW.raw_user_meta_data->>'full_name', username);
+\n\n  -- Ensure username is at least 3 characters\n  IF length(username) < 3 THEN\n    username := username || LPAD(floor(random() * 1000)::text, 3, '0');
+\n  END IF;
+\n\n  -- Try to insert profile with unique username\n  LOOP\n    BEGIN\n      INSERT INTO public.profiles (\n        id,\n        email,\n        username,\n        full_name,\n        created_at,\n        is_admin,\n        avatar_url,\n        shipping_address,\n        payment_setup,\n        onboarding_completed\n      ) VALUES (\n        NEW.id,\n        NEW.email,\n        CASE \n          WHEN counter = 0 THEN username\n          ELSE username || '_' || counter::text\n        END,\n        full_name,\n        NOW(),\n        false,\n        null,\n        null,\n        false,\n        false\n      );
+\n      \n      -- If we get here, insert was successful\n      RETURN NEW;
+\n      \n    EXCEPTION \n      WHEN unique_violation THEN\n        -- Only retry 5 times\n        IF counter >= 5 THEN\n          RAISE EXCEPTION 'Could not generate unique username after 5 attempts';
+\n        END IF;
+\n        counter := counter + 1;
+\n        CONTINUE;
+\n      WHEN OTHERS THEN\n        -- Log any other errors but don't prevent user creation\n        INSERT INTO auth_errors (\n          user_id,\n          email,\n          error,\n          details\n        ) VALUES (\n          NEW.id,\n          NEW.email,\n          SQLERRM,\n          jsonb_build_object(\n            'state', SQLSTATE,\n            'username', username,\n            'full_name', full_name,\n            'attempt', counter\n          )\n        );
+\n        RETURN NEW;
+\n    END;
+\n  END LOOP;
+\nEND;
+\n$$;
+\n\n-- Recreate trigger\nCREATE TRIGGER on_auth_user_created\n  AFTER INSERT ON auth.users\n  FOR EACH ROW\n  EXECUTE FUNCTION handle_new_user();
+\n\n-- Ensure proper grants\nGRANT USAGE ON SCHEMA public TO authenticated;
+\nGRANT ALL ON ALL TABLES IN SCHEMA public TO authenticated;
+\nGRANT ALL ON ALL SEQUENCES IN SCHEMA public TO authenticated;
+\n\n-- Create index for auth_errors if it doesn't exist\nCREATE INDEX IF NOT EXISTS idx_auth_errors_user_id ON auth_errors(user_id);
+\nCREATE INDEX IF NOT EXISTS idx_auth_errors_created_at ON auth_errors(created_at);
+;

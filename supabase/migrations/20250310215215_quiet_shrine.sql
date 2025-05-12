@@ -1,0 +1,17 @@
+\n\n-- Create email verification table\nCREATE TABLE IF NOT EXISTS email_verification (\n  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),\n  user_id uuid REFERENCES profiles(id) ON DELETE CASCADE,\n  token text UNIQUE NOT NULL,\n  expires_at timestamptz NOT NULL,\n  created_at timestamptz DEFAULT now()\n);
+\n\n-- Add indexes\nCREATE INDEX IF NOT EXISTS idx_email_verification_token ON email_verification(token);
+\nCREATE INDEX IF NOT EXISTS idx_email_verification_expires_at ON email_verification(expires_at);
+\n\n-- Enable RLS\nALTER TABLE email_verification ENABLE ROW LEVEL SECURITY;
+\n\n-- Drop existing policy if it exists\nDO $$\nBEGIN\n  DROP POLICY IF EXISTS "Users can read their own verification records" ON email_verification;
+\nEND $$;
+\n\n-- Add RLS policies\nCREATE POLICY "Users can read their own verification records"\n  ON email_verification\n  FOR SELECT\n  TO authenticated\n  USING (auth.uid() = user_id);
+\n\n-- Add email_verified column to profiles if it doesn't exist\nDO $$\nBEGIN\n  IF NOT EXISTS (\n    SELECT 1 FROM information_schema.columns\n    WHERE table_name = 'profiles' AND column_name = 'email_verified'\n  ) THEN\n    ALTER TABLE profiles ADD COLUMN email_verified boolean DEFAULT false;
+\n  END IF;
+\nEND $$;
+\n\n-- Create function to clean up expired tokens\nCREATE OR REPLACE FUNCTION trigger_cleanup_expired_verification_tokens()\nRETURNS trigger AS $$\nBEGIN\n  DELETE FROM email_verification\n  WHERE expires_at < NOW();
+\n  RETURN NULL;
+\nEND;
+\n$$ LANGUAGE plpgsql;
+\n\n-- Drop existing trigger if it exists\nDROP TRIGGER IF EXISTS cleanup_expired_verification_tokens_trigger ON email_verification;
+\n\n-- Create trigger to clean up expired tokens\nCREATE TRIGGER cleanup_expired_verification_tokens_trigger\n  AFTER INSERT ON email_verification\n  FOR EACH STATEMENT\n  EXECUTE FUNCTION trigger_cleanup_expired_verification_tokens();
+;

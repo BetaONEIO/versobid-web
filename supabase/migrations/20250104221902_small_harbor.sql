@@ -1,58 +1,16 @@
-/*
-  # Add Profile Error Handling
-  
-  1. Creates error handling function for profile creation
-  2. Sets up trigger for logging profile creation attempts
-  3. Grants necessary permissions
-*/
-
--- Create better error handling function
-CREATE OR REPLACE FUNCTION handle_profile_creation()
-RETURNS TRIGGER AS $$
-BEGIN
-  BEGIN
-    -- Basic validation
-    IF NEW.email IS NULL OR NEW.email = '' THEN
-      RAISE EXCEPTION 'Email cannot be empty';
-    END IF;
-
-    IF NEW.username IS NULL OR NEW.username = '' THEN
-      RAISE EXCEPTION 'Username cannot be empty';
-    END IF;
-
-    -- Log attempt
-    INSERT INTO signup_errors (user_id, email, error_message)
-    VALUES (NEW.id, NEW.email, 'Profile creation attempted');
-
-    RETURN NEW;
-  EXCEPTION WHEN OTHERS THEN
-    -- Log error
-    INSERT INTO signup_errors (
-      user_id,
-      email,
-      error_message,
-      error_details
-    ) VALUES (
-      NEW.id,
-      NEW.email,
-      'Profile creation failed: ' || SQLERRM,
-      jsonb_build_object(
-        'error_code', SQLSTATE,
-        'error_message', SQLERRM
-      )
-    );
-    RAISE;
-  END;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
--- Create trigger for error handling
-DROP TRIGGER IF EXISTS handle_profile_creation_trigger ON profiles;
-CREATE TRIGGER handle_profile_creation_trigger
-  BEFORE INSERT ON profiles
-  FOR EACH ROW
-  EXECUTE FUNCTION handle_profile_creation();
-
--- Grant necessary permissions
-GRANT ALL ON signup_errors TO authenticated;
-GRANT ALL ON signup_errors TO service_role;
+\n\n-- Create better error handling function\nCREATE OR REPLACE FUNCTION handle_profile_creation()\nRETURNS TRIGGER AS $$\nBEGIN\n  BEGIN\n    -- Basic validation\n    IF NEW.email IS NULL OR NEW.email = '' THEN\n      RAISE EXCEPTION 'Email cannot be empty';
+\n    END IF;
+\n\n    IF NEW.username IS NULL OR NEW.username = '' THEN\n      RAISE EXCEPTION 'Username cannot be empty';
+\n    END IF;
+\n\n    -- Log attempt\n    INSERT INTO signup_errors (user_id, email, error_message)\n    VALUES (NEW.id, NEW.email, 'Profile creation attempted');
+\n\n    RETURN NEW;
+\n  EXCEPTION WHEN OTHERS THEN\n    -- Log error\n    INSERT INTO signup_errors (\n      user_id,\n      email,\n      error_message,\n      error_details\n    ) VALUES (\n      NEW.id,\n      NEW.email,\n      'Profile creation failed: ' || SQLERRM,\n      jsonb_build_object(\n        'error_code', SQLSTATE,\n        'error_message', SQLERRM\n      )\n    );
+\n    RAISE;
+\n  END;
+\nEND;
+\n$$ LANGUAGE plpgsql SECURITY DEFINER;
+\n\n-- Create trigger for error handling\nDROP TRIGGER IF EXISTS handle_profile_creation_trigger ON profiles;
+\nCREATE TRIGGER handle_profile_creation_trigger\n  BEFORE INSERT ON profiles\n  FOR EACH ROW\n  EXECUTE FUNCTION handle_profile_creation();
+\n\n-- Grant necessary permissions\nGRANT ALL ON signup_errors TO authenticated;
+\nGRANT ALL ON signup_errors TO service_role;
+;

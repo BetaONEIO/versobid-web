@@ -1,70 +1,10 @@
-/*
-  # Create Items Table for Buyer Listings
-
-  1. New Tables
-    - `items`
-      - `id` (uuid, primary key)
-      - `title` (text)
-      - `description` (text)
-      - `min_price` (numeric)
-      - `max_price` (numeric)
-      - `category` (text)
-      - `shipping_options` (jsonb)
-      - `condition` (text)
-      - `seller_id` (uuid, references profiles)
-      - `status` (text)
-      - `created_at` (timestamptz)
-
-  2. Security
-    - Enable RLS
-    - Add policies for CRUD operations
-*/
-
--- Create items table
-CREATE TABLE IF NOT EXISTS items (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  title TEXT NOT NULL,
-  description TEXT,
-  min_price NUMERIC NOT NULL CHECK (min_price >= 0),
-  max_price NUMERIC NOT NULL CHECK (max_price >= min_price),
-  category TEXT NOT NULL,
-  shipping_options JSONB DEFAULT '[]',
-  condition TEXT,
-  seller_id UUID REFERENCES profiles(id) NOT NULL,
-  status TEXT NOT NULL DEFAULT 'active',
-  created_at TIMESTAMPTZ DEFAULT now(),
-  CHECK (status IN ('active', 'completed', 'archived'))
-);
-
--- Enable RLS
-ALTER TABLE items ENABLE ROW LEVEL SECURITY;
-
--- Create policies
-CREATE POLICY "Anyone can view active items"
-  ON items
-  FOR SELECT
-  USING (status = 'active');
-
-CREATE POLICY "Users can create their own items"
-  ON items
-  FOR INSERT
-  TO authenticated
-  WITH CHECK (auth.uid() = seller_id);
-
-CREATE POLICY "Users can update their own items"
-  ON items
-  FOR UPDATE
-  TO authenticated
-  USING (auth.uid() = seller_id)
-  WITH CHECK (auth.uid() = seller_id);
-
-CREATE POLICY "Users can delete their own items"
-  ON items
-  FOR DELETE
-  TO authenticated
-  USING (auth.uid() = seller_id);
-
--- Create indexes
-CREATE INDEX items_seller_id_idx ON items(seller_id);
-CREATE INDEX items_category_idx ON items(category);
-CREATE INDEX items_status_idx ON items(status);
+\n\n-- Create items table\nCREATE TABLE IF NOT EXISTS items (\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n  title TEXT NOT NULL,\n  description TEXT,\n  min_price NUMERIC NOT NULL CHECK (min_price >= 0),\n  max_price NUMERIC NOT NULL CHECK (max_price >= min_price),\n  category TEXT NOT NULL,\n  shipping_options JSONB DEFAULT '[]',\n  condition TEXT,\n  seller_id UUID REFERENCES profiles(id) NOT NULL,\n  status TEXT NOT NULL DEFAULT 'active',\n  created_at TIMESTAMPTZ DEFAULT now(),\n  CHECK (status IN ('active', 'completed', 'archived'))\n);
+\n\n-- Enable RLS\nALTER TABLE items ENABLE ROW LEVEL SECURITY;
+\n\n-- Create policies\nCREATE POLICY "Anyone can view active items"\n  ON items\n  FOR SELECT\n  USING (status = 'active');
+\n\nCREATE POLICY "Users can create their own items"\n  ON items\n  FOR INSERT\n  TO authenticated\n  WITH CHECK (auth.uid() = seller_id);
+\n\nCREATE POLICY "Users can update their own items"\n  ON items\n  FOR UPDATE\n  TO authenticated\n  USING (auth.uid() = seller_id)\n  WITH CHECK (auth.uid() = seller_id);
+\n\nCREATE POLICY "Users can delete their own items"\n  ON items\n  FOR DELETE\n  TO authenticated\n  USING (auth.uid() = seller_id);
+\n\n-- Create indexes\nCREATE INDEX items_seller_id_idx ON items(seller_id);
+\nCREATE INDEX items_category_idx ON items(category);
+\nCREATE INDEX items_status_idx ON items(status);
+;

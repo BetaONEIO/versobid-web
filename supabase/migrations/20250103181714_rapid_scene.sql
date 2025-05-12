@@ -1,28 +1,10 @@
--- Clean up orphaned profiles
-CREATE OR REPLACE FUNCTION cleanup_orphaned_profiles()
-RETURNS void AS $$
-BEGIN
-  -- Delete profiles that don't have corresponding auth.users entries
-  DELETE FROM profiles
-  WHERE id NOT IN (
-    SELECT id FROM auth.users
-  );
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
--- Run the cleanup
-SELECT cleanup_orphaned_profiles();
-
--- Create trigger to automatically clean up orphaned profiles
-CREATE OR REPLACE FUNCTION cleanup_profile_on_user_delete()
-RETURNS TRIGGER AS $$
-BEGIN
-  DELETE FROM profiles WHERE id = OLD.id;
-  RETURN OLD;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
-CREATE TRIGGER cleanup_profile_trigger
-  AFTER DELETE ON auth.users
-  FOR EACH ROW
-  EXECUTE FUNCTION cleanup_profile_on_user_delete();
+-- Clean up orphaned profiles\nCREATE OR REPLACE FUNCTION cleanup_orphaned_profiles()\nRETURNS void AS $$\nBEGIN\n  -- Delete profiles that don't have corresponding auth.users entries\n  DELETE FROM profiles\n  WHERE id NOT IN (\n    SELECT id FROM auth.users\n  );
+\nEND;
+\n$$ LANGUAGE plpgsql SECURITY DEFINER;
+\n\n-- Run the cleanup\nSELECT cleanup_orphaned_profiles();
+\n\n-- Create trigger to automatically clean up orphaned profiles\nCREATE OR REPLACE FUNCTION cleanup_profile_on_user_delete()\nRETURNS TRIGGER AS $$\nBEGIN\n  DELETE FROM profiles WHERE id = OLD.id;
+\n  RETURN OLD;
+\nEND;
+\n$$ LANGUAGE plpgsql SECURITY DEFINER;
+\n\nCREATE TRIGGER cleanup_profile_trigger\n  AFTER DELETE ON auth.users\n  FOR EACH ROW\n  EXECUTE FUNCTION cleanup_profile_on_user_delete();
+;

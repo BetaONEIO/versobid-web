@@ -1,55 +1,15 @@
-/*
-  # Fix profiles table and policies
-
-  1. Changes
-    - Drop existing policies
-    - Update RLS policies
-    - Ensure indexes exist
-    - Update public profiles view
-
-  2. Security
-    - Maintain RLS
-    - Recreate policies with proper permissions
-*/
-
--- Drop existing policies
-DROP POLICY IF EXISTS "Users can insert their own profile" ON profiles;
-DROP POLICY IF EXISTS "Users can update own profile" ON profiles;
-DROP POLICY IF EXISTS "Users can update their own profile" ON profiles;
-DROP POLICY IF EXISTS "Public profiles are viewable by everyone" ON profiles;
-DROP POLICY IF EXISTS "Profiles are viewable by authenticated users" ON profiles;
-
--- Ensure RLS is enabled
-ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
-
--- Create new policies
-CREATE POLICY "Profiles are viewable by authenticated users"
-  ON profiles
-  FOR SELECT
-  TO authenticated
-  USING (true);
-
-CREATE POLICY "Users can insert their own profile"
-  ON profiles
-  FOR INSERT
-  TO authenticated
-  WITH CHECK (auth.uid() = id);
-
-CREATE POLICY "Users can update own profile"
-  ON profiles
-  FOR UPDATE
-  TO authenticated
-  USING (auth.uid() = id);
-
--- Ensure indexes exist
-CREATE INDEX IF NOT EXISTS profiles_username_idx ON profiles (username);
-CREATE INDEX IF NOT EXISTS profiles_email_idx ON profiles (email);
-
--- Recreate public profiles view
-DROP VIEW IF EXISTS public_profiles;
-CREATE VIEW public_profiles AS
-  SELECT id, username, avatar_url
-  FROM profiles;
-
--- Grant access to public profiles view
-GRANT SELECT ON public_profiles TO anon, authenticated;
+\n\n-- Drop existing policies\nDROP POLICY IF EXISTS "Users can insert their own profile" ON profiles;
+\nDROP POLICY IF EXISTS "Users can update own profile" ON profiles;
+\nDROP POLICY IF EXISTS "Users can update their own profile" ON profiles;
+\nDROP POLICY IF EXISTS "Public profiles are viewable by everyone" ON profiles;
+\nDROP POLICY IF EXISTS "Profiles are viewable by authenticated users" ON profiles;
+\n\n-- Ensure RLS is enabled\nALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
+\n\n-- Create new policies\nCREATE POLICY "Profiles are viewable by authenticated users"\n  ON profiles\n  FOR SELECT\n  TO authenticated\n  USING (true);
+\n\nCREATE POLICY "Users can insert their own profile"\n  ON profiles\n  FOR INSERT\n  TO authenticated\n  WITH CHECK (auth.uid() = id);
+\n\nCREATE POLICY "Users can update own profile"\n  ON profiles\n  FOR UPDATE\n  TO authenticated\n  USING (auth.uid() = id);
+\n\n-- Ensure indexes exist\nCREATE INDEX IF NOT EXISTS profiles_username_idx ON profiles (username);
+\nCREATE INDEX IF NOT EXISTS profiles_email_idx ON profiles (email);
+\n\n-- Recreate public profiles view\nDROP VIEW IF EXISTS public_profiles;
+\nCREATE VIEW public_profiles AS\n  SELECT id, username, avatar_url\n  FROM profiles;
+\n\n-- Grant access to public profiles view\nGRANT SELECT ON public_profiles TO anon, authenticated;
+;

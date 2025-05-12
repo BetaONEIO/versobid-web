@@ -1,133 +1,38 @@
--- Drop existing trigger and function
-DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
-DROP FUNCTION IF EXISTS handle_new_user();
-
--- Create improved function to handle new user creation
-CREATE OR REPLACE FUNCTION handle_new_user()
-RETURNS trigger
-SECURITY DEFINER
-SET search_path = public
-LANGUAGE plpgsql
-AS $$
-DECLARE
-  username text;
-  full_name text;
-BEGIN
-  -- Get username and full_name from metadata
-  username := NEW.raw_user_meta_data->>'username';
-  full_name := NEW.raw_user_meta_data->>'full_name';
-  
-  -- Fallback values if metadata is missing
-  IF username IS NULL THEN
-    username := REGEXP_REPLACE(SPLIT_PART(NEW.email, '@', 1), '[^a-zA-Z0-9_]', '_', 'g');
-  END IF;
-  
-  IF full_name IS NULL THEN
-    full_name := username;
-  END IF;
-
-  -- Insert profile
-  INSERT INTO public.profiles (
-    id,
-    email,
-    username,
-    full_name,
-    created_at,
-    is_admin,
-    avatar_url,
-    shipping_address,
-    payment_setup,
-    onboarding_completed
-  ) VALUES (
-    NEW.id,
-    NEW.email,
-    username,
-    full_name,
-    NOW(),
-    false,
-    null,
-    null,
-    false,
-    false
-  );
-
-  RETURN NEW;
-EXCEPTION WHEN others THEN
-  -- Log error details
-  RAISE LOG 'Profile creation failed for user % (%). Error: % (SQLSTATE: %)',
-    NEW.id, NEW.email, SQLERRM, SQLSTATE;
-  RETURN NULL;
-END;
-$$;
-
--- Recreate trigger
-CREATE TRIGGER on_auth_user_created
-  AFTER INSERT ON auth.users
-  FOR EACH ROW
-  EXECUTE FUNCTION handle_new_user();
-
--- Drop existing policies
-DO $$ 
-BEGIN
-    DROP POLICY IF EXISTS "profiles_select" ON profiles;
-    DROP POLICY IF EXISTS "profiles_insert" ON profiles;
-    DROP POLICY IF EXISTS "profiles_update" ON profiles;
-EXCEPTION 
-    WHEN undefined_object THEN NULL;
-END $$;
-
--- Create simplified policies
-CREATE POLICY "profiles_select"
-  ON profiles
-  FOR SELECT
-  TO public
-  USING (true);
-
-CREATE POLICY "profiles_insert"
-  ON profiles
-  FOR INSERT
-  TO service_role
-  WITH CHECK (true);
-
-CREATE POLICY "profiles_update"
-  ON profiles
-  FOR UPDATE
-  TO authenticated
-  USING (auth.uid() = id)
-  WITH CHECK (auth.uid() = id);
-
--- Ensure proper grants
-GRANT USAGE ON SCHEMA public TO anon, authenticated, service_role;
-GRANT ALL ON profiles TO service_role;
-GRANT SELECT ON profiles TO anon;
-GRANT SELECT, UPDATE ON profiles TO authenticated;
-
--- Create unique indexes
-DROP INDEX IF EXISTS idx_profiles_email;
-DROP INDEX IF EXISTS idx_profiles_username;
-CREATE UNIQUE INDEX idx_profiles_email ON profiles(email);
-CREATE UNIQUE INDEX idx_profiles_username ON profiles(username);
-
--- Add error logging table
-CREATE TABLE IF NOT EXISTS auth_errors (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID,
-  email TEXT,
-  error TEXT,
-  details JSONB,
-  created_at TIMESTAMPTZ DEFAULT now()
-);
-
--- Create function to log auth errors
-CREATE OR REPLACE FUNCTION log_auth_error(
-  p_user_id UUID,
-  p_email TEXT,
-  p_error TEXT,
-  p_details JSONB DEFAULT NULL
-)
-RETURNS void AS $$
-BEGIN
-  INSERT INTO auth_errors (user_id, email, error, details)
-  VALUES (p_user_id, p_email, p_error, p_details);
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+-- Drop existing trigger and function\nDROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+\nDROP FUNCTION IF EXISTS handle_new_user();
+\n\n-- Create improved function to handle new user creation\nCREATE OR REPLACE FUNCTION handle_new_user()\nRETURNS trigger\nSECURITY DEFINER\nSET search_path = public\nLANGUAGE plpgsql\nAS $$\nDECLARE\n  username text;
+\n  full_name text;
+\nBEGIN\n  -- Get username and full_name from metadata\n  username := NEW.raw_user_meta_data->>'username';
+\n  full_name := NEW.raw_user_meta_data->>'full_name';
+\n  \n  -- Fallback values if metadata is missing\n  IF username IS NULL THEN\n    username := REGEXP_REPLACE(SPLIT_PART(NEW.email, '@', 1), '[^a-zA-Z0-9_]', '_', 'g');
+\n  END IF;
+\n  \n  IF full_name IS NULL THEN\n    full_name := username;
+\n  END IF;
+\n\n  -- Insert profile\n  INSERT INTO public.profiles (\n    id,\n    email,\n    username,\n    full_name,\n    created_at,\n    is_admin,\n    avatar_url,\n    shipping_address,\n    payment_setup,\n    onboarding_completed\n  ) VALUES (\n    NEW.id,\n    NEW.email,\n    username,\n    full_name,\n    NOW(),\n    false,\n    null,\n    null,\n    false,\n    false\n  );
+\n\n  RETURN NEW;
+\nEXCEPTION WHEN others THEN\n  -- Log error details\n  RAISE LOG 'Profile creation failed for user % (%). Error: % (SQLSTATE: %)',\n    NEW.id, NEW.email, SQLERRM, SQLSTATE;
+\n  RETURN NULL;
+\nEND;
+\n$$;
+\n\n-- Recreate trigger\nCREATE TRIGGER on_auth_user_created\n  AFTER INSERT ON auth.users\n  FOR EACH ROW\n  EXECUTE FUNCTION handle_new_user();
+\n\n-- Drop existing policies\nDO $$ \nBEGIN\n    DROP POLICY IF EXISTS "profiles_select" ON profiles;
+\n    DROP POLICY IF EXISTS "profiles_insert" ON profiles;
+\n    DROP POLICY IF EXISTS "profiles_update" ON profiles;
+\nEXCEPTION \n    WHEN undefined_object THEN NULL;
+\nEND $$;
+\n\n-- Create simplified policies\nCREATE POLICY "profiles_select"\n  ON profiles\n  FOR SELECT\n  TO public\n  USING (true);
+\n\nCREATE POLICY "profiles_insert"\n  ON profiles\n  FOR INSERT\n  TO service_role\n  WITH CHECK (true);
+\n\nCREATE POLICY "profiles_update"\n  ON profiles\n  FOR UPDATE\n  TO authenticated\n  USING (auth.uid() = id)\n  WITH CHECK (auth.uid() = id);
+\n\n-- Ensure proper grants\nGRANT USAGE ON SCHEMA public TO anon, authenticated, service_role;
+\nGRANT ALL ON profiles TO service_role;
+\nGRANT SELECT ON profiles TO anon;
+\nGRANT SELECT, UPDATE ON profiles TO authenticated;
+\n\n-- Create unique indexes\nDROP INDEX IF EXISTS idx_profiles_email;
+\nDROP INDEX IF EXISTS idx_profiles_username;
+\nCREATE UNIQUE INDEX idx_profiles_email ON profiles(email);
+\nCREATE UNIQUE INDEX idx_profiles_username ON profiles(username);
+\n\n-- Add error logging table\nCREATE TABLE IF NOT EXISTS auth_errors (\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n  user_id UUID,\n  email TEXT,\n  error TEXT,\n  details JSONB,\n  created_at TIMESTAMPTZ DEFAULT now()\n);
+\n\n-- Create function to log auth errors\nCREATE OR REPLACE FUNCTION log_auth_error(\n  p_user_id UUID,\n  p_email TEXT,\n  p_error TEXT,\n  p_details JSONB DEFAULT NULL\n)\nRETURNS void AS $$\nBEGIN\n  INSERT INTO auth_errors (user_id, email, error, details)\n  VALUES (p_user_id, p_email, p_error, p_details);
+\nEND;
+\n$$ LANGUAGE plpgsql SECURITY DEFINER;
+;

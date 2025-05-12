@@ -1,120 +1,20 @@
--- Enhance signup error logging
-ALTER TABLE signup_errors 
-ADD COLUMN IF NOT EXISTS request_data JSONB,
-ADD COLUMN IF NOT EXISTS stack_trace TEXT;
-
--- Create function to log detailed signup attempts
-CREATE OR REPLACE FUNCTION log_signup_attempt(
-    p_user_id UUID,
-    p_email TEXT,
-    p_request_data JSONB DEFAULT NULL
-) RETURNS void AS $$
-BEGIN
-    INSERT INTO signup_errors (
-        user_id,
-        email,
-        error_message,
-        request_data,
-        error_details
-    ) VALUES (
-        p_user_id,
-        p_email,
-        'Signup attempt started',
-        p_request_data,
-        jsonb_build_object(
-            'timestamp', now(),
-            'auth_exists', EXISTS(SELECT 1 FROM auth.users WHERE id = p_user_id),
-            'profile_exists', EXISTS(SELECT 1 FROM profiles WHERE id = p_user_id)
-        )
-    );
-EXCEPTION WHEN OTHERS THEN
-    -- Log any errors in the logging itself
-    INSERT INTO signup_errors (
-        user_id,
-        email,
-        error_message,
-        error_details
-    ) VALUES (
-        p_user_id,
-        p_email,
-        'Failed to log signup attempt: ' || SQLERRM,
-        jsonb_build_object(
-            'error_code', SQLSTATE,
-            'error_message', SQLERRM
-        )
-    );
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
--- Update handle_profile_creation to include more details
-CREATE OR REPLACE FUNCTION handle_profile_creation()
-RETURNS TRIGGER AS $$
-BEGIN
-    -- Log the attempt with full details
-    INSERT INTO signup_errors (
-        user_id,
-        email,
-        error_message,
-        request_data,
-        error_details
-    ) VALUES (
-        NEW.id,
-        NEW.email,
-        'Profile creation started',
-        row_to_json(NEW)::jsonb,
-        jsonb_build_object(
-            'timestamp', now(),
-            'auth_exists', EXISTS(SELECT 1 FROM auth.users WHERE id = NEW.id)
-        )
-    );
-
-    -- Perform validations
-    IF NEW.email IS NULL OR NEW.email = '' THEN
-        RAISE EXCEPTION 'Email cannot be empty';
-    END IF;
-
-    IF NEW.username IS NULL OR NEW.username = '' THEN
-        RAISE EXCEPTION 'Username cannot be empty';
-    END IF;
-
-    -- Check for duplicate email
-    IF EXISTS (
-        SELECT 1 FROM profiles
-        WHERE email = NEW.email
-        AND id != NEW.id
-    ) THEN
-        RAISE EXCEPTION 'Email already exists';
-    END IF;
-
-    -- Check for duplicate username
-    IF EXISTS (
-        SELECT 1 FROM profiles
-        WHERE username = NEW.username
-        AND id != NEW.id
-    ) THEN
-        RAISE EXCEPTION 'Username already exists';
-    END IF;
-
-    RETURN NEW;
-EXCEPTION WHEN OTHERS THEN
-    -- Log the error with full details
-    INSERT INTO signup_errors (
-        user_id,
-        email,
-        error_message,
-        request_data,
-        error_details
-    ) VALUES (
-        NEW.id,
-        NEW.email,
-        'Profile creation failed: ' || SQLERRM,
-        row_to_json(NEW)::jsonb,
-        jsonb_build_object(
-            'error_code', SQLSTATE,
-            'error_message', SQLERRM,
-            'stack_trace', pg_backend_pid()
-        )
-    );
-    RAISE;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+-- Enhance signup error logging\nALTER TABLE signup_errors \nADD COLUMN IF NOT EXISTS request_data JSONB,\nADD COLUMN IF NOT EXISTS stack_trace TEXT;
+\n\n-- Create function to log detailed signup attempts\nCREATE OR REPLACE FUNCTION log_signup_attempt(\n    p_user_id UUID,\n    p_email TEXT,\n    p_request_data JSONB DEFAULT NULL\n) RETURNS void AS $$\nBEGIN\n    INSERT INTO signup_errors (\n        user_id,\n        email,\n        error_message,\n        request_data,\n        error_details\n    ) VALUES (\n        p_user_id,\n        p_email,\n        'Signup attempt started',\n        p_request_data,\n        jsonb_build_object(\n            'timestamp', now(),\n            'auth_exists', EXISTS(SELECT 1 FROM auth.users WHERE id = p_user_id),\n            'profile_exists', EXISTS(SELECT 1 FROM profiles WHERE id = p_user_id)\n        )\n    );
+\nEXCEPTION WHEN OTHERS THEN\n    -- Log any errors in the logging itself\n    INSERT INTO signup_errors (\n        user_id,\n        email,\n        error_message,\n        error_details\n    ) VALUES (\n        p_user_id,\n        p_email,\n        'Failed to log signup attempt: ' || SQLERRM,\n        jsonb_build_object(\n            'error_code', SQLSTATE,\n            'error_message', SQLERRM\n        )\n    );
+\nEND;
+\n$$ LANGUAGE plpgsql SECURITY DEFINER;
+\n\n-- Update handle_profile_creation to include more details\nCREATE OR REPLACE FUNCTION handle_profile_creation()\nRETURNS TRIGGER AS $$\nBEGIN\n    -- Log the attempt with full details\n    INSERT INTO signup_errors (\n        user_id,\n        email,\n        error_message,\n        request_data,\n        error_details\n    ) VALUES (\n        NEW.id,\n        NEW.email,\n        'Profile creation started',\n        row_to_json(NEW)::jsonb,\n        jsonb_build_object(\n            'timestamp', now(),\n            'auth_exists', EXISTS(SELECT 1 FROM auth.users WHERE id = NEW.id)\n        )\n    );
+\n\n    -- Perform validations\n    IF NEW.email IS NULL OR NEW.email = '' THEN\n        RAISE EXCEPTION 'Email cannot be empty';
+\n    END IF;
+\n\n    IF NEW.username IS NULL OR NEW.username = '' THEN\n        RAISE EXCEPTION 'Username cannot be empty';
+\n    END IF;
+\n\n    -- Check for duplicate email\n    IF EXISTS (\n        SELECT 1 FROM profiles\n        WHERE email = NEW.email\n        AND id != NEW.id\n    ) THEN\n        RAISE EXCEPTION 'Email already exists';
+\n    END IF;
+\n\n    -- Check for duplicate username\n    IF EXISTS (\n        SELECT 1 FROM profiles\n        WHERE username = NEW.username\n        AND id != NEW.id\n    ) THEN\n        RAISE EXCEPTION 'Username already exists';
+\n    END IF;
+\n\n    RETURN NEW;
+\nEXCEPTION WHEN OTHERS THEN\n    -- Log the error with full details\n    INSERT INTO signup_errors (\n        user_id,\n        email,\n        error_message,\n        request_data,\n        error_details\n    ) VALUES (\n        NEW.id,\n        NEW.email,\n        'Profile creation failed: ' || SQLERRM,\n        row_to_json(NEW)::jsonb,\n        jsonb_build_object(\n            'error_code', SQLSTATE,\n            'error_message', SQLERRM,\n            'stack_trace', pg_backend_pid()\n        )\n    );
+\n    RAISE;
+\nEND;
+\n$$ LANGUAGE plpgsql SECURITY DEFINER;
+;

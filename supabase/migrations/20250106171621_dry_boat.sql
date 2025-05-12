@@ -1,28 +1,11 @@
--- Drop any existing policies first
-DROP POLICY IF EXISTS "profiles_email_check_policy" ON profiles;
-DROP POLICY IF EXISTS "Allow email existence check" ON profiles;
-DROP POLICY IF EXISTS "allow_email_checks" ON profiles;
-
--- Create single unified policy for email checks (only if it doesn't exist)
-DO $$ 
-BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_policies 
-    WHERE tablename = 'profiles' 
-    AND policyname = 'allow_email_checks'
-  ) THEN
-    CREATE POLICY "allow_email_checks"
-      ON profiles
-      FOR SELECT 
-      TO anon, authenticated
-      USING (true);
-  END IF;
-END $$;
-
--- Ensure proper grants
-GRANT USAGE ON SCHEMA public TO anon, authenticated;
-GRANT SELECT ON profiles TO anon, authenticated;
-
--- Refresh RLS
-ALTER TABLE profiles DISABLE ROW LEVEL SECURITY;
-ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
+-- Drop any existing policies first\nDROP POLICY IF EXISTS "profiles_email_check_policy" ON profiles;
+\nDROP POLICY IF EXISTS "Allow email existence check" ON profiles;
+\nDROP POLICY IF EXISTS "allow_email_checks" ON profiles;
+\n\n-- Create single unified policy for email checks (only if it doesn't exist)\nDO $$ \nBEGIN\n  IF NOT EXISTS (\n    SELECT 1 FROM pg_policies \n    WHERE tablename = 'profiles' \n    AND policyname = 'allow_email_checks'\n  ) THEN\n    CREATE POLICY "allow_email_checks"\n      ON profiles\n      FOR SELECT \n      TO anon, authenticated\n      USING (true);
+\n  END IF;
+\nEND $$;
+\n\n-- Ensure proper grants\nGRANT USAGE ON SCHEMA public TO anon, authenticated;
+\nGRANT SELECT ON profiles TO anon, authenticated;
+\n\n-- Refresh RLS\nALTER TABLE profiles DISABLE ROW LEVEL SECURITY;
+\nALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
+;

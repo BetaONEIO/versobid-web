@@ -1,201 +1,55 @@
--- Drop existing trigger and function
-DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
-DROP FUNCTION IF EXISTS handle_new_user();
-
--- Create function to safely create profile
-CREATE OR REPLACE FUNCTION create_profile_safely(
-  user_id UUID,
-  user_email TEXT,
-  user_username TEXT,
-  user_full_name TEXT
-) RETURNS boolean AS $$
-DECLARE
-  final_username TEXT;
-  attempt_count INTEGER := 0;
-  MAX_ATTEMPTS CONSTANT INTEGER := 3;
-BEGIN
-  -- Initialize username
-  final_username := user_username;
-  
-  LOOP
-    EXIT WHEN attempt_count >= MAX_ATTEMPTS;
-    BEGIN
-      INSERT INTO public.profiles (
-        id,
-        email,
-        username,
-        full_name,
-        created_at,
-        is_admin,
-        avatar_url,
-        shipping_address,
-        payment_setup,
-        onboarding_completed
-      ) VALUES (
-        user_id,
-        user_email,
-        final_username,
-        user_full_name,
-        NOW(),
-        false,
-        null,
-        null,
-        false,
-        false
-      );
-      
-      -- If we get here, insert was successful
-      RETURN true;
-      
-    EXCEPTION 
-      WHEN unique_violation THEN
-        -- Only retry for username violations
-        IF attempt_count < MAX_ATTEMPTS THEN
-          final_username := user_username || '_' || floor(random() * 9000 + 1000)::text;
-          attempt_count := attempt_count + 1;
-          CONTINUE;
-        END IF;
-      WHEN OTHERS THEN
-        -- Log other errors
-        PERFORM log_auth_error(
-          user_id,
-          user_email,
-          SQLERRM,
-          jsonb_build_object(
-            'state', SQLSTATE,
-            'attempt', attempt_count,
-            'username', final_username
-          )
-        );
-        RETURN false;
-    END;
-  END LOOP;
-  
-  -- If we get here, all attempts failed
-  PERFORM log_auth_error(
-    user_id,
-    user_email,
-    'Failed to create profile after maximum attempts',
-    jsonb_build_object(
-      'max_attempts', MAX_ATTEMPTS,
-      'final_username', final_username
-    )
-  );
-  
-  RETURN false;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
--- Create improved user creation handler
-CREATE OR REPLACE FUNCTION handle_new_user()
-RETURNS trigger
-SECURITY DEFINER
-SET search_path = public
-LANGUAGE plpgsql
-AS $$
-DECLARE
-  username text;
-  full_name text;
-  success boolean;
-BEGIN
-  -- Extract user data
-  username := COALESCE(
-    NEW.raw_user_meta_data->>'username',
-    REGEXP_REPLACE(SPLIT_PART(NEW.email, '@', 1), '[^a-zA-Z0-9_]', '_', 'g')
-  );
-  
-  full_name := COALESCE(
-    NEW.raw_user_meta_data->>'full_name',
-    username
-  );
-
-  -- Attempt to create profile
-  success := create_profile_safely(
-    NEW.id,
-    NEW.email,
-    username,
-    full_name
-  );
-
-  IF NOT success THEN
-    RAISE WARNING 'Failed to create profile for user: %', NEW.email;
-  END IF;
-
-  RETURN NEW;
-END;
-$$;
-
--- Recreate trigger
-CREATE TRIGGER on_auth_user_created
-  AFTER INSERT ON auth.users
-  FOR EACH ROW
-  EXECUTE FUNCTION handle_new_user();
-
--- Ensure RLS is enabled
-ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
-
--- Drop existing policies safely
-DO $$ 
-BEGIN
-    DROP POLICY IF EXISTS "profiles_select" ON profiles;
-    DROP POLICY IF EXISTS "profiles_insert" ON profiles;
-    DROP POLICY IF EXISTS "profiles_update" ON profiles;
-EXCEPTION 
-    WHEN undefined_object THEN NULL;
-END $$;
-
--- Create simplified policies
-CREATE POLICY "profiles_select"
-  ON profiles
-  FOR SELECT
-  TO public
-  USING (true);
-
-CREATE POLICY "profiles_insert"
-  ON profiles
-  FOR INSERT
-  TO service_role
-  WITH CHECK (true);
-
-CREATE POLICY "profiles_update"
-  ON profiles
-  FOR UPDATE
-  TO authenticated
-  USING (auth.uid() = id)
-  WITH CHECK (auth.uid() = id);
-
--- Ensure proper grants
-GRANT USAGE ON SCHEMA public TO anon, authenticated, service_role;
-GRANT ALL ON profiles TO service_role;
-GRANT SELECT ON profiles TO anon;
-GRANT SELECT, UPDATE ON profiles TO authenticated;
-
--- Create unique indexes
-DROP INDEX IF EXISTS idx_profiles_email;
-DROP INDEX IF EXISTS idx_profiles_username;
-CREATE UNIQUE INDEX idx_profiles_email ON profiles(email);
-CREATE UNIQUE INDEX idx_profiles_username ON profiles(username);
-
--- Create error logging table if it doesn't exist
-CREATE TABLE IF NOT EXISTS auth_errors (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID,
-  email TEXT,
-  error TEXT,
-  details JSONB,
-  created_at TIMESTAMPTZ DEFAULT now()
-);
-
--- Create or replace error logging function
-CREATE OR REPLACE FUNCTION log_auth_error(
-  p_user_id UUID,
-  p_email TEXT,
-  p_error TEXT,
-  p_details JSONB DEFAULT NULL
-)
-RETURNS void AS $$
-BEGIN
-  INSERT INTO auth_errors (user_id, email, error, details)
-  VALUES (p_user_id, p_email, p_error, p_details);
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+-- Drop existing trigger and function\nDROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+\nDROP FUNCTION IF EXISTS handle_new_user();
+\n\n-- Create function to safely create profile\nCREATE OR REPLACE FUNCTION create_profile_safely(\n  user_id UUID,\n  user_email TEXT,\n  user_username TEXT,\n  user_full_name TEXT\n) RETURNS boolean AS $$\nDECLARE\n  final_username TEXT;
+\n  attempt_count INTEGER := 0;
+\n  MAX_ATTEMPTS CONSTANT INTEGER := 3;
+\nBEGIN\n  -- Initialize username\n  final_username := user_username;
+\n  \n  LOOP\n    EXIT WHEN attempt_count >= MAX_ATTEMPTS;
+\n    BEGIN\n      INSERT INTO public.profiles (\n        id,\n        email,\n        username,\n        full_name,\n        created_at,\n        is_admin,\n        avatar_url,\n        shipping_address,\n        payment_setup,\n        onboarding_completed\n      ) VALUES (\n        user_id,\n        user_email,\n        final_username,\n        user_full_name,\n        NOW(),\n        false,\n        null,\n        null,\n        false,\n        false\n      );
+\n      \n      -- If we get here, insert was successful\n      RETURN true;
+\n      \n    EXCEPTION \n      WHEN unique_violation THEN\n        -- Only retry for username violations\n        IF attempt_count < MAX_ATTEMPTS THEN\n          final_username := user_username || '_' || floor(random() * 9000 + 1000)::text;
+\n          attempt_count := attempt_count + 1;
+\n          CONTINUE;
+\n        END IF;
+\n      WHEN OTHERS THEN\n        -- Log other errors\n        PERFORM log_auth_error(\n          user_id,\n          user_email,\n          SQLERRM,\n          jsonb_build_object(\n            'state', SQLSTATE,\n            'attempt', attempt_count,\n            'username', final_username\n          )\n        );
+\n        RETURN false;
+\n    END;
+\n  END LOOP;
+\n  \n  -- If we get here, all attempts failed\n  PERFORM log_auth_error(\n    user_id,\n    user_email,\n    'Failed to create profile after maximum attempts',\n    jsonb_build_object(\n      'max_attempts', MAX_ATTEMPTS,\n      'final_username', final_username\n    )\n  );
+\n  \n  RETURN false;
+\nEND;
+\n$$ LANGUAGE plpgsql SECURITY DEFINER;
+\n\n-- Create improved user creation handler\nCREATE OR REPLACE FUNCTION handle_new_user()\nRETURNS trigger\nSECURITY DEFINER\nSET search_path = public\nLANGUAGE plpgsql\nAS $$\nDECLARE\n  username text;
+\n  full_name text;
+\n  success boolean;
+\nBEGIN\n  -- Extract user data\n  username := COALESCE(\n    NEW.raw_user_meta_data->>'username',\n    REGEXP_REPLACE(SPLIT_PART(NEW.email, '@', 1), '[^a-zA-Z0-9_]', '_', 'g')\n  );
+\n  \n  full_name := COALESCE(\n    NEW.raw_user_meta_data->>'full_name',\n    username\n  );
+\n\n  -- Attempt to create profile\n  success := create_profile_safely(\n    NEW.id,\n    NEW.email,\n    username,\n    full_name\n  );
+\n\n  IF NOT success THEN\n    RAISE WARNING 'Failed to create profile for user: %', NEW.email;
+\n  END IF;
+\n\n  RETURN NEW;
+\nEND;
+\n$$;
+\n\n-- Recreate trigger\nCREATE TRIGGER on_auth_user_created\n  AFTER INSERT ON auth.users\n  FOR EACH ROW\n  EXECUTE FUNCTION handle_new_user();
+\n\n-- Ensure RLS is enabled\nALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
+\n\n-- Drop existing policies safely\nDO $$ \nBEGIN\n    DROP POLICY IF EXISTS "profiles_select" ON profiles;
+\n    DROP POLICY IF EXISTS "profiles_insert" ON profiles;
+\n    DROP POLICY IF EXISTS "profiles_update" ON profiles;
+\nEXCEPTION \n    WHEN undefined_object THEN NULL;
+\nEND $$;
+\n\n-- Create simplified policies\nCREATE POLICY "profiles_select"\n  ON profiles\n  FOR SELECT\n  TO public\n  USING (true);
+\n\nCREATE POLICY "profiles_insert"\n  ON profiles\n  FOR INSERT\n  TO service_role\n  WITH CHECK (true);
+\n\nCREATE POLICY "profiles_update"\n  ON profiles\n  FOR UPDATE\n  TO authenticated\n  USING (auth.uid() = id)\n  WITH CHECK (auth.uid() = id);
+\n\n-- Ensure proper grants\nGRANT USAGE ON SCHEMA public TO anon, authenticated, service_role;
+\nGRANT ALL ON profiles TO service_role;
+\nGRANT SELECT ON profiles TO anon;
+\nGRANT SELECT, UPDATE ON profiles TO authenticated;
+\n\n-- Create unique indexes\nDROP INDEX IF EXISTS idx_profiles_email;
+\nDROP INDEX IF EXISTS idx_profiles_username;
+\nCREATE UNIQUE INDEX idx_profiles_email ON profiles(email);
+\nCREATE UNIQUE INDEX idx_profiles_username ON profiles(username);
+\n\n-- Create error logging table if it doesn't exist\nCREATE TABLE IF NOT EXISTS auth_errors (\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n  user_id UUID,\n  email TEXT,\n  error TEXT,\n  details JSONB,\n  created_at TIMESTAMPTZ DEFAULT now()\n);
+\n\n-- Create or replace error logging function\nCREATE OR REPLACE FUNCTION log_auth_error(\n  p_user_id UUID,\n  p_email TEXT,\n  p_error TEXT,\n  p_details JSONB DEFAULT NULL\n)\nRETURNS void AS $$\nBEGIN\n  INSERT INTO auth_errors (user_id, email, error, details)\n  VALUES (p_user_id, p_email, p_error, p_details);
+\nEND;
+\n$$ LANGUAGE plpgsql SECURITY DEFINER;
+;

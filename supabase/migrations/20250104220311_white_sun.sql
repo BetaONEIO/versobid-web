@@ -1,54 +1,14 @@
-/*
-  # Fix User Deletion
-
-  1. Changes
-    - Add cascade deletion function
-    - Add better error handling
-    - Add detailed logging
-*/
-
--- Function to safely delete a user with cascade and error handling
-CREATE OR REPLACE FUNCTION safe_delete_user(target_user_id UUID)
-RETURNS BOOLEAN AS $$
-DECLARE
-    v_email TEXT;
-BEGIN
-    -- Get user email for logging
-    SELECT email INTO v_email
-    FROM auth.users
-    WHERE id = target_user_id;
-
-    IF v_email IS NULL THEN
-        RAISE EXCEPTION 'User not found with ID: %', target_user_id;
-    END IF;
-
-    -- Begin transaction
-    BEGIN
-        -- Delete from profiles first (this should cascade to related data)
-        DELETE FROM profiles WHERE id = target_user_id;
-        
-        -- Delete from auth.users
-        DELETE FROM auth.users WHERE id = target_user_id;
-
-        -- Log successful deletion
-        INSERT INTO signup_errors (user_id, email, error_message)
-        VALUES (target_user_id, v_email, 'User successfully deleted');
-
-        RETURN TRUE;
-    EXCEPTION WHEN OTHERS THEN
-        -- Log the error
-        INSERT INTO signup_errors (user_id, email, error_message, error_details)
-        VALUES (
-            target_user_id,
-            v_email,
-            'Failed to delete user: ' || SQLERRM,
-            jsonb_build_object(
-                'error_code', SQLSTATE,
-                'error_message', SQLERRM,
-                'error_detail', SQLSTATE || ' - ' || SQLERRM
-            )
-        );
-        RAISE;
-    END;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+\n\n-- Function to safely delete a user with cascade and error handling\nCREATE OR REPLACE FUNCTION safe_delete_user(target_user_id UUID)\nRETURNS BOOLEAN AS $$\nDECLARE\n    v_email TEXT;
+\nBEGIN\n    -- Get user email for logging\n    SELECT email INTO v_email\n    FROM auth.users\n    WHERE id = target_user_id;
+\n\n    IF v_email IS NULL THEN\n        RAISE EXCEPTION 'User not found with ID: %', target_user_id;
+\n    END IF;
+\n\n    -- Begin transaction\n    BEGIN\n        -- Delete from profiles first (this should cascade to related data)\n        DELETE FROM profiles WHERE id = target_user_id;
+\n        \n        -- Delete from auth.users\n        DELETE FROM auth.users WHERE id = target_user_id;
+\n\n        -- Log successful deletion\n        INSERT INTO signup_errors (user_id, email, error_message)\n        VALUES (target_user_id, v_email, 'User successfully deleted');
+\n\n        RETURN TRUE;
+\n    EXCEPTION WHEN OTHERS THEN\n        -- Log the error\n        INSERT INTO signup_errors (user_id, email, error_message, error_details)\n        VALUES (\n            target_user_id,\n            v_email,\n            'Failed to delete user: ' || SQLERRM,\n            jsonb_build_object(\n                'error_code', SQLSTATE,\n                'error_message', SQLERRM,\n                'error_detail', SQLSTATE || ' - ' || SQLERRM\n            )\n        );
+\n        RAISE;
+\n    END;
+\nEND;
+\n$$ LANGUAGE plpgsql SECURITY DEFINER;
+;

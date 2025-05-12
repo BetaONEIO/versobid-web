@@ -1,37 +1,16 @@
--- Drop all existing policies first
-DROP POLICY IF EXISTS "allow_email_existence_check" ON profiles;
-DROP POLICY IF EXISTS "profiles_select_policy" ON profiles;
-DROP POLICY IF EXISTS "profiles_insert_policy" ON profiles;
-DROP POLICY IF EXISTS "profiles_update_policy" ON profiles;
-DROP POLICY IF EXISTS "public_profiles_access" ON profiles;
-DROP POLICY IF EXISTS "allow_email_checks" ON profiles;
-DROP POLICY IF EXISTS "profiles_public_read" ON profiles;
-
--- Create new policies with unique version numbers
-CREATE POLICY "profiles_select_v3"
-  ON profiles
-  FOR SELECT
-  TO authenticated, anon
-  USING (true);
-
-CREATE POLICY "profiles_insert_v3"
-  ON profiles
-  FOR INSERT
-  TO authenticated
-  WITH CHECK (auth.uid() = id);
-
-CREATE POLICY "profiles_update_v3"
-  ON profiles
-  FOR UPDATE
-  TO authenticated
-  USING (auth.uid() = id)
-  WITH CHECK (auth.uid() = id);
-
--- Ensure proper grants
-GRANT USAGE ON SCHEMA public TO anon, authenticated;
-GRANT SELECT, INSERT, UPDATE ON profiles TO authenticated;
-GRANT SELECT ON profiles TO anon;
-
--- Refresh RLS
-ALTER TABLE profiles DISABLE ROW LEVEL SECURITY;
-ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
+-- Drop all existing policies first\nDROP POLICY IF EXISTS "allow_email_existence_check" ON profiles;
+\nDROP POLICY IF EXISTS "profiles_select_policy" ON profiles;
+\nDROP POLICY IF EXISTS "profiles_insert_policy" ON profiles;
+\nDROP POLICY IF EXISTS "profiles_update_policy" ON profiles;
+\nDROP POLICY IF EXISTS "public_profiles_access" ON profiles;
+\nDROP POLICY IF EXISTS "allow_email_checks" ON profiles;
+\nDROP POLICY IF EXISTS "profiles_public_read" ON profiles;
+\n\n-- Create new policies with unique version numbers\nCREATE POLICY "profiles_select_v3"\n  ON profiles\n  FOR SELECT\n  TO authenticated, anon\n  USING (true);
+\n\nCREATE POLICY "profiles_insert_v3"\n  ON profiles\n  FOR INSERT\n  TO authenticated\n  WITH CHECK (auth.uid() = id);
+\n\nCREATE POLICY "profiles_update_v3"\n  ON profiles\n  FOR UPDATE\n  TO authenticated\n  USING (auth.uid() = id)\n  WITH CHECK (auth.uid() = id);
+\n\n-- Ensure proper grants\nGRANT USAGE ON SCHEMA public TO anon, authenticated;
+\nGRANT SELECT, INSERT, UPDATE ON profiles TO authenticated;
+\nGRANT SELECT ON profiles TO anon;
+\n\n-- Refresh RLS\nALTER TABLE profiles DISABLE ROW LEVEL SECURITY;
+\nALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
+;

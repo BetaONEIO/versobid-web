@@ -1,44 +1,12 @@
-/*
-  # Email Validation Migration
-  
-  1. Remove old email constraints
-  2. Add improved email validation
-  3. Create index for performance
-*/
-
--- Drop all email-related constraints
-ALTER TABLE profiles 
-DROP CONSTRAINT IF EXISTS profiles_email_match_auth,
-DROP CONSTRAINT IF EXISTS profiles_email_check;
-
--- Recreate the validate_profile_email function with better error handling
-CREATE OR REPLACE FUNCTION validate_profile_email()
-RETURNS TRIGGER AS $$
-BEGIN
-  -- Only validate if email is being changed
-  IF TG_OP = 'UPDATE' AND NEW.email = OLD.email THEN
-    RETURN NEW;
-  END IF;
-
-  -- Check if email exists in auth.users
-  IF EXISTS (
-    SELECT 1 FROM profiles 
-    WHERE email = NEW.email 
-    AND id != NEW.id
-  ) THEN
-    RAISE EXCEPTION 'Email already exists';
-  END IF;
-
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
--- Recreate the trigger
-DROP TRIGGER IF EXISTS validate_profile_email_trigger ON profiles;
-CREATE TRIGGER validate_profile_email_trigger
-BEFORE INSERT OR UPDATE OF email ON profiles
-FOR EACH ROW
-EXECUTE FUNCTION validate_profile_email();
-
--- Ensure email index exists
-CREATE INDEX IF NOT EXISTS idx_profiles_email ON profiles(email);
+\n\n-- Drop all email-related constraints\nALTER TABLE profiles \nDROP CONSTRAINT IF EXISTS profiles_email_match_auth,\nDROP CONSTRAINT IF EXISTS profiles_email_check;
+\n\n-- Recreate the validate_profile_email function with better error handling\nCREATE OR REPLACE FUNCTION validate_profile_email()\nRETURNS TRIGGER AS $$\nBEGIN\n  -- Only validate if email is being changed\n  IF TG_OP = 'UPDATE' AND NEW.email = OLD.email THEN\n    RETURN NEW;
+\n  END IF;
+\n\n  -- Check if email exists in auth.users\n  IF EXISTS (\n    SELECT 1 FROM profiles \n    WHERE email = NEW.email \n    AND id != NEW.id\n  ) THEN\n    RAISE EXCEPTION 'Email already exists';
+\n  END IF;
+\n\n  RETURN NEW;
+\nEND;
+\n$$ LANGUAGE plpgsql SECURITY DEFINER;
+\n\n-- Recreate the trigger\nDROP TRIGGER IF EXISTS validate_profile_email_trigger ON profiles;
+\nCREATE TRIGGER validate_profile_email_trigger\nBEFORE INSERT OR UPDATE OF email ON profiles\nFOR EACH ROW\nEXECUTE FUNCTION validate_profile_email();
+\n\n-- Ensure email index exists\nCREATE INDEX IF NOT EXISTS idx_profiles_email ON profiles(email);
+;
