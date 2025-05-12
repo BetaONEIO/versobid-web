@@ -1,49 +1,11 @@
-/*
-  # Update profiles table and policies
-  
-  1. Changes
-    - Add missing policies for profile management
-    - Create public profiles view
-    - Set up proper access control
-*/
-
--- Create policies if they don't exist
-DO $$ 
-BEGIN
-    -- Public profiles viewable policy
-    IF NOT EXISTS (
-        SELECT 1 FROM pg_policies 
-        WHERE tablename = 'profiles' 
-        AND policyname = 'Public profiles are viewable by everyone'
-    ) THEN
-        CREATE POLICY "Public profiles are viewable by everyone"
-          ON profiles
-          FOR SELECT
-          USING (true);
-    END IF;
-
-    -- Insert own profile policy
-    IF NOT EXISTS (
-        SELECT 1 FROM pg_policies 
-        WHERE tablename = 'profiles' 
-        AND policyname = 'Users can insert their own profile'
-    ) THEN
-        CREATE POLICY "Users can insert their own profile"
-          ON profiles
-          FOR INSERT
-          WITH CHECK (auth.uid() = id);
-    END IF;
-END $$;
-
--- Create indexes for performance
-CREATE INDEX IF NOT EXISTS profiles_username_idx ON profiles (username);
-CREATE INDEX IF NOT EXISTS profiles_email_idx ON profiles (email);
-
--- Drop view if exists and recreate
-DROP VIEW IF EXISTS public_profiles;
-CREATE VIEW public_profiles AS
-  SELECT id, username, avatar_url
-  FROM profiles;
-
--- Grant access to public profiles view
-GRANT SELECT ON public_profiles TO anon, authenticated;
+\n\n-- Create policies if they don't exist\nDO $$ \nBEGIN\n    -- Public profiles viewable policy\n    IF NOT EXISTS (\n        SELECT 1 FROM pg_policies \n        WHERE tablename = 'profiles' \n        AND policyname = 'Public profiles are viewable by everyone'\n    ) THEN\n        CREATE POLICY "Public profiles are viewable by everyone"\n          ON profiles\n          FOR SELECT\n          USING (true);
+\n    END IF;
+\n\n    -- Insert own profile policy\n    IF NOT EXISTS (\n        SELECT 1 FROM pg_policies \n        WHERE tablename = 'profiles' \n        AND policyname = 'Users can insert their own profile'\n    ) THEN\n        CREATE POLICY "Users can insert their own profile"\n          ON profiles\n          FOR INSERT\n          WITH CHECK (auth.uid() = id);
+\n    END IF;
+\nEND $$;
+\n\n-- Create indexes for performance\nCREATE INDEX IF NOT EXISTS profiles_username_idx ON profiles (username);
+\nCREATE INDEX IF NOT EXISTS profiles_email_idx ON profiles (email);
+\n\n-- Drop view if exists and recreate\nDROP VIEW IF EXISTS public_profiles;
+\nCREATE VIEW public_profiles AS\n  SELECT id, username, avatar_url\n  FROM profiles;
+\n\n-- Grant access to public profiles view\nGRANT SELECT ON public_profiles TO anon, authenticated;
+;

@@ -1,102 +1,24 @@
-/*
-  # Enhanced Admin Capabilities
-
-  1. New Functions
-    - manage_users: Allows admins to update/delete users
-    - manage_admins: Allows admins to promote/demote other admins
-    - view_site_activity: Allows admins to view all site activity
-
-  2. Security
-    - All functions are security definer
-    - Strict admin-only access control
-*/
-
--- Function to manage users (update/delete)
-CREATE OR REPLACE FUNCTION manage_user(
-  admin_id UUID,
-  target_user_id UUID,
-  action TEXT,
-  updates JSONB DEFAULT NULL
-) RETURNS BOOLEAN AS $$
-BEGIN
-  -- Verify admin status
-  IF NOT is_admin(admin_id) THEN
-    RAISE EXCEPTION 'Unauthorized: User is not an admin';
-  END IF;
-
-  CASE action
-    WHEN 'update' THEN
-      UPDATE profiles 
-      SET 
-        full_name = COALESCE(updates->>'full_name', full_name),
-        email = COALESCE(updates->>'email', email),
-        username = COALESCE(updates->>'username', username)
-      WHERE id = target_user_id;
-    WHEN 'delete' THEN
-      -- Don't allow deleting other admins
-      IF EXISTS (SELECT 1 FROM profiles WHERE id = target_user_id AND is_admin = true) THEN
-        RAISE EXCEPTION 'Cannot delete admin users';
-      END IF;
-      DELETE FROM profiles WHERE id = target_user_id;
-    ELSE
-      RAISE EXCEPTION 'Invalid action';
-  END CASE;
-
-  RETURN TRUE;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
--- Function to manage admin status
-CREATE OR REPLACE FUNCTION manage_admin_status(
-  admin_id UUID,
-  target_user_id UUID,
-  make_admin BOOLEAN
-) RETURNS BOOLEAN AS $$
-BEGIN
-  -- Verify admin status
-  IF NOT is_admin(admin_id) THEN
-    RAISE EXCEPTION 'Unauthorized: User is not an admin';
-  END IF;
-
-  UPDATE profiles 
-  SET is_admin = make_admin
-  WHERE id = target_user_id;
-
-  RETURN TRUE;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
--- Create admin activity log table
-CREATE TABLE IF NOT EXISTS admin_activity_log (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  admin_id UUID REFERENCES profiles(id) NOT NULL,
-  action TEXT NOT NULL,
-  target_type TEXT NOT NULL,
-  target_id UUID NOT NULL,
-  details JSONB,
-  created_at TIMESTAMPTZ DEFAULT now()
-);
-
--- Enable RLS on activity log
-ALTER TABLE admin_activity_log ENABLE ROW LEVEL SECURITY;
-
--- Admin can view all activity
-CREATE POLICY "Admins can view all activity"
-  ON admin_activity_log
-  FOR SELECT
-  TO authenticated
-  USING (is_admin(auth.uid()));
-
--- Function to log admin activity
-CREATE OR REPLACE FUNCTION log_admin_activity(
-  admin_id UUID,
-  action TEXT,
-  target_type TEXT,
-  target_id UUID,
-  details JSONB DEFAULT NULL
-) RETURNS VOID AS $$
-BEGIN
-  INSERT INTO admin_activity_log (admin_id, action, target_type, target_id, details)
-  VALUES (admin_id, action, target_type, target_id, details);
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+\n\n-- Function to manage users (update/delete)\nCREATE OR REPLACE FUNCTION manage_user(\n  admin_id UUID,\n  target_user_id UUID,\n  action TEXT,\n  updates JSONB DEFAULT NULL\n) RETURNS BOOLEAN AS $$\nBEGIN\n  -- Verify admin status\n  IF NOT is_admin(admin_id) THEN\n    RAISE EXCEPTION 'Unauthorized: User is not an admin';
+\n  END IF;
+\n\n  CASE action\n    WHEN 'update' THEN\n      UPDATE profiles \n      SET \n        full_name = COALESCE(updates->>'full_name', full_name),\n        email = COALESCE(updates->>'email', email),\n        username = COALESCE(updates->>'username', username)\n      WHERE id = target_user_id;
+\n    WHEN 'delete' THEN\n      -- Don't allow deleting other admins\n      IF EXISTS (SELECT 1 FROM profiles WHERE id = target_user_id AND is_admin = true) THEN\n        RAISE EXCEPTION 'Cannot delete admin users';
+\n      END IF;
+\n      DELETE FROM profiles WHERE id = target_user_id;
+\n    ELSE\n      RAISE EXCEPTION 'Invalid action';
+\n  END CASE;
+\n\n  RETURN TRUE;
+\nEND;
+\n$$ LANGUAGE plpgsql SECURITY DEFINER;
+\n\n-- Function to manage admin status\nCREATE OR REPLACE FUNCTION manage_admin_status(\n  admin_id UUID,\n  target_user_id UUID,\n  make_admin BOOLEAN\n) RETURNS BOOLEAN AS $$\nBEGIN\n  -- Verify admin status\n  IF NOT is_admin(admin_id) THEN\n    RAISE EXCEPTION 'Unauthorized: User is not an admin';
+\n  END IF;
+\n\n  UPDATE profiles \n  SET is_admin = make_admin\n  WHERE id = target_user_id;
+\n\n  RETURN TRUE;
+\nEND;
+\n$$ LANGUAGE plpgsql SECURITY DEFINER;
+\n\n-- Create admin activity log table\nCREATE TABLE IF NOT EXISTS admin_activity_log (\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n  admin_id UUID REFERENCES profiles(id) NOT NULL,\n  action TEXT NOT NULL,\n  target_type TEXT NOT NULL,\n  target_id UUID NOT NULL,\n  details JSONB,\n  created_at TIMESTAMPTZ DEFAULT now()\n);
+\n\n-- Enable RLS on activity log\nALTER TABLE admin_activity_log ENABLE ROW LEVEL SECURITY;
+\n\n-- Admin can view all activity\nCREATE POLICY "Admins can view all activity"\n  ON admin_activity_log\n  FOR SELECT\n  TO authenticated\n  USING (is_admin(auth.uid()));
+\n\n-- Function to log admin activity\nCREATE OR REPLACE FUNCTION log_admin_activity(\n  admin_id UUID,\n  action TEXT,\n  target_type TEXT,\n  target_id UUID,\n  details JSONB DEFAULT NULL\n) RETURNS VOID AS $$\nBEGIN\n  INSERT INTO admin_activity_log (admin_id, action, target_type, target_id, details)\n  VALUES (admin_id, action, target_type, target_id, details);
+\nEND;
+\n$$ LANGUAGE plpgsql SECURITY DEFINER;
+;

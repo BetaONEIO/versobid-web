@@ -1,86 +1,15 @@
-/*
-  # Fix Profile Creation Policy and Validation
-
-  1. Changes
-    - Fix check_user_exists function
-    - Fix profile creation policy to properly reference NEW record
-    - Add validation function and trigger for profile creation
-
-  2. Security
-    - Enable RLS
-    - Add policies with proper record validation
-*/
-
--- Drop and recreate check_user_exists with better error handling
-CREATE OR REPLACE FUNCTION check_user_exists(
-  check_email TEXT,
-  check_username TEXT
-)
-RETURNS TABLE (
-  exists_email BOOLEAN,
-  exists_username BOOLEAN
-) AS $$
-BEGIN
-  RETURN QUERY
-  SELECT 
-    EXISTS(
-      SELECT 1 
-      FROM profiles 
-      WHERE email = check_email
-    ) as exists_email,
-    EXISTS(
-      SELECT 1 
-      FROM profiles 
-      WHERE username = check_username
-    ) as exists_username;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
--- Drop existing policy if it exists
-DROP POLICY IF EXISTS "Allow profile creation during signup" ON profiles;
-
--- Create policy for profile creation
-CREATE POLICY "Allow profile creation during signup"
-  ON profiles
-  FOR INSERT
-  TO authenticated
-  WITH CHECK (
-    auth.uid() = id AND
-    NOT EXISTS (
-      SELECT 1 FROM profiles p
-      WHERE p.email = profiles.email OR p.username = profiles.username
-    )
-  );
-
--- Create function to validate profile creation
-CREATE OR REPLACE FUNCTION validate_profile_creation()
-RETURNS TRIGGER AS $$
-BEGIN
-  -- Check if email already exists
-  IF EXISTS (
-    SELECT 1 FROM profiles
-    WHERE email = NEW.email
-    AND id != NEW.id
-  ) THEN
-    RAISE EXCEPTION 'Email already exists';
-  END IF;
-
-  -- Check if username already exists
-  IF EXISTS (
-    SELECT 1 FROM profiles
-    WHERE username = NEW.username
-    AND id != NEW.id
-  ) THEN
-    RAISE EXCEPTION 'Username already exists';
-  END IF;
-
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
--- Create trigger for profile validation
-DROP TRIGGER IF EXISTS validate_profile_creation_trigger ON profiles;
-CREATE TRIGGER validate_profile_creation_trigger
-  BEFORE INSERT ON profiles
-  FOR EACH ROW
-  EXECUTE FUNCTION validate_profile_creation();
+\n\n-- Drop and recreate check_user_exists with better error handling\nCREATE OR REPLACE FUNCTION check_user_exists(\n  check_email TEXT,\n  check_username TEXT\n)\nRETURNS TABLE (\n  exists_email BOOLEAN,\n  exists_username BOOLEAN\n) AS $$\nBEGIN\n  RETURN QUERY\n  SELECT \n    EXISTS(\n      SELECT 1 \n      FROM profiles \n      WHERE email = check_email\n    ) as exists_email,\n    EXISTS(\n      SELECT 1 \n      FROM profiles \n      WHERE username = check_username\n    ) as exists_username;
+\nEND;
+\n$$ LANGUAGE plpgsql SECURITY DEFINER;
+\n\n-- Drop existing policy if it exists\nDROP POLICY IF EXISTS "Allow profile creation during signup" ON profiles;
+\n\n-- Create policy for profile creation\nCREATE POLICY "Allow profile creation during signup"\n  ON profiles\n  FOR INSERT\n  TO authenticated\n  WITH CHECK (\n    auth.uid() = id AND\n    NOT EXISTS (\n      SELECT 1 FROM profiles p\n      WHERE p.email = profiles.email OR p.username = profiles.username\n    )\n  );
+\n\n-- Create function to validate profile creation\nCREATE OR REPLACE FUNCTION validate_profile_creation()\nRETURNS TRIGGER AS $$\nBEGIN\n  -- Check if email already exists\n  IF EXISTS (\n    SELECT 1 FROM profiles\n    WHERE email = NEW.email\n    AND id != NEW.id\n  ) THEN\n    RAISE EXCEPTION 'Email already exists';
+\n  END IF;
+\n\n  -- Check if username already exists\n  IF EXISTS (\n    SELECT 1 FROM profiles\n    WHERE username = NEW.username\n    AND id != NEW.id\n  ) THEN\n    RAISE EXCEPTION 'Username already exists';
+\n  END IF;
+\n\n  RETURN NEW;
+\nEND;
+\n$$ LANGUAGE plpgsql SECURITY DEFINER;
+\n\n-- Create trigger for profile validation\nDROP TRIGGER IF EXISTS validate_profile_creation_trigger ON profiles;
+\nCREATE TRIGGER validate_profile_creation_trigger\n  BEFORE INSERT ON profiles\n  FOR EACH ROW\n  EXECUTE FUNCTION validate_profile_creation();
+;

@@ -1,118 +1,31 @@
--- Grant necessary permissions to the auth user
-ALTER USER authenticator SET search_path = public;
-
--- Ensure the auth user has proper permissions
-GRANT USAGE ON SCHEMA public TO anon, authenticated, service_role;
-GRANT ALL ON ALL TABLES IN SCHEMA public TO authenticated;
-GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO authenticated;
-GRANT ALL ON ALL TABLES IN SCHEMA public TO service_role;
-GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO service_role;
-
--- Ensure RLS is enabled on all tables
-ALTER TABLE IF EXISTS profiles ENABLE ROW LEVEL SECURITY;
-ALTER TABLE IF EXISTS items ENABLE ROW LEVEL SECURITY;
-ALTER TABLE IF EXISTS bids ENABLE ROW LEVEL SECURITY;
-ALTER TABLE IF EXISTS notifications ENABLE ROW LEVEL SECURITY;
-ALTER TABLE IF EXISTS payments ENABLE ROW LEVEL SECURITY;
-ALTER TABLE IF EXISTS email_logs ENABLE ROW LEVEL SECURITY;
-ALTER TABLE IF EXISTS auth_errors ENABLE ROW LEVEL SECURITY;
-
--- Drop and recreate the handle_new_user function with better error handling
-CREATE OR REPLACE FUNCTION handle_new_user()
-RETURNS trigger
-SECURITY DEFINER
-SET search_path = public
-LANGUAGE plpgsql
-AS $$
-DECLARE
-  username text;
-  full_name text;
-BEGIN
-  -- Extract or generate username
-  username := COALESCE(
-    NEW.raw_user_meta_data->>'username',
-    REGEXP_REPLACE(SPLIT_PART(NEW.email, '@', 1), '[^a-zA-Z0-9_]', '_', 'g')
-  );
-  
-  -- Extract or use username as full name
-  full_name := COALESCE(
-    NEW.raw_user_meta_data->>'full_name',
-    username
-  );
-
-  -- Ensure username is unique
-  IF EXISTS (SELECT 1 FROM profiles WHERE username = username) THEN
-    username := username || '_' || substring(md5(random()::text), 1, 6);
-  END IF;
-
-  -- Create profile
-  INSERT INTO profiles (
-    id,
-    email,
-    username,
-    full_name,
-    created_at,
-    is_admin,
-    avatar_url,
-    shipping_address,
-    payment_setup,
-    onboarding_completed
-  ) VALUES (
-    NEW.id,
-    NEW.email,
-    username,
-    full_name,
-    NOW(),
-    false,
-    null,
-    null,
-    false,
-    false
-  );
-
-  RETURN NEW;
-EXCEPTION WHEN others THEN
-  -- Log error but don't prevent user creation
-  INSERT INTO auth_errors (
-    user_id,
-    email,
-    error,
-    details
-  ) VALUES (
-    NEW.id,
-    NEW.email,
-    SQLERRM,
-    jsonb_build_object(
-      'state', SQLSTATE,
-      'username', username,
-      'full_name', full_name
-    )
-  );
-  
-  RETURN NEW;
-END;
-$$;
-
--- Recreate the trigger
-DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
-CREATE TRIGGER on_auth_user_created
-  AFTER INSERT ON auth.users
-  FOR EACH ROW
-  EXECUTE FUNCTION handle_new_user();
-
--- Create policy for auth errors table
-CREATE POLICY "auth_errors_admin_only"
-  ON auth_errors
-  FOR ALL
-  TO authenticated
-  USING (
-    EXISTS (
-      SELECT 1 FROM profiles
-      WHERE profiles.id = auth.uid()
-      AND profiles.is_admin = true
-    )
-  );
-
--- Ensure proper grants for auth_errors table
-GRANT ALL ON auth_errors TO service_role;
-GRANT SELECT ON auth_errors TO authenticated;
+-- Grant necessary permissions to the auth user\nALTER USER authenticator SET search_path = public;
+\n\n-- Ensure the auth user has proper permissions\nGRANT USAGE ON SCHEMA public TO anon, authenticated, service_role;
+\nGRANT ALL ON ALL TABLES IN SCHEMA public TO authenticated;
+\nGRANT ALL ON ALL SEQUENCES IN SCHEMA public TO authenticated;
+\nGRANT ALL ON ALL TABLES IN SCHEMA public TO service_role;
+\nGRANT ALL ON ALL SEQUENCES IN SCHEMA public TO service_role;
+\n\n-- Ensure RLS is enabled on all tables\nALTER TABLE IF EXISTS profiles ENABLE ROW LEVEL SECURITY;
+\nALTER TABLE IF EXISTS items ENABLE ROW LEVEL SECURITY;
+\nALTER TABLE IF EXISTS bids ENABLE ROW LEVEL SECURITY;
+\nALTER TABLE IF EXISTS notifications ENABLE ROW LEVEL SECURITY;
+\nALTER TABLE IF EXISTS payments ENABLE ROW LEVEL SECURITY;
+\nALTER TABLE IF EXISTS email_logs ENABLE ROW LEVEL SECURITY;
+\nALTER TABLE IF EXISTS auth_errors ENABLE ROW LEVEL SECURITY;
+\n\n-- Drop and recreate the handle_new_user function with better error handling\nCREATE OR REPLACE FUNCTION handle_new_user()\nRETURNS trigger\nSECURITY DEFINER\nSET search_path = public\nLANGUAGE plpgsql\nAS $$\nDECLARE\n  username text;
+\n  full_name text;
+\nBEGIN\n  -- Extract or generate username\n  username := COALESCE(\n    NEW.raw_user_meta_data->>'username',\n    REGEXP_REPLACE(SPLIT_PART(NEW.email, '@', 1), '[^a-zA-Z0-9_]', '_', 'g')\n  );
+\n  \n  -- Extract or use username as full name\n  full_name := COALESCE(\n    NEW.raw_user_meta_data->>'full_name',\n    username\n  );
+\n\n  -- Ensure username is unique\n  IF EXISTS (SELECT 1 FROM profiles WHERE username = username) THEN\n    username := username || '_' || substring(md5(random()::text), 1, 6);
+\n  END IF;
+\n\n  -- Create profile\n  INSERT INTO profiles (\n    id,\n    email,\n    username,\n    full_name,\n    created_at,\n    is_admin,\n    avatar_url,\n    shipping_address,\n    payment_setup,\n    onboarding_completed\n  ) VALUES (\n    NEW.id,\n    NEW.email,\n    username,\n    full_name,\n    NOW(),\n    false,\n    null,\n    null,\n    false,\n    false\n  );
+\n\n  RETURN NEW;
+\nEXCEPTION WHEN others THEN\n  -- Log error but don't prevent user creation\n  INSERT INTO auth_errors (\n    user_id,\n    email,\n    error,\n    details\n  ) VALUES (\n    NEW.id,\n    NEW.email,\n    SQLERRM,\n    jsonb_build_object(\n      'state', SQLSTATE,\n      'username', username,\n      'full_name', full_name\n    )\n  );
+\n  \n  RETURN NEW;
+\nEND;
+\n$$;
+\n\n-- Recreate the trigger\nDROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+\nCREATE TRIGGER on_auth_user_created\n  AFTER INSERT ON auth.users\n  FOR EACH ROW\n  EXECUTE FUNCTION handle_new_user();
+\n\n-- Create policy for auth errors table\nCREATE POLICY "auth_errors_admin_only"\n  ON auth_errors\n  FOR ALL\n  TO authenticated\n  USING (\n    EXISTS (\n      SELECT 1 FROM profiles\n      WHERE profiles.id = auth.uid()\n      AND profiles.is_admin = true\n    )\n  );
+\n\n-- Ensure proper grants for auth_errors table\nGRANT ALL ON auth_errors TO service_role;
+\nGRANT SELECT ON auth_errors TO authenticated;
+;

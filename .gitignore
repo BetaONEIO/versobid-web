@@ -30,3 +30,5 @@ test.js
 .env.development
 .env.test
 .env.production
+
+supabase/.temp

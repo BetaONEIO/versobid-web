@@ -1,157 +1,37 @@
--- Drop existing trigger and function
-DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
-DROP FUNCTION IF EXISTS handle_new_user();
-
--- Create improved function to handle new user creation
-CREATE OR REPLACE FUNCTION handle_new_user()
-RETURNS trigger
-SECURITY DEFINER
-SET search_path = public
-LANGUAGE plpgsql
-AS $$
-DECLARE
-  username text;
-  full_name text;
-BEGIN
-  -- Extract username and full_name from metadata
-  username := COALESCE(
-    NEW.raw_user_meta_data->>'username',
-    SPLIT_PART(NEW.email, '@', 1)
-  );
-  
-  full_name := COALESCE(
-    NEW.raw_user_meta_data->>'full_name',
-    username
-  );
-
-  -- Insert the profile with error handling
-  BEGIN
-    INSERT INTO public.profiles (
-      id,
-      email,
-      username,
-      full_name,
-      created_at,
-      is_admin,
-      avatar_url,
-      shipping_address,
-      payment_setup,
-      onboarding_completed
-    ) VALUES (
-      NEW.id,
-      NEW.email,
-      username,
-      full_name,
-      NOW(),
-      false,
-      null,
-      null,
-      false,
-      false
-    );
-  EXCEPTION 
-    WHEN unique_violation THEN
-      -- Handle duplicate username by appending random numbers
-      username := username || '_' || FLOOR(RANDOM() * 1000)::text;
-      
-      INSERT INTO public.profiles (
-        id,
-        email,
-        username,
-        full_name,
-        created_at,
-        is_admin,
-        avatar_url,
-        shipping_address,
-        payment_setup,
-        onboarding_completed
-      ) VALUES (
-        NEW.id,
-        NEW.email,
-        username,
-        full_name,
-        NOW(),
-        false,
-        null,
-        null,
-        false,
-        false
-      );
-    WHEN OTHERS THEN
-      RAISE WARNING 'Error creating profile for user %: %', NEW.id, SQLERRM;
-  END;
-  
-  RETURN NEW;
-END;
-$$;
-
--- Recreate trigger
-CREATE TRIGGER on_auth_user_created
-  AFTER INSERT ON auth.users
-  FOR EACH ROW
-  EXECUTE FUNCTION handle_new_user();
-
--- Drop existing policies safely
-DO $$ 
-BEGIN
-    DROP POLICY IF EXISTS "profiles_read_policy" ON profiles;
-    DROP POLICY IF EXISTS "profiles_insert_policy" ON profiles;
-    DROP POLICY IF EXISTS "profiles_update_policy" ON profiles;
-    DROP POLICY IF EXISTS "allow_read_all_profiles" ON profiles;
-    DROP POLICY IF EXISTS "allow_service_role_insert" ON profiles;
-    DROP POLICY IF EXISTS "allow_users_update_own" ON profiles;
-EXCEPTION 
-    WHEN undefined_object THEN 
-        NULL;
-END $$;
-
--- Create new policies safely
-DO $$ 
-BEGIN
-    IF NOT EXISTS (
-        SELECT 1 FROM pg_policies 
-        WHERE tablename = 'profiles' 
-        AND policyname = 'profiles_read_all'
-    ) THEN
-        CREATE POLICY "profiles_read_all"
-          ON profiles
-          FOR SELECT
-          TO public
-          USING (true);
-    END IF;
-
-    IF NOT EXISTS (
-        SELECT 1 FROM pg_policies 
-        WHERE tablename = 'profiles' 
-        AND policyname = 'profiles_insert_service'
-    ) THEN
-        CREATE POLICY "profiles_insert_service"
-          ON profiles
-          FOR INSERT
-          TO service_role
-          WITH CHECK (true);
-    END IF;
-
-    IF NOT EXISTS (
-        SELECT 1 FROM pg_policies 
-        WHERE tablename = 'profiles' 
-        AND policyname = 'profiles_update_own'
-    ) THEN
-        CREATE POLICY "profiles_update_own"
-          ON profiles
-          FOR UPDATE
-          TO authenticated
-          USING (auth.uid() = id)
-          WITH CHECK (auth.uid() = id);
-    END IF;
-END $$;
-
--- Ensure proper grants
-GRANT USAGE ON SCHEMA public TO anon, authenticated, service_role;
-GRANT ALL ON profiles TO service_role;
-GRANT SELECT ON profiles TO anon;
-GRANT SELECT, UPDATE ON profiles TO authenticated;
-
--- Create indexes for better performance
-CREATE INDEX IF NOT EXISTS idx_profiles_email ON profiles(email);
-CREATE INDEX IF NOT EXISTS idx_profiles_username ON profiles(username);
+-- Drop existing trigger and function\nDROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+\nDROP FUNCTION IF EXISTS handle_new_user();
+\n\n-- Create improved function to handle new user creation\nCREATE OR REPLACE FUNCTION handle_new_user()\nRETURNS trigger\nSECURITY DEFINER\nSET search_path = public\nLANGUAGE plpgsql\nAS $$\nDECLARE\n  username text;
+\n  full_name text;
+\nBEGIN\n  -- Extract username and full_name from metadata\n  username := COALESCE(\n    NEW.raw_user_meta_data->>'username',\n    SPLIT_PART(NEW.email, '@', 1)\n  );
+\n  \n  full_name := COALESCE(\n    NEW.raw_user_meta_data->>'full_name',\n    username\n  );
+\n\n  -- Insert the profile with error handling\n  BEGIN\n    INSERT INTO public.profiles (\n      id,\n      email,\n      username,\n      full_name,\n      created_at,\n      is_admin,\n      avatar_url,\n      shipping_address,\n      payment_setup,\n      onboarding_completed\n    ) VALUES (\n      NEW.id,\n      NEW.email,\n      username,\n      full_name,\n      NOW(),\n      false,\n      null,\n      null,\n      false,\n      false\n    );
+\n  EXCEPTION \n    WHEN unique_violation THEN\n      -- Handle duplicate username by appending random numbers\n      username := username || '_' || FLOOR(RANDOM() * 1000)::text;
+\n      \n      INSERT INTO public.profiles (\n        id,\n        email,\n        username,\n        full_name,\n        created_at,\n        is_admin,\n        avatar_url,\n        shipping_address,\n        payment_setup,\n        onboarding_completed\n      ) VALUES (\n        NEW.id,\n        NEW.email,\n        username,\n        full_name,\n        NOW(),\n        false,\n        null,\n        null,\n        false,\n        false\n      );
+\n    WHEN OTHERS THEN\n      RAISE WARNING 'Error creating profile for user %: %', NEW.id, SQLERRM;
+\n  END;
+\n  \n  RETURN NEW;
+\nEND;
+\n$$;
+\n\n-- Recreate trigger\nCREATE TRIGGER on_auth_user_created\n  AFTER INSERT ON auth.users\n  FOR EACH ROW\n  EXECUTE FUNCTION handle_new_user();
+\n\n-- Drop existing policies safely\nDO $$ \nBEGIN\n    DROP POLICY IF EXISTS "profiles_read_policy" ON profiles;
+\n    DROP POLICY IF EXISTS "profiles_insert_policy" ON profiles;
+\n    DROP POLICY IF EXISTS "profiles_update_policy" ON profiles;
+\n    DROP POLICY IF EXISTS "allow_read_all_profiles" ON profiles;
+\n    DROP POLICY IF EXISTS "allow_service_role_insert" ON profiles;
+\n    DROP POLICY IF EXISTS "allow_users_update_own" ON profiles;
+\nEXCEPTION \n    WHEN undefined_object THEN \n        NULL;
+\nEND $$;
+\n\n-- Create new policies safely\nDO $$ \nBEGIN\n    IF NOT EXISTS (\n        SELECT 1 FROM pg_policies \n        WHERE tablename = 'profiles' \n        AND policyname = 'profiles_read_all'\n    ) THEN\n        CREATE POLICY "profiles_read_all"\n          ON profiles\n          FOR SELECT\n          TO public\n          USING (true);
+\n    END IF;
+\n\n    IF NOT EXISTS (\n        SELECT 1 FROM pg_policies \n        WHERE tablename = 'profiles' \n        AND policyname = 'profiles_insert_service'\n    ) THEN\n        CREATE POLICY "profiles_insert_service"\n          ON profiles\n          FOR INSERT\n          TO service_role\n          WITH CHECK (true);
+\n    END IF;
+\n\n    IF NOT EXISTS (\n        SELECT 1 FROM pg_policies \n        WHERE tablename = 'profiles' \n        AND policyname = 'profiles_update_own'\n    ) THEN\n        CREATE POLICY "profiles_update_own"\n          ON profiles\n          FOR UPDATE\n          TO authenticated\n          USING (auth.uid() = id)\n          WITH CHECK (auth.uid() = id);
+\n    END IF;
+\nEND $$;
+\n\n-- Ensure proper grants\nGRANT USAGE ON SCHEMA public TO anon, authenticated, service_role;
+\nGRANT ALL ON profiles TO service_role;
+\nGRANT SELECT ON profiles TO anon;
+\nGRANT SELECT, UPDATE ON profiles TO authenticated;
+\n\n-- Create indexes for better performance\nCREATE INDEX IF NOT EXISTS idx_profiles_email ON profiles(email);
+\nCREATE INDEX IF NOT EXISTS idx_profiles_username ON profiles(username);
+;

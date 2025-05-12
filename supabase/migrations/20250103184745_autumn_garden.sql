@@ -1,39 +1,11 @@
-/*
-  # Email Validation Migration
-  
-  1. Basic email validation function
-  2. Simple trigger setup
-  3. Email index for performance
-*/
-
--- Create simplified email validation function
-CREATE OR REPLACE FUNCTION validate_profile_email()
-RETURNS TRIGGER AS $$
-BEGIN
-  -- Basic validation
-  IF NEW.email IS NULL OR NEW.email = '' THEN
-    RAISE EXCEPTION 'Email cannot be empty';
-  END IF;
-
-  -- Check for duplicates
-  IF EXISTS (
-    SELECT 1 FROM profiles 
-    WHERE email = NEW.email 
-    AND id != NEW.id
-  ) THEN
-    RAISE EXCEPTION 'Email already exists';
-  END IF;
-
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
--- Set up basic trigger
-DROP TRIGGER IF EXISTS validate_profile_email_trigger ON profiles;
-CREATE TRIGGER validate_profile_email_trigger
-BEFORE INSERT OR UPDATE OF email ON profiles
-FOR EACH ROW
-EXECUTE FUNCTION validate_profile_email();
-
--- Create index for performance
-CREATE INDEX IF NOT EXISTS idx_profiles_email ON profiles(email);
+\n\n-- Create simplified email validation function\nCREATE OR REPLACE FUNCTION validate_profile_email()\nRETURNS TRIGGER AS $$\nBEGIN\n  -- Basic validation\n  IF NEW.email IS NULL OR NEW.email = '' THEN\n    RAISE EXCEPTION 'Email cannot be empty';
+\n  END IF;
+\n\n  -- Check for duplicates\n  IF EXISTS (\n    SELECT 1 FROM profiles \n    WHERE email = NEW.email \n    AND id != NEW.id\n  ) THEN\n    RAISE EXCEPTION 'Email already exists';
+\n  END IF;
+\n\n  RETURN NEW;
+\nEND;
+\n$$ LANGUAGE plpgsql SECURITY DEFINER;
+\n\n-- Set up basic trigger\nDROP TRIGGER IF EXISTS validate_profile_email_trigger ON profiles;
+\nCREATE TRIGGER validate_profile_email_trigger\nBEFORE INSERT OR UPDATE OF email ON profiles\nFOR EACH ROW\nEXECUTE FUNCTION validate_profile_email();
+\n\n-- Create index for performance\nCREATE INDEX IF NOT EXISTS idx_profiles_email ON profiles(email);
+;

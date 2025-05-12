@@ -1,69 +1,22 @@
--- Drop existing policies first
-DROP POLICY IF EXISTS "profiles_select_policy_v5" ON profiles;
-DROP POLICY IF EXISTS "profiles_insert_policy_v5" ON profiles;
-DROP POLICY IF EXISTS "profiles_update_policy_v5" ON profiles;
-
--- Ensure RLS is enabled
-ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
-
--- Create new policies with proper permissions
-CREATE POLICY "profiles_select_v6"
-  ON profiles
-  FOR SELECT
-  TO authenticated, anon
-  USING (true);
-
-CREATE POLICY "profiles_insert_v6"
-  ON profiles
-  FOR INSERT
-  TO authenticated
-  WITH CHECK (auth.uid() = id);
-
-CREATE POLICY "profiles_update_v6"
-  ON profiles
-  FOR UPDATE
-  TO authenticated
-  USING (auth.uid() = id)
-  WITH CHECK (auth.uid() = id);
-
--- Create function to validate profile creation
-CREATE OR REPLACE FUNCTION validate_profile_creation()
-RETURNS TRIGGER AS $$
-BEGIN
-  -- Check if email already exists
-  IF EXISTS (
-    SELECT 1 FROM profiles
-    WHERE email = NEW.email
-    AND id != NEW.id
-  ) THEN
-    RAISE EXCEPTION 'Email already exists';
-  END IF;
-
-  -- Check if username already exists
-  IF EXISTS (
-    SELECT 1 FROM profiles
-    WHERE username = NEW.username
-    AND id != NEW.id
-  ) THEN
-    RAISE EXCEPTION 'Username already exists';
-  END IF;
-
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
--- Create trigger for profile validation
-DROP TRIGGER IF EXISTS validate_profile_creation_trigger ON profiles;
-CREATE TRIGGER validate_profile_creation_trigger
-  BEFORE INSERT ON profiles
-  FOR EACH ROW
-  EXECUTE FUNCTION validate_profile_creation();
-
--- Ensure proper grants
-GRANT USAGE ON SCHEMA public TO anon, authenticated;
-GRANT SELECT, INSERT, UPDATE ON profiles TO authenticated;
-GRANT SELECT ON profiles TO anon;
-
--- Create indexes if they don't exist
-CREATE INDEX IF NOT EXISTS idx_profiles_email ON profiles(email);
-CREATE INDEX IF NOT EXISTS idx_profiles_username ON profiles(username);
+-- Drop existing policies first\nDROP POLICY IF EXISTS "profiles_select_policy_v5" ON profiles;
+\nDROP POLICY IF EXISTS "profiles_insert_policy_v5" ON profiles;
+\nDROP POLICY IF EXISTS "profiles_update_policy_v5" ON profiles;
+\n\n-- Ensure RLS is enabled\nALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
+\n\n-- Create new policies with proper permissions\nCREATE POLICY "profiles_select_v6"\n  ON profiles\n  FOR SELECT\n  TO authenticated, anon\n  USING (true);
+\n\nCREATE POLICY "profiles_insert_v6"\n  ON profiles\n  FOR INSERT\n  TO authenticated\n  WITH CHECK (auth.uid() = id);
+\n\nCREATE POLICY "profiles_update_v6"\n  ON profiles\n  FOR UPDATE\n  TO authenticated\n  USING (auth.uid() = id)\n  WITH CHECK (auth.uid() = id);
+\n\n-- Create function to validate profile creation\nCREATE OR REPLACE FUNCTION validate_profile_creation()\nRETURNS TRIGGER AS $$\nBEGIN\n  -- Check if email already exists\n  IF EXISTS (\n    SELECT 1 FROM profiles\n    WHERE email = NEW.email\n    AND id != NEW.id\n  ) THEN\n    RAISE EXCEPTION 'Email already exists';
+\n  END IF;
+\n\n  -- Check if username already exists\n  IF EXISTS (\n    SELECT 1 FROM profiles\n    WHERE username = NEW.username\n    AND id != NEW.id\n  ) THEN\n    RAISE EXCEPTION 'Username already exists';
+\n  END IF;
+\n\n  RETURN NEW;
+\nEND;
+\n$$ LANGUAGE plpgsql SECURITY DEFINER;
+\n\n-- Create trigger for profile validation\nDROP TRIGGER IF EXISTS validate_profile_creation_trigger ON profiles;
+\nCREATE TRIGGER validate_profile_creation_trigger\n  BEFORE INSERT ON profiles\n  FOR EACH ROW\n  EXECUTE FUNCTION validate_profile_creation();
+\n\n-- Ensure proper grants\nGRANT USAGE ON SCHEMA public TO anon, authenticated;
+\nGRANT SELECT, INSERT, UPDATE ON profiles TO authenticated;
+\nGRANT SELECT ON profiles TO anon;
+\n\n-- Create indexes if they don't exist\nCREATE INDEX IF NOT EXISTS idx_profiles_email ON profiles(email);
+\nCREATE INDEX IF NOT EXISTS idx_profiles_username ON profiles(username);
+;

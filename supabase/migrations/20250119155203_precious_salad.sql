@@ -1,54 +1,15 @@
--- Drop email_logs table if it exists
-DROP TABLE IF EXISTS email_logs CASCADE;
-
--- Create email logs table
-CREATE TABLE email_logs (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  recipient TEXT NOT NULL,
-  subject TEXT NOT NULL,
-  template_name TEXT NOT NULL,
-  status TEXT NOT NULL DEFAULT 'pending',
-  error TEXT,
-  created_at TIMESTAMPTZ DEFAULT now(),
-  updated_at TIMESTAMPTZ DEFAULT now(),
-  CONSTRAINT valid_status CHECK (status IN ('pending', 'sent', 'failed'))
-);
-
--- Enable RLS
-ALTER TABLE email_logs ENABLE ROW LEVEL SECURITY;
-
--- Create policy for admins
-CREATE POLICY "Admins can manage email logs"
-  ON email_logs
-  FOR ALL
-  TO authenticated
-  USING (
-    EXISTS (
-      SELECT 1 FROM profiles
-      WHERE profiles.id = auth.uid()
-      AND profiles.is_admin = true
-    )
-  );
-
--- Create indexes
-CREATE INDEX idx_email_logs_recipient ON email_logs(recipient);
-CREATE INDEX idx_email_logs_status ON email_logs(status);
-CREATE INDEX idx_email_logs_created_at ON email_logs(created_at);
-
--- Create updated_at trigger
-CREATE OR REPLACE FUNCTION update_email_log_timestamp()
-RETURNS TRIGGER AS $$
-BEGIN
-  NEW.updated_at = now();
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE TRIGGER update_email_logs_timestamp
-  BEFORE UPDATE ON email_logs
-  FOR EACH ROW
-  EXECUTE FUNCTION update_email_log_timestamp();
-
--- Grant necessary permissions
-GRANT ALL ON email_logs TO authenticated;
-GRANT ALL ON email_logs TO service_role;
+-- Drop email_logs table if it exists\nDROP TABLE IF EXISTS email_logs CASCADE;
+\n\n-- Create email logs table\nCREATE TABLE email_logs (\n  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),\n  recipient TEXT NOT NULL,\n  subject TEXT NOT NULL,\n  template_name TEXT NOT NULL,\n  status TEXT NOT NULL DEFAULT 'pending',\n  error TEXT,\n  created_at TIMESTAMPTZ DEFAULT now(),\n  updated_at TIMESTAMPTZ DEFAULT now(),\n  CONSTRAINT valid_status CHECK (status IN ('pending', 'sent', 'failed'))\n);
+\n\n-- Enable RLS\nALTER TABLE email_logs ENABLE ROW LEVEL SECURITY;
+\n\n-- Create policy for admins\nCREATE POLICY "Admins can manage email logs"\n  ON email_logs\n  FOR ALL\n  TO authenticated\n  USING (\n    EXISTS (\n      SELECT 1 FROM profiles\n      WHERE profiles.id = auth.uid()\n      AND profiles.is_admin = true\n    )\n  );
+\n\n-- Create indexes\nCREATE INDEX idx_email_logs_recipient ON email_logs(recipient);
+\nCREATE INDEX idx_email_logs_status ON email_logs(status);
+\nCREATE INDEX idx_email_logs_created_at ON email_logs(created_at);
+\n\n-- Create updated_at trigger\nCREATE OR REPLACE FUNCTION update_email_log_timestamp()\nRETURNS TRIGGER AS $$\nBEGIN\n  NEW.updated_at = now();
+\n  RETURN NEW;
+\nEND;
+\n$$ LANGUAGE plpgsql;
+\n\nCREATE TRIGGER update_email_logs_timestamp\n  BEFORE UPDATE ON email_logs\n  FOR EACH ROW\n  EXECUTE FUNCTION update_email_log_timestamp();
+\n\n-- Grant necessary permissions\nGRANT ALL ON email_logs TO authenticated;
+\nGRANT ALL ON email_logs TO service_role;
+;
