@@ -34,7 +34,7 @@ export default defineConfig(({ mode }) => {
     server: {
       port: 5173,
       strictPort: true,
-      host: '0.0.0.0',
+      host: 'localhost',
       cors: true,
       allowedHosts: [
         '52e8800c-a685-4197-a774-7c16b49835dd-00-19fuicwr8frnw.spock.replit.dev',
@@ -42,9 +42,9 @@ export default defineConfig(({ mode }) => {
         '.spock.replit.dev'
       ],
       hmr: {
-        clientPort: 443,
+        clientPort: 5173,
         timeout: 5000,
-        host: '0.0.0.0'
+        host: 'localhost'
       },
       watch: {
         usePolling: true
@@ -52,7 +52,7 @@ export default defineConfig(({ mode }) => {
     },
     preview: {
       port: 5173,
-      host: '0.0.0.0'
+      host: 'localhost'
     },
     define: {
       __APP_ENV__: JSON.stringify(env.APP_ENV)

@@ -11,6 +11,7 @@ node_modules
 dist
 dist-ssr
 *.local
+deno.lock
 
 # Editor directories and files
 .vscode/*
@@ -31,4 +32,8 @@ test.js
 .env.test
 .env.production
 
+#supabase files
 supabase/.temp
+supabase/functions/deno.lock
+supabase/functions/deno.json
+supabase/config.toml

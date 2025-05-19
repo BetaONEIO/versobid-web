@@ -21,7 +21,7 @@
     "types": ["node", "vite/client"]
   },
   "include": ["src"],
-  "exclude": ["dist"],
+  "exclude": ["dist","supabase"],
   "ts-node": {
     "esm": true,
     "experimentalSpecifiers": true
