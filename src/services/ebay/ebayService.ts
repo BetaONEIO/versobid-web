@@ -1,30 +1,7 @@
 import { EbaySearchResponse } from './types';
 import { SearchResult } from '../../types/search';
 
-const EBAY_API_URL = import.meta.env.VITE_EBAY_API_URL;
-const EBAY_TOKEN = import.meta.env.VITE_EBAY_API_TOKEN;
-
-// Rate limiting configuration
-const RATE_LIMIT = 5; // requests per second
-const RATE_WINDOW = 1000; // 1 second in milliseconds
-let lastRequestTime = 0;
-let requestCount = 0;
-
-const rateLimiter = async () => {
-  const now = Date.now();
-  if (now - lastRequestTime >= RATE_WINDOW) {
-    // Reset counter for new window
-    requestCount = 0;
-    lastRequestTime = now;
-  } else if (requestCount >= RATE_LIMIT) {
-    // Wait until next window
-    const waitTime = RATE_WINDOW - (now - lastRequestTime);
-    await new Promise(resolve => setTimeout(resolve, waitTime));
-    requestCount = 0;
-    lastRequestTime = Date.now();
-  }
-  requestCount++;
-};
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 
 export const ebayService = {
   async searchItems(query: string): Promise<SearchResult[]> {
@@ -33,38 +10,20 @@ export const ebayService = {
     }
 
     try {
-      await rateLimiter();
-
-      console.log('Searching eBay API:', {
-        url: EBAY_API_URL,
-        query,
-        hasToken: !!EBAY_TOKEN
-      });
-
       const response = await fetch(
-        `${EBAY_API_URL}/item_summary/search?q=${encodeURIComponent(query)}&limit=50`, 
+        `${SUPABASE_URL}/functions/v1/ebay-search?q=${encodeURIComponent(query)}`,
         {
           headers: {
-            'Authorization': `Bearer ${EBAY_TOKEN}`,
-            'Content-Type': 'application/json',
-            'X-EBAY-C-MARKETPLACE-ID': 'EBAY_GB'
+            'Content-Type': 'application/json'
           }
         }
       );
 
       if (!response.ok) {
-        console.error('eBay API error:', {
-          status: response.status,
-          statusText: response.statusText
-        });
-        throw new Error(`eBay API error: ${response.statusText}`);
+        throw new Error(`eBay search error: ${response.statusText}`);
       }
 
       const data: EbaySearchResponse = await response.json();
-      console.log('eBay API response:', {
-        itemCount: data.itemSummaries?.length || 0
-      });
-
       return (data.itemSummaries || []).map(item => ({
         title: item.title || '',
         imageUrl: item.image?.imageUrl,

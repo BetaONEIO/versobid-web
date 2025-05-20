@@ -24,7 +24,7 @@ export const useAuth = () => {
 
       if (error) {
         console.error('Error checking profile trigger:', error);
-        return false;
+        throw new Error('Failed to check profile trigger');
       }
 
       // If we find an error, the trigger failed
