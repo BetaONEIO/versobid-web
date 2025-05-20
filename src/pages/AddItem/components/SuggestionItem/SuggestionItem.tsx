@@ -5,6 +5,9 @@ import { SuggestionItemPropsTypes } from "./SuggestionItem.types";
 
 const SuggestionItem = forwardRef<HTMLDivElement, SuggestionItemPropsTypes>(
   ({ loading, data, handleSuggestionSelect, title, showSuggestion }, ref) => {
+
+    console.log('data----->',data)
+
     return (
       <div ref={ref}>
         {loading && showSuggestion && (
@@ -21,7 +24,7 @@ const SuggestionItem = forwardRef<HTMLDivElement, SuggestionItemPropsTypes>(
             {/* No Results Message */}
             {isEmpty(data) && !isEmpty(title) && showSuggestion && (
               <p className="text-gray-600 dark:text-gray-300 text-center p-4">
-                Sorry, we can't find that item, but you can still post it!
+                Sorry, we can't find that item, but you can still post itttt!
               </p>
             )}
 

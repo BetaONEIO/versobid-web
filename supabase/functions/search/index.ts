@@ -1,3 +1,4 @@
+// deno-lint-ignore-file
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { corsHeaders } from '../_shared/cors.ts'
 
@@ -63,7 +64,7 @@ serve(async (req) => {
 
     const token = await getEbayAppToken();
     const response = await fetch(
-      `${EBAY_API_URL}?q=${encodeURIComponent(query)}&limit=50`,
+      `${EBAY_API_URL}?q=${encodeURIComponent(query)}&limit=5`,
       {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -83,7 +84,7 @@ serve(async (req) => {
       imageUrl: item.image?.imageUrl,
       price: item.price ? parseFloat(item.price.value) : undefined,
       condition: item.condition,
-      shortDescription: item.shortDescription,
+      shortDescription: item.shortDescription || '',
       brand: item.brand || ''
     }));
 
