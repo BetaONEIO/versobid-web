@@ -12,6 +12,9 @@ export interface Product {
   category?: string;
 }
 
+let searchProducts: Product[] = [];
+
+
 export async function searchProductsByQuery(query: string) {
   try {
     const response = await axios.post(`${SUPABASE_URL}/functions/v1/search`, {
@@ -23,7 +26,7 @@ export async function searchProductsByQuery(query: string) {
     });
 
     const items = response.data.results || [];
-    return items.map((item: any) => ({
+    searchProducts = items.map((item: any) => ({
       title: item.title || 'No Title',
       imageUrl: item.imageUrl || '',
       price: item.price || 0,
@@ -32,8 +35,13 @@ export async function searchProductsByQuery(query: string) {
       description: item.shortDescription || item.title || '',
       category: 'Unknown'
     }));
+
+    return searchProducts;
+
   } catch (error) {
     console.error('Failed to load search:', error);
     return [];
   }
 }
+export { searchProducts };
+
