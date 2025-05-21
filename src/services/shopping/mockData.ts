@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { supabase } from '../../lib/supabase';
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 
@@ -14,14 +15,21 @@ export interface Product {
 
 let searchProducts: Product[] = [];
 
-
 export async function searchProductsByQuery(query: string) {
   try {
+    // Get the current session
+    const { data: { session } } = await supabase.auth.getSession();
+    console.log('session', session?.access_token);
+    if (!session) {
+      throw new Error('No active session found');
+    }
+
     const response = await axios.post(`${SUPABASE_URL}/functions/v1/search`, {
       query
     }, {
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session.access_token}`
       },
     });
 
