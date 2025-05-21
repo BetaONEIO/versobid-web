@@ -19,7 +19,6 @@ export async function searchProductsByQuery(query: string) {
   try {
     // Get the current session
     const { data: { session } } = await supabase.auth.getSession();
-    console.log('session', session?.access_token);
     if (!session) {
       throw new Error('No active session found');
     }
