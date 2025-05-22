@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { ItemFormData } from '../../../types/item';
 import { categories } from '../../../utils/constants';
-import { googleShoppingService } from '../../../services/shopping/googleShoppingService';
+import { ebayService } from '../../../services/ebay/ebayService';
 import { SearchResult } from '../../../types/search';
 import { QuestionMarkCircleIcon } from '@heroicons/react/24/outline';
 import { useUser } from '../../../contexts/UserContext';
@@ -19,7 +19,6 @@ export const WantedItemFields: React.FC<WantedItemFieldsProps> = ({ formData, on
   const [loading, setLoading] = useState(false);
   const [suggestions, setSuggestions] = useState<SearchResult[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const [priceAnalysis, setPriceAnalysis] = useState<any>(null);
   const [searchAttempted, setSearchAttempted] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
@@ -31,13 +30,13 @@ export const WantedItemFields: React.FC<WantedItemFieldsProps> = ({ formData, on
     if (value.length >= 3) {
       setLoading(true);
       try {
-        const results = await googleShoppingService.searchProducts(value);
-        setSuggestions(results.results || []);
-        setPriceAnalysis(results.priceAnalysis);
+        const results = await ebayService.searchItems(value);
+        setSuggestions(results);
         setShowSuggestions(true);
         setSearchAttempted(true);
       } catch (error) {
         console.error('Search error:', error);
+        addNotification('error', 'Failed to fetch suggestions');
       } finally {
         setLoading(false);
       }
@@ -110,7 +109,7 @@ export const WantedItemFields: React.FC<WantedItemFieldsProps> = ({ formData, on
         {searchAttempted && !loading && suggestions.length === 0 && (
           <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 rounded-md shadow-lg p-4">
             <p className="text-gray-600 dark:text-gray-300 text-center">
-              Sorry, we can't find that item, but you can still post it!
+              No suggestions found, but you can still post your item!
             </p>
           </div>
         )}
@@ -241,18 +240,6 @@ export const WantedItemFields: React.FC<WantedItemFieldsProps> = ({ formData, on
           ))}
         </select>
       </div>
-
-      {priceAnalysis && (
-        <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900 rounded-lg">
-          <h4 className="text-sm font-medium text-blue-900 dark:text-blue-100">Market Price Analysis</h4>
-          <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">
-            Suggested price range: £{priceAnalysis.suggestedRange.minPrice} - £{priceAnalysis.suggestedRange.maxPrice}
-          </p>
-          <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
-            Based on {priceAnalysis.basedOn} similar items
-          </p>
-        </div>
-      )}
     </>
   );
 };

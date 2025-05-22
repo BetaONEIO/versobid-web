@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { useOnClickOutside } from "usehooks-ts";
 
 import {
@@ -15,7 +15,7 @@ import { useNotification } from "../../../../contexts/NotificationContext";
 
 import { categories } from "../../../../utils/constants";
 
-import { searchProducts } from "../../../../services/shopping/mockData";
+import { searchProductsByQuery } from "../../../../services/shopping/mockData";
 
 import SuggestionItem from "../SuggestionItem";
 import DeliveryOption from "../DeliveryOption";
@@ -53,6 +53,8 @@ const WantedItemForm = () => {
 
   const [loading, setLoading] = useState<boolean>(false);
   const [showSuggestion, setShowSuggestion] = useState<boolean>(false);
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchResults, setSearchResults] = useState<SuggestionItemType[]>([]);
 
   const handleSuggestionSelect = (data: SuggestionItemType) => {
     setShowSuggestion(false);
@@ -62,15 +64,23 @@ const WantedItemForm = () => {
     setValue('maxPrice', Math.ceil(data.price * 1.1));
   };
 
-  const searchSuggestion = useCallback(() => {
+  const searchSuggestion = useCallback(async() => {
     if (!isEmpty(title)) {
-      const result = searchProducts?.filter((item) =>
-        item.title?.toLowerCase().includes(title?.toLowerCase())
-      );
-      return result;
+      setIsSearching(true);
+      try {
+        const result = await searchProductsByQuery(title);
+        setSearchResults(result as SuggestionItemType[]);
+      } finally {
+        setIsSearching(false);
+      }
+    } else {
+      setSearchResults([]);
     }
-    return [];
   }, [title]);
+
+  useEffect(() => {
+    searchSuggestion();
+  }, [searchSuggestion]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -145,8 +155,8 @@ const WantedItemForm = () => {
             <span className="text-red-500 text-xs">{errors.title.message}</span>
           )}
           <SuggestionItem
-            loading={loading}
-            data={searchSuggestion()}
+            loading={isSearching}
+            data={searchResults}
             handleSuggestionSelect={handleSuggestionSelect}
             title={title}
             showSuggestion={showSuggestion}

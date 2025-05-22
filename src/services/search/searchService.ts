@@ -11,8 +11,8 @@ export async function searchItems(query: string): Promise<SearchResult[]> {
     const results = searchProducts
       .filter(product => 
         product.title.toLowerCase().includes(query.toLowerCase()) ||
-        product.description.toLowerCase().includes(query.toLowerCase()) ||
-        product.brand.toLowerCase().includes(query.toLowerCase())
+        product.description?.toLowerCase().includes(query.toLowerCase()) ||
+        product.brand?.toLowerCase().includes(query.toLowerCase())
       )
       .map(product => ({
         title: product.title,
