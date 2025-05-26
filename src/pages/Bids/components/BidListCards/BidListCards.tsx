@@ -24,6 +24,7 @@ const BidList: React.FC<BidListProps> = ({ bids, onBidSelect }) => {
     <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
       {bids.map((bid) => (
         <div
+          key={bid.id}
           className="bg-white shadow rounded-lg p-6 hover:shadow-lg transition-shadow duration-200"
           onClick={() => onBidSelect?.(bid)}
         >
