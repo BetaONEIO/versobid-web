@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useUser } from '../../../../contexts/UserContext';
 import { useNotification } from '../../../../contexts/NotificationContext';
 
-// import { bidService } from '../../../../services/bidService';
+import { bidService } from '../../../../services/bidService';
 
 import { BidFormProps } from './BidForm.types';
 
@@ -18,10 +18,10 @@ const BidForm: React.FC<BidFormProps> = ({ item }) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!auth.user) return;
-
+    if (!item) return;
     // berhubungan dengan backend untuk submit form bid
     try {
-      // await bidService.createBid(item.id, amount, message);
+      await bidService.createBid(item.id, amount, message);
       addNotification('success', 'Bid placed successfully!');
       navigate('/bids')
     } catch (error) {

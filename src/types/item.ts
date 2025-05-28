@@ -39,7 +39,7 @@ export interface ItemFormData {
 export interface ItemFilters {
   category?: string;
   status?: string;
-  seller_id?: string;
+  buyer_id?: string;
   exclude_seller?: string;
   search?: string;
   type?: 'item' | 'service';
@@ -48,10 +48,12 @@ export interface ItemFilters {
 // Main item interface
 export interface Item extends ItemFormData {
   id: string;
-  sellerId: string;
+  sellerId?: string;
+  buyerId: string;
   status: 'active' | 'completed' | 'archived';
   createdAt: string;
   sellerUsername?: string;
+  buyerUsername?: string;
   archivedReason?: string;
   archivedAt?: string;
 }

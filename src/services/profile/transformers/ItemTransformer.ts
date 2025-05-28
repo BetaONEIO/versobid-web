@@ -7,6 +7,7 @@ interface ItemRow {
   description: string;
   min_price: number;
   max_price: number;
+  buyer_id: string;
   seller_id: string;
   category: string;
   shipping_options: any[];
@@ -22,6 +23,7 @@ export class ItemTransformer extends BaseTransformer<ItemRow, Item> {
       description: data.description,
       minPrice: data.min_price,
       maxPrice: data.max_price,
+      buyerId: data.buyer_id,
       sellerId: data.seller_id,
       category: data.category,
       shippingOptions: data.shipping_options,

@@ -11,7 +11,7 @@ import { itemService } from "../../../services/itemService";
 import { DeleteListingModal } from "../../../components/ui/DeleteListingModal";
 import { BidForm } from "../components";
 
-import { MockItemListDetail } from "./mockItemListDetail";
+// import { MockItemListDetail } from "./mockItemListDetail";
 
 const ItemListDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -48,14 +48,14 @@ const ItemListDetail: React.FC = () => {
     return <div className="text-center text-red-600 py-8">{error || 'Listing not found'}</div>;
   }
 
-  const isOwner = auth.user?.id === MockItemListDetail.sellerId;
+  const isOwner = auth.user?.id === listing.buyerId;
 
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
         <div className="flex justify-between items-start mb-6">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            {MockItemListDetail.title}
+            {listing.title}
           </h1>
           {isOwner && (
             <button
@@ -72,7 +72,7 @@ const ItemListDetail: React.FC = () => {
             <div>
               <h2 className="text-xl font-semibold mb-2">Description</h2>
               <p className="text-gray-600 dark:text-gray-300">
-                {MockItemListDetail.description}
+                {listing.description}
               </p>
             </div>
 
@@ -84,7 +84,7 @@ const ItemListDetail: React.FC = () => {
                     Category
                   </dt>
                   <dd className="text-gray-900 dark:text-white">
-                    {MockItemListDetail.category}
+                    {listing.category}
                   </dd>
                 </div>
                 <div>
@@ -92,7 +92,7 @@ const ItemListDetail: React.FC = () => {
                     Price Range
                   </dt>
                   <dd className="text-gray-900 dark:text-white">
-                    £{MockItemListDetail.minPrice} - £{MockItemListDetail.maxPrice}
+                    £{listing.minPrice} - £{listing.maxPrice}
                   </dd>
                 </div>
               </dl>
@@ -103,7 +103,7 @@ const ItemListDetail: React.FC = () => {
             <div className="bg-gray-50 dark:bg-gray-700 p-6 rounded-lg">
               <h2 className="text-xl font-semibold mb-4">Place a Bid</h2>
               <BidForm 
-                item={MockItemListDetail}
+                item={listing}
               />
             </div>
           )}

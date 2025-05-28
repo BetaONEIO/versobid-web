@@ -23,7 +23,8 @@ export const ItemForm: React.FC = () => {
         description: formData.description,
         minPrice: formData.minPrice,
         maxPrice: formData.maxPrice,
-        sellerId: auth.user.id,
+        // sellerId: auth.user.id,
+        buyerId: auth.user.id,
         category: formData.category,
         shippingOptions: formData.shippingOptions,
         status: 'active'

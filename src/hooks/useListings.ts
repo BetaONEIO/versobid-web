@@ -16,7 +16,7 @@ export const useListings = () => {
       if (role === 'buyer') {
         // Buyers see their own listings (items they want to buy)
         filters = { 
-          seller_id: auth.user?.id,
+          buyer_id: auth.user?.id,
           status: 'active', // Only show active listings
           search
         };
@@ -30,6 +30,7 @@ export const useListings = () => {
       }
       
       const items = await itemService.getItems(filters);
+      console.log('Fetched items:', items); // Debug log
       setListings(items);
     } catch (err) {
       console.error('Failed to fetch listings:', err);
@@ -44,6 +45,7 @@ export const useListings = () => {
       fetchListings();
     } else {
       setLoading(false);
+      setListings([]); // Clear listings when not authenticated
     }
   }, [role, auth.user?.id, auth.isAuthenticated]);
 
