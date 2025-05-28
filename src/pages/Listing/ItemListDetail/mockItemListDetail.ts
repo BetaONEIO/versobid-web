@@ -2,10 +2,10 @@ import { Item } from "../../../types"
 
 export const MockItemListDetail: Item = {
   id: "qwer",
-  sellerId: "qwerty",
+  buyerId: "qwerty",
   status: "active",
   createdAt: "2025-04-21T11:19:48.201243+00:00",
-  sellerUsername: "Patrick",
+  buyerUsername: "Patrick",
   archivedReason: "",
   archivedAt: "",
   title: "iPhone 15 Pro",

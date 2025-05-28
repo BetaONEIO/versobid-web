@@ -7,8 +7,8 @@ import { useUser } from '../../../contexts/UserContext';
 import { MockBidList } from './mockBidListData';
 
 const BidList: React.FC = () => {
-  // const { bids, loading, error } = useBids(); // berhubungan dengan backend di dalamnya - bids untuk replace mock data
-  const { loading, error } = useBids();
+  const { bids, loading, error } = useBids(); // berhubungan dengan backend di dalamnya - bids untuk replace mock data
+  // const { loading, error } = useBids();
   const { role } = useUser();
 
   if (loading) {
@@ -33,7 +33,7 @@ const BidList: React.FC = () => {
         {role === 'seller' ? 'My Bids' : 'Bids Received'}
       </h1>
       
-      {MockBidList.length === 0 ? (
+      {bids.length === 0 ? (
         <div className="flex justify-center items-center min-h-[30vh] bg-white dark:bg-gray-800 rounded-lg shadow-md p-8">
           <div className="text-center">
             <p className="text-lg text-gray-600 dark:text-gray-300">
@@ -47,7 +47,7 @@ const BidList: React.FC = () => {
           </div>
         </div>
       ) : (
-        <BidListCards bids={MockBidList} />
+        <BidListCards bids={bids} />
       )}
     </div>
   );

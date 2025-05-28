@@ -21,12 +21,12 @@ export const useWantedItemForm = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!auth.user) return;
-
+    
     try {
+      console.log('formData----->', formData);
       await itemService.createItem({
         ...formData,
-        sellerId: auth.user.id,
+        buyerId: auth.user!.id,
         status: 'active'
       });
       addNotification('success', 'Wanted item posted successfully!');

@@ -13,6 +13,7 @@ const transformItem = (row: ItemRow, seller_username?: string): Item => ({
   minPrice: row.min_price,
   maxPrice: row.max_price,
   sellerId: row.seller_id,
+  buyerId: row.buyer_id ,
   category: row.category,
   shippingOptions: row.shipping_options || [],
   status: row.status,
@@ -28,7 +29,7 @@ export const itemService = {
         .from('items')
         .select(`
           *,
-          seller:profiles!inner(
+          seller:profiles!items_seller_id_fkey(
             username
           )
         `);
@@ -42,11 +43,11 @@ export const itemService = {
       if (filters?.status) {
         query = query.eq('status', filters.status);
       }
-      if (filters?.seller_id) {
-        query = query.eq('seller_id', filters.seller_id);
+      if (filters?.buyer_id) {
+        query = query.eq('buyer_id', filters.buyer_id);
       }
       if (filters?.exclude_seller) {
-        query = query.neq('seller_id', filters.exclude_seller);
+        query = query.neq('buyer_id', filters.exclude_seller);
       }
 
       const { data, error } = await query.order('created_at', { ascending: false });
@@ -69,7 +70,7 @@ export const itemService = {
         .from('items')
         .select(`
           *,
-          seller:profiles!inner(
+          seller:profiles!items_seller_id_fkey(
             username
           )
         `)
@@ -95,7 +96,7 @@ export const itemService = {
         description: item.description,
         min_price: item.minPrice,
         max_price: item.maxPrice,
-        seller_id: item.sellerId,
+        buyer_id: item.buyerId,
         category: item.category,
         shipping_options: item.shippingOptions,
         status: item.status,
@@ -107,7 +108,7 @@ export const itemService = {
         .insert(itemData)
         .select(`
           *,
-          seller:profiles!inner(
+          buyer:profiles!items_buyer_id_fkey(
             username
           )
         `)

@@ -118,7 +118,7 @@ export const bidService = {
             description,
             min_price,
             max_price,
-            seller_id,
+            buyer_id,
             category,
             status,
             created_at
@@ -148,13 +148,13 @@ export const bidService = {
             description,
             min_price,
             max_price,
-            seller_id,
+            buyer_id,
             category,
             status,
             created_at
           )
         `)
-        .eq('item.seller_id', userId)
+        .eq('item.buyer_id', userId)
         .order('created_at', { ascending: false });
 
       if (error) return [];

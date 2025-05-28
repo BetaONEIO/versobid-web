@@ -20,7 +20,7 @@ export const ItemForm: React.FC = () => {
     try {
       await itemService.createItem({
         ...formData,
-        sellerId: auth.user.id,
+        buyerId: auth.user.id,
         status: 'active'
       });
       addNotification('success', 'Item listed successfully!');

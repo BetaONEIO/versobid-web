@@ -11,13 +11,10 @@ import { formatCurrency } from "../../../utils/formatters";
 import { ebayService } from "../../../services/ebay/ebayService";
 import { SearchResult } from "../../../types/search";
 
-import { MockList } from "./mockList";
-
 const ItemList: React.FC = () => {
   const [searchParams] = useSearchParams();
   const searchQuery = searchParams.get("search");
-  // const { listings, loading, error } = useListings(); // berhubungan dengan backend di dalamnya - listing untuk replace mock data
-  const { loading, error } = useListings(); // berhubungan dengan backend di dalamnya
+  const { listings, loading, error } = useListings();
   const { role } = useUser();
   const { addNotification } = useNotification();
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
@@ -28,7 +25,6 @@ const ItemList: React.FC = () => {
       if (searchQuery) {
         setSearching(true);
         try {
-          // berhubungan dengan backend untuk get search item
           const results = await ebayService.searchItems(searchQuery);
           setSearchResults(results);
 
@@ -155,46 +151,53 @@ const ItemList: React.FC = () => {
             )
           ) : (
             // Show user's listings
-            MockList.map((listing) => (
-              <Link
-                key={listing.id}
-                to={`/listings/${listing.id}`}
-                className="bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-lg transition-shadow"
-              >
-                <div className="p-6">
-                  <div className="flex justify-between items-start mb-2">
-                    <h3 className="text-xl font-semibold">{listing.title}</h3>
-                    <span className="text-sm text-gray-500 dark:text-gray-400">
-                      {listing.category}
-                    </span>
-                  </div>
-                  <p className="text-gray-600 dark:text-gray-300 mb-4 line-clamp-2">
-                    {listing.description}
-                  </p>
-                  <div className="flex flex-col justify-between items-start">
-                    <div>
+            listings.length > 0 ? (
+              listings.map((listing) => (
+                <Link
+                  key={listing.id}
+                  to={`/listings/${listing.id}`}
+                  className="bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-lg transition-shadow"
+                >
+                  <div className="p-6">
+                    <div className="flex justify-between items-start mb-2">
+                      <h3 className="text-xl font-semibold">{listing.title}</h3>
                       <span className="text-sm text-gray-500 dark:text-gray-400">
-                        Budget:
-                      </span>
-                      <span className="ml-2 text-lg font-bold text-indigo-600 dark:text-indigo-400">
-                        {formatCurrency(listing.minPrice)} -{" "}
-                        {formatCurrency(listing.maxPrice)}
+                        {listing.category}
                       </span>
                     </div>
-                    {listing.sellerUsername && (
-                      <div className="text-sm text-gray-500 dark:text-gray-400">
-                        Posted by: {listing.sellerUsername}
+                    <p className="text-gray-600 dark:text-gray-300 mb-4 line-clamp-2">
+                      {listing.description}
+                    </p>
+                    <div className="flex flex-col justify-between items-start">
+                      <div>
+                        <span className="text-sm text-gray-500 dark:text-gray-400">
+                          Budget:
+                        </span>
+                        <span className="ml-2 text-lg font-bold text-indigo-600 dark:text-indigo-400">
+                          {formatCurrency(listing.minPrice)} -{" "}
+                          {formatCurrency(listing.maxPrice)}
+                        </span>
                       </div>
-                    )}
+                      {listing.sellerUsername && (
+                        <div className="text-sm text-gray-500 dark:text-gray-400">
+                          Posted by: {listing.sellerUsername}
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
-              </Link>
-            ))
+                </Link>
+              ))
+            ) : (
+              <div className="col-span-3 text-center py-8">
+                <p className="text-gray-500 dark:text-gray-400">
+                  No listings found
+                </p>
+              </div>
+            )
           )}
         </div>
       </div>
     </div>
   );
 };
-
 export default ItemList;

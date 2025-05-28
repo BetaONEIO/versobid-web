@@ -51,7 +51,7 @@ export const ServiceItemForm: React.FC = () => {
         title: formData.title,
         description: formData.description,
         category: formData.category,
-        sellerId: auth.user.id,
+        buyerId: auth.user.id,
         minPrice: formData.rate,
         maxPrice: formData.rate,
         status: 'active',

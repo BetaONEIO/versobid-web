@@ -22,6 +22,8 @@ import DeliveryOption from "../DeliveryOption";
 
 import { InputsType, SuggestionItemType } from "./WantedItemForm.types";
 import { isEmpty, isNil } from "ramda";
+import { itemService } from "../../../../services/itemService";
+import { Item, ShippingOption } from "../../../../types";
 
 const WantedItemForm = () => {
   const navigate = useNavigate();
@@ -101,18 +103,34 @@ const WantedItemForm = () => {
   };
 
   const submitHandler = async (data: InputsType) => {
-    console.log({ data });
     setLoading(true);
-    
+
     try {
+      let imageUrl = data.image_url;
       if (image && auth.user?.id) {
-        await storageService.uploadImage(image, auth?.user.id);   
-      }      
-      navigate('/listings')
+        // Upload image and get URL
+        imageUrl = await storageService.uploadImage(image, auth.user.id);
+      }
+
+      // Prepare the item data for the backend
+      const itemToSave: Omit<Item, 'id' | 'createdAt'> = {
+        title: data.title,
+        description: data.description,
+        minPrice: data.minPrice,
+        maxPrice: data.maxPrice,
+        category: data.category,
+        shippingOptions: data.shipping_type as unknown as ShippingOption[], // or map if needed
+        status: "active",
+        buyerId: auth.user?.id as string,
+        imageUrl: imageUrl || "",
+      };
+      await itemService.createItem(itemToSave);
+      addNotification("success", "Wanted item posted successfully!");
+      navigate("/listings");
     } catch (error) {
-      addNotification('error', 'Failed to post item');
+      addNotification("error", "Failed to post item");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   };
 

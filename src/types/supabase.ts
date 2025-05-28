@@ -62,12 +62,13 @@ export interface Database {
           description: string;
           min_price: number;
           max_price: number;
-          seller_id: string;
+          seller_id?: string;
           category: string;
           shipping_options: any[];
           status: 'active' | 'completed' | 'archived';
           created_at: string;
           image_url?: string;
+          buyer_id: string ;
         };
         Insert: {
           id?: string;
@@ -75,12 +76,13 @@ export interface Database {
           description: string;
           min_price: number;
           max_price: number;
-          seller_id: string;
+          seller_id?: string;
           category: string;
           shipping_options?: any[];
           status?: 'active' | 'completed' | 'archived';
           created_at?: string;
           image_url?: string;
+          buyer_id: string;
         };
         Update: {
           id?: string;
@@ -94,6 +96,7 @@ export interface Database {
           status?: 'active' | 'completed' | 'archived';
           created_at?: string;
           image_url?: string;
+          buyer_id?: string ;
         };
       };
       bids: {
