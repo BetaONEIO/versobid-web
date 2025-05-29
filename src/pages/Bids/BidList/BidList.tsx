@@ -4,7 +4,7 @@ import { BidListCards } from '../components';
 import { useBids } from '../../../hooks/useBids';
 import { useUser } from '../../../contexts/UserContext';
 
-import { MockBidList } from './mockBidListData';
+// import { MockBidList } from './mockBidListData';
 
 const BidList: React.FC = () => {
   const { bids, loading, error } = useBids(); // berhubungan dengan backend di dalamnya - bids untuk replace mock data
