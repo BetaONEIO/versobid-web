@@ -31,7 +31,10 @@ const ItemListDetail: React.FC = () => {
 
   const handleDeleteConfirm = async () => {
     try {
-      await itemService.deleteListing(id!);
+      const success = await itemService.deleteListing(id!);
+      if (!success) {
+        throw new Error('Failed to archive listing');
+      }
       addNotification("success", "Listing deleted successfully");
       navigate("/listings");
     } catch (error) {

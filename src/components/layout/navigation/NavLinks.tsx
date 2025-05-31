@@ -13,7 +13,7 @@ export const NavLinks: React.FC<NavLinksProps> = ({ role, isAdmin, username, mob
   const sellerLinks = [
     { to: '/', label: 'Home' },
     { to: '/listings', label: 'Browse Items' },
-    { to: '/bids/received', label: 'My Bids' },
+    { to: '/bids', label: 'Bids Received' },
     { to: `/profile/${username}`, label: 'Profile' },
     { to: '/help', label: 'Help' },
   ];
@@ -22,7 +22,7 @@ export const NavLinks: React.FC<NavLinksProps> = ({ role, isAdmin, username, mob
     { to: '/', label: 'Home' },
     { to: '/items/add', label: 'Place a Listing' },
     { to: '/listings', label: 'My Listings' },
-    { to: '/bids', label: 'My Bids' },
+    { to: '/bids', label: 'Bids Received' },
     { to: `/profile/${username}`, label: 'Profile' },
     { to: '/help', label: 'Help' },
   ];

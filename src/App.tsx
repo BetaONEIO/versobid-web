@@ -5,7 +5,7 @@ import { Footer } from './components/layout/Footer';
 import { Home } from './pages/Home';
 import { SignIn } from './pages/SignIn';
 import { SignUp } from './pages/SignUp';
-import { AddItem, Listing, Bids } from './pages';
+import { AddItem, Listing } from './pages';
 import { Help } from './pages/Help';
 import { Admin } from './pages/Admin';
 import { BidsReceived } from './pages/BidsReceived';
@@ -44,10 +44,10 @@ const App: React.FC = () => {
                     }
                   />
                   <Route
-                    path="/bids/*"
+                    path="/bids"
                     element={
                       <ProtectedRoute>
-                        <Bids />
+                        <BidsReceived />
                       </ProtectedRoute>
                     }
                   />
@@ -59,14 +59,14 @@ const App: React.FC = () => {
                       </ProtectedRoute>
                     }
                   />
-                  <Route
+                  {/* <Route
                     path="/bids/received"
                     element={
                       <ProtectedRoute>
                         <BidsReceived />
                       </ProtectedRoute>
                     }
-                  />
+                  /> */}
                   <Route
                     path="/admin"
                     element={
