@@ -44,10 +44,10 @@ const App: React.FC = () => {
                     }
                   />
                   <Route
-                    path="/bids/*"
+                    path="/bids"
                     element={
                       <ProtectedRoute>
-                        <Bids />
+                        <BidsReceived />
                       </ProtectedRoute>
                     }
                   />
@@ -59,14 +59,14 @@ const App: React.FC = () => {
                       </ProtectedRoute>
                     }
                   />
-                  <Route
+                  {/* <Route
                     path="/bids/received"
                     element={
                       <ProtectedRoute>
                         <BidsReceived />
                       </ProtectedRoute>
                     }
-                  />
+                  /> */}
                   <Route
                     path="/admin"
                     element={
