@@ -45,7 +45,11 @@ export const BidsReceived: React.FC = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold mb-6">Bids Received</h1>
+      {role === 'buyer' ? (
+        <h1 className="text-2xl font-bold mb-6">Bids Received</h1>
+      ) : (
+        <h1 className="text-2xl font-bold mb-6">Bids Sent</h1>
+      )}
       
       <div className="bg-white dark:bg-gray-800 shadow overflow-hidden rounded-lg">
         <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
@@ -72,7 +76,7 @@ export const BidsReceived: React.FC = () => {
             {bids.map((bid) => (
               <tr key={bid.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm font-medium text-gray-900 dark:text-white">
+                  <div className="text-sm font-medium text-gray-900 dark:text-white truncate max-w-xs">
                     {bid.item?.title}
                   </div>
                 </td>
