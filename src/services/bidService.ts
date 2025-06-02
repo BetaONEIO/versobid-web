@@ -118,6 +118,7 @@ export const bidService = {
           )
         `)
         .eq('bidder_id', userId)
+        .neq('item.status', 'archived')
         .order('created_at', { ascending: false });
 
       if (error) return [];
@@ -148,6 +149,7 @@ export const bidService = {
           )
         `)          
         .eq('item.buyer_id', userId)
+        .neq('item.status', 'archived')
         .order('created_at', { ascending: false });
 
       if (error) return [];
