@@ -7,18 +7,26 @@ interface ProtectedRouteProps {
 }
 
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  const { auth } = useUser();
+  const { auth, loading } = useUser();
   const location = useLocation();
 
   useEffect(() => {
-    // If user is not authenticated, save the attempted route
-
-    console.log("auth",auth,"location",location)
-    if (!auth.isAuthenticated) {
+    // If user is not authenticated and not loading, save the attempted route
+    if (!auth.isAuthenticated && !loading) {
       localStorage.setItem('intendedRoute', location.pathname + location.search);
     }
-  }, [auth.isAuthenticated, location]);
+  }, [auth.isAuthenticated, loading, location]);
 
+  // Show loading while checking authentication
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-lg">Loading...</div>
+      </div>
+    );
+  }
+
+  // Redirect to signin if not authenticated
   if (!auth.isAuthenticated) {
     return <Navigate to="/signin" state={{ from: location }} replace />;
   }

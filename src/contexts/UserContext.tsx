@@ -10,6 +10,7 @@ interface UserContextType {
   auth: AuthState;
   login: (user: User) => void;
   logout: () => void;
+  loading: boolean;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -35,12 +36,45 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return (savedRole as UserRole) || 'buyer';
   });
   const [auth, setAuth] = useState<AuthState>(initialAuthState);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check for existing session
-    const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+    // Get initial session
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (session?.user) {
+        try {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .single();
+
+          if (profile) {
+            setAuth({
+              isAuthenticated: true,
+              user: {
+                id: profile.id,
+                name: profile.full_name,
+                email: profile.email,
+                username: profile.username,
+                is_admin: profile.is_admin || false,
+                email_verified: session.user.email_confirmed_at !== null,
+                shipping_address: profile.shipping_address,
+                payment_setup: profile.payment_setup,
+                onboarding_completed: profile.onboarding_completed
+              }
+            });
+          }
+        } catch (error) {
+          console.error('Error fetching profile on session restore:', error);
+        }
+      }
+      setLoading(false);
+    });
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_IN' && session?.user) {
         const { data: profile } = await supabase
           .from('profiles')
           .select('*')
@@ -63,10 +97,14 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
             }
           });
         }
+      } else if (event === 'SIGNED_OUT') {
+        setAuth(initialAuthState);
       }
-    };
+    });
 
-    checkSession();
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   const toggleRole = () => {
@@ -95,7 +133,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <UserContext.Provider value={{ role, toggleRole, auth, login, logout }}>
+    <UserContext.Provider value={{ role, toggleRole, auth, login, logout, loading }}>
       {children}
     </UserContext.Provider>
   );
