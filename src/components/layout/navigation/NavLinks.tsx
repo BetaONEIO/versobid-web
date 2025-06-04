@@ -1,6 +1,8 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { UserRole } from '../../../types/user';
+import { useUser } from '../../../contexts/UserContext';
+import { useNotification } from '../../../contexts/NotificationContext';
 
 interface NavLinksProps {
   role: UserRole;
@@ -10,6 +12,20 @@ interface NavLinksProps {
 }
 
 export const NavLinks: React.FC<NavLinksProps> = ({ role, isAdmin, username, mobile = false }) => {
+  const { logout } = useUser();
+  const navigate = useNavigate();
+  const { addNotification } = useNotification();
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      addNotification('success', 'Successfully logged out');
+      navigate('/signin');
+    } catch (error) {
+      console.error('Error logging out:', error);
+      addNotification('error', 'Failed to log out. Please try again.');
+    }
+  };
   const sellerLinks = [
     { to: '/', label: 'Home' },
     { to: '/listings', label: 'Browse Items' },
@@ -54,6 +70,12 @@ export const NavLinks: React.FC<NavLinksProps> = ({ role, isAdmin, username, mob
           Admin Panel
         </Link>
       )}
+      {/* to include logout button */}
+      <button className={`${baseClasses} cursor-pointer sm:hidden`}
+        onClick={handleLogout}
+      >
+        Logout
+      </button>
     </>
   );
 };

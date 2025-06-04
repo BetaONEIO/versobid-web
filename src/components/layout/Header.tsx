@@ -32,7 +32,7 @@ export const Header: React.FC = () => {
       <nav className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 justify-between items-center">
           <div className="flex-shrink-0">
-            <Link to="/" className="text-2xl font-bold text-gray-900 dark:text-white">
+            <Link to="/" className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
               VersoBid
             </Link>
           </div>
@@ -56,7 +56,7 @@ export const Header: React.FC = () => {
             )}
           </div>
 
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2 sm:space-x-4">
             {auth.isAuthenticated && (
               <>
                 <NotificationBell />
@@ -77,7 +77,7 @@ export const Header: React.FC = () => {
             {auth.isAuthenticated && (
               <button
                 onClick={handleLogout}
-                className="inline-flex items-center px-3 py-1 text-sm font-medium text-gray-500 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors duration-200"
+                className="hidden sm:inline-flex items-center px-3 py-1 text-sm font-medium text-gray-500 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors duration-200"
               >
                 Log Out
               </button>
@@ -97,7 +97,7 @@ export const Header: React.FC = () => {
         </div>
 
         {isMenuOpen && (
-          <div className="sm:hidden">
+          <div className="sm:hidden absolute top-16 left-0 right-0 bg-white dark:bg-gray-800 shadow-lg border-t border-gray-200 dark:border-gray-700 max-h-[calc(100vh-4rem)] overflow-y-auto z-50">
             <div className="pt-2 pb-3 space-y-1">
               {auth.isAuthenticated && (
                 <NavLinks 
