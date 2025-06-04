@@ -80,7 +80,7 @@ export const BidsReceived: React.FC = () => {
                     {bid.item?.title}
                   </div>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">
+                <td className="px-6 py-4 truncate max-w-[50px] sm:max-w-xs">
                   <div className="text-sm text-gray-500 dark:text-gray-300">
                     {bid.bidder?.username}
                   </div>
