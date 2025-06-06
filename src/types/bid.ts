@@ -19,6 +19,7 @@ export interface Bid {
     minPrice: number;
     maxPrice: number;
     seller_id: string;
+    buyer_id: string;
     category: string;
     status: string;
     created_at: string;

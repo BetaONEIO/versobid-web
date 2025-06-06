@@ -16,6 +16,9 @@ export const Header: React.FC = () => {
   const { addNotification } = useNotification();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
+  // Disable role toggle on bid detail pages
+  const isBidDetailPage = location.pathname.startsWith('/bids/') && location.pathname !== '/bids';
+
   const handleLogout = async () => {
     try {
       await logout();
@@ -60,7 +63,7 @@ export const Header: React.FC = () => {
             {auth.isAuthenticated && (
               <>
                 <NotificationBell />
-                <RoleToggle />
+                <RoleToggle disabled={isBidDetailPage} />
               </>
             )}
             <button
