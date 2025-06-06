@@ -69,8 +69,8 @@ export const Header: React.FC = () => {
           <div className="flex items-center space-x-2 sm:space-x-4">
             {auth.isAuthenticated && (
               <>
-                <NotificationBell />
                 <RoleToggle disabled={isBidDetailPage} />
+                <NotificationBell />
               </>
             )}
             <button
