@@ -34,11 +34,18 @@ export const Header: React.FC = () => {
     <header className="bg-white dark:bg-gray-800 shadow">
       <nav className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 justify-between items-center">
+          {!auth.isAuthenticated ?
           <div className="flex-shrink-0">
             <Link to="/" className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
               VersoBid
             </Link>
           </div>
+          : <div className="flex-shrink-0">
+            <Link to="/" className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
+              V/B
+            </Link>
+          </div> }
+          
 
           <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
             {auth.isAuthenticated && (
