@@ -9,8 +9,10 @@ import { AddItem, Listing } from './pages';
 import { Help } from './pages/Help';
 import { Admin } from './pages/Admin';
 import { BidsReceived } from './pages/BidsReceived';
+import { BidDetails } from './pages/BidDetails';
 import { Profile } from './pages/Profile';
 import { PaymentSuccess } from './pages/PaymentSuccess';
+import { PaymentCheckout } from './pages/PaymentCheckout';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { UserProvider } from './contexts/UserContext';
 import { NotificationProvider } from './contexts/NotificationContext';
@@ -36,6 +38,14 @@ const App: React.FC = () => {
                   <Route path="/profile/:username" element={<Profile />} />
                   <Route path="/payment/success" element={<PaymentSuccess />} />
                   <Route
+                    path="/payment/checkout"
+                    element={
+                      <ProtectedRoute>
+                        <PaymentCheckout />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
                     path="/listings/*"
                     element={
                       <ProtectedRoute>
@@ -48,6 +58,14 @@ const App: React.FC = () => {
                     element={
                       <ProtectedRoute>
                         <BidsReceived />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/bids/:bidId"
+                    element={
+                      <ProtectedRoute>
+                        <BidDetails />
                       </ProtectedRoute>
                     }
                   />

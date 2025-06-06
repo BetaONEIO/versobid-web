@@ -20,6 +20,7 @@ export const MockBidList: Bid[] = [
       minPrice: 100,
       maxPrice: 1000,
       seller_id: "0987",
+      buyer_id: "1234",
       category: "Electronics",
       status: "pending",
       created_at: "2025-04-21T11:19:48.201243+00:00",

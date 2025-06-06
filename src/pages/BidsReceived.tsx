@@ -3,12 +3,12 @@ import { useUser } from '../contexts/UserContext';
 import { bidService } from '../services/bidService';
 import { Bid } from '../types/bid';
 import { formatCurrency, formatDate } from '../utils/formatters';
-
+import {useNavigate } from 'react-router-dom';
 export const BidsReceived: React.FC = () => {
   const { auth, role } = useUser();
   const [bids, setBids] = useState<Bid[]>([]);
   const [loading, setLoading] = useState(true);
-
+  const navigate = useNavigate();
   useEffect(() => {
     const fetchBids = async () => {
       if (!auth.user?.id) return;
@@ -17,6 +17,7 @@ export const BidsReceived: React.FC = () => {
           ? await bidService.getReceivedBids(auth.user.id)
           : await bidService.getBidsForItem(auth.user.id);
         setBids(data);
+        console.log(data);
       } catch (error) {
         console.error('Failed to fetch bids:', error);
       } finally {
@@ -74,7 +75,7 @@ export const BidsReceived: React.FC = () => {
           </thead>
           <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
             {bids.map((bid) => (
-              <tr key={bid.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+              <tr onClick={()=>navigate(`/bids/${bid.id}`)} key={bid.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="text-sm font-medium text-gray-900 dark:text-white truncate max-w-[50px] sm:max-w-xs">
                     {bid.item?.title}

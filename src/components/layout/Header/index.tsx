@@ -1,4 +1,5 @@
 import React from 'react';
+import { useLocation } from 'react-router-dom';
 import { useUser } from '../../../contexts/UserContext';
 import { Logo } from './Logo';
 import { NavLinks } from '../navigation/NavLinks';
@@ -8,6 +9,10 @@ import { RoleToggle } from '../../ui/RoleToggle';
 
 export const Header: React.FC = () => {
   const { auth, role } = useUser();
+  const location = useLocation();
+  
+  // Disable role toggle on bid detail pages
+  const isBidDetailPage = location.pathname.startsWith('/bids/') && location.pathname !== '/bids';
 
   return (
     <header className="bg-white dark:bg-gray-800 shadow">
@@ -21,7 +26,7 @@ export const Header: React.FC = () => {
             <AuthButtons isAuthenticated={auth.isAuthenticated} />
           </div>
           <div className="flex items-center space-x-4">
-            {auth.isAuthenticated && <RoleToggle />}
+            {auth.isAuthenticated && <RoleToggle disabled={isBidDetailPage} />}
             <ThemeToggle />
           </div>
         </div>
