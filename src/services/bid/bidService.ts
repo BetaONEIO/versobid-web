@@ -17,6 +17,7 @@ interface BidWithRelations extends BidRow {
     min_price: number;
     max_price: number;
     seller_id: string;
+    buyer_id: string;
     category: string;
     status: string;
     created_at: string;
@@ -36,7 +37,8 @@ const transformBid = (data: BidWithRelations): Bid => ({
   item: data.item && {
     ...data.item,
     minPrice: data.item.min_price,
-    maxPrice: data.item.max_price
+    maxPrice: data.item.max_price,
+    buyer_id: data.item.buyer_id
   }
 });
 
