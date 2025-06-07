@@ -115,8 +115,7 @@ export const bidService = {
   async updateBidStatus(bidId: string, status: BidStatus, counterOffer?: number): Promise<boolean> {
     try {
       const updateData: BidUpdate = {
-        status,
-        ...(counterOffer !== undefined && { counter_amount: counterOffer })
+        status
       };
 
       const { error } = await supabase
