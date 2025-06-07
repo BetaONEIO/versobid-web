@@ -41,7 +41,7 @@ export const Header: React.FC = () => {
             </Link>
           </div>
           : <div className="flex-shrink-0">
-            <Link to="/" className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
+            <Link to="/" className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white pr-2">
               V/B
             </Link>
           </div> }
