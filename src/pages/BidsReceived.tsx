@@ -1,32 +1,13 @@
-import React, { useEffect, useState } from 'react';
-import { useUser } from '../contexts/UserContext';
-import { bidService } from '../services/bidService';
-import { Bid } from '../types/bid';
+import React from 'react';
 import { formatCurrency, formatDate } from '../utils/formatters';
-import {useNavigate } from 'react-router-dom';
-export const BidsReceived: React.FC = () => {
-  const { auth, role } = useUser();
-  const [bids, setBids] = useState<Bid[]>([]);
-  const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
-  useEffect(() => {
-    const fetchBids = async () => {
-      if (!auth.user?.id) return;
-      try {
-        const data = role === 'buyer' 
-          ? await bidService.getReceivedBids(auth.user.id)
-          : await bidService.getBidsForItem(auth.user.id);
-        setBids(data);
-        console.log(data);
-      } catch (error) {
-        console.error('Failed to fetch bids:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
+import { useNavigate } from 'react-router-dom';
+import { useBids } from '../hooks/useBids';
+import { useUser } from '../contexts/UserContext';
 
-    fetchBids();
-  }, [auth.user?.id, role]);
+export const BidsReceived: React.FC = () => {
+  const { role } = useUser();
+  const { bids, loading } = useBids();
+  const navigate = useNavigate();
 
   if (loading) {
     return <div className="text-center py-8">Loading bids...</div>;

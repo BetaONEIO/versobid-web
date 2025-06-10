@@ -50,13 +50,17 @@ export const notificationService = {
         data: notification.data
       };
 
+      console.log('Auth user:', await supabase.auth.getUser());
+      console.log('Notification data:', notificationData);
+
       const { data, error } = await supabase
         .from('notifications')
         .insert([notificationData])
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) throw {
+        'the main error--->':error};
       if (!data) return null;
 
       return transformNotification(data as NotificationRow);

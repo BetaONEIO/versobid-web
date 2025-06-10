@@ -1,57 +1,36 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useUser } from '../contexts/UserContext';
 import { useNotification } from '../contexts/NotificationContext';
 import { bidService } from '../services/bidService';
-import { Bid } from '../types/bid';
 import { formatCurrency, formatDate } from '../utils/formatters';
+import { useBidDetails } from '../hooks/useBidDetails';
 
 export const BidDetails: React.FC = () => {
   const { bidId } = useParams<{ bidId: string }>();
   const navigate = useNavigate();
-  const { auth, role } = useUser();
+  const { role } = useUser();
   const { addNotification } = useNotification();
   
-  const [bid, setBid] = useState<Bid | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { bid, loading, error } = useBidDetails(bidId);
   const [counterAmount, setCounterAmount] = useState<number>(0);
   const [showCounterForm, setShowCounterForm] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
 
-  useEffect(() => {
-    const fetchBid = async () => {
-      if (!bidId || !auth.user?.id) return;
-      
-      try {
-        // Use the new getBid method to fetch specific bid
-        const foundBid = await bidService.getBid(bidId);
-        if (foundBid) {
-          // Verify user can access this bid (they're either the bidder or item owner)
-          const isBidder = foundBid.bidder_id === auth.user.id;
-          const itemLister = foundBid.item?.buyer_id === auth.user.id; 
-          console.log('buyer_id', foundBid.item?.buyer_id);
-          
-          if (isBidder || itemLister) {
-            setBid(foundBid);
-            setCounterAmount(foundBid.amount);
-          } else {
-            addNotification('error', 'You do not have permission to view this bid');
-            navigate('/bids');
-          }
-        } else {
-          addNotification('error', 'Bid not found');
-          navigate('/bids');
-        }
-      } catch (error) {
-        console.error('Failed to fetch bid:', error);
-        addNotification('error', 'Failed to load bid details');
-      } finally {
-        setLoading(false);
-      }
-    };
+  // Set counter amount when bid loads
+  React.useEffect(() => {
+    if (bid) {
+      setCounterAmount(bid.counter_amount || bid.amount);
+    }
+  }, [bid]);
 
-    fetchBid();
-  }, [bidId, auth.user?.id, addNotification, navigate]);
+  // Handle errors from the hook
+  React.useEffect(() => {
+    if (error) {
+      addNotification('error', error);
+      navigate('/bids');
+    }
+  }, [error, addNotification, navigate]);
 
   const handleAcceptBid = async () => {
     if (!bid) return;
@@ -61,7 +40,6 @@ export const BidDetails: React.FC = () => {
       const success = await bidService.updateBidStatus(bid.id, 'accepted');
       if (success) {
         addNotification('success', 'Bid accepted! Redirecting to payment...');
-        // TODO: Implement payment redirection
         navigate('/payment/checkout', { state: { bidId: bid.id, amount: bid.amount } });
       } else {
         addNotification('error', 'Failed to accept bid');
@@ -82,7 +60,6 @@ export const BidDetails: React.FC = () => {
       const success = await bidService.updateBidStatus(bid.id, 'rejected');
       if (success) {
         addNotification('success', 'Bid rejected');
-        // TODO: Send notification to bidder
         navigate('/bids');
       } else {
         addNotification('error', 'Failed to reject bid');
@@ -103,7 +80,6 @@ export const BidDetails: React.FC = () => {
       const success = await bidService.updateBidStatus(bid.id, 'countered', counterAmount);
       if (success) {
         addNotification('success', 'Counter offer sent!');
-        // TODO: Send notification to bidder
         navigate('/bids');
       } else {
         addNotification('error', 'Failed to send counter offer');
@@ -131,9 +107,10 @@ export const BidDetails: React.FC = () => {
           addNotification('error', 'Failed to accept counter offer');
         }
       } else {
-        const success = await bidService.updateBidStatus(bid.id, 'rejected');
+        // When seller rejects counter, delete the bid entirely
+        const success = await bidService.deleteBid(bid.id);
         if (success) {
-          addNotification('success', 'Counter offer rejected');
+          addNotification('success', 'Counter offer rejected. Bid has been removed.');
           navigate('/bids');
         } else {
           addNotification('error', 'Failed to reject counter offer');
@@ -163,9 +140,9 @@ export const BidDetails: React.FC = () => {
 
   const isBuyer = role === 'buyer';
   const canAcceptReject = isBuyer && bid.status === 'pending';
-  // const canCounter = isBuyer && bid.status === 'pending';
   const isCountered = bid.status === 'countered';
   const canRespondToCounter = !isBuyer && isCountered;
+  const canMakeCounter = isBuyer && bid.status === 'pending' && !bid.counter_amount; // Only allow 1 counter
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -300,13 +277,15 @@ export const BidDetails: React.FC = () => {
                 >
                   {actionLoading ? 'Processing...' : 'Reject Bid'}
                 </button>
-                <button
-                  onClick={() => setShowCounterForm(true)}
-                  disabled={actionLoading}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md disabled:opacity-50"
-                >
-                  Counter Offer
-                </button>
+                {canMakeCounter && (
+                  <button
+                    onClick={() => setShowCounterForm(true)}
+                    disabled={actionLoading}
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md disabled:opacity-50"
+                  >
+                    Counter Offer
+                  </button>
+                )}
               </div>
             )}
 
@@ -327,19 +306,12 @@ export const BidDetails: React.FC = () => {
                   disabled={actionLoading}
                   className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md disabled:opacity-50"
                 >
-                  {actionLoading ? 'Processing...' : 'Reject Counter'}
-                </button>
-                <button
-                  onClick={() => setShowCounterForm(true)}
-                  disabled={actionLoading}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md disabled:opacity-50"
-                >
-                  Make New Counter
+                  {actionLoading ? 'Processing...' : 'Reject & Delete Bid'}
                 </button>
               </div>
             )}
 
-            {showCounterForm && (
+            {showCounterForm && canMakeCounter && (
               <div className="mt-4 p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-600">
                 <h4 className="text-lg font-semibold mb-3 text-gray-900 dark:text-white">
                   Make Counter Offer
@@ -352,7 +324,12 @@ export const BidDetails: React.FC = () => {
                     <input
                       type="number"
                       value={counterAmount}
-                      onChange={(e) => setCounterAmount(Number(e.target.value))}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        // Remove leading zeros but allow valid decimal numbers
+                        const cleanValue = value.replace(/^0+(?=\d)/, '');
+                        setCounterAmount(Number(cleanValue) || 0);
+                      }}
                       min="0"
                       step="0.01"
                       className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white"

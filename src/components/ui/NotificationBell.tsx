@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { BellIcon } from '@heroicons/react/24/outline';
 import { notificationService } from '../../services/notificationService';
 import { Notification } from '../../types/notification';
 import { supabase } from '../../lib/supabase';
 
 export const NotificationBell: React.FC = () => {
+  const navigate = useNavigate();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
@@ -59,16 +61,39 @@ export const NotificationBell: React.FC = () => {
     };
   }, [isOpen]);
 
-  const handleMarkAsRead = async (id: string) => {
+  const handleNotificationClick = async (notification: Notification) => {
+    // Mark as read first
     try {
-      await notificationService.markAsRead(id);
+      await notificationService.markAsRead(notification.id);
       setNotifications(prev =>
-        prev.map(n => n.id === id ? { ...n, read: true } : n)
+        prev.map(n => n.id === notification.id ? { ...n, read: true } : n)
       );
       setUnreadCount(prev => prev - 1);
     } catch (error) {
       console.error('Failed to mark notification as read:', error);
     }
+
+    // Navigate based on notification type and data
+    if (notification.data && typeof notification.data === 'object') {
+      const data = notification.data as any;
+      
+      // If it's a bid-related notification with bidId, navigate to bid details
+      if (data.bidId && ['bid_accepted', 'bid_rejected', 'info'].includes(notification.type)) {
+        setIsOpen(false);
+        navigate(`/bids/${data.bidId}`);
+        return;
+      }
+      
+      // If it's a bid received notification, navigate to bids page
+      if (notification.type === 'bid_received') {
+        setIsOpen(false);
+        navigate('/bids');
+        return;
+      }
+    }
+    
+    // Default: just close the dropdown
+    setIsOpen(false);
   };
 
   return (
@@ -96,17 +121,24 @@ export const NotificationBell: React.FC = () => {
                 notifications.map(notification => (
                   <div
                     key={notification.id}
-                    className={`p-3 rounded-md ${
+                    className={`p-3 rounded-md cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors ${
                       notification.read
                         ? 'bg-gray-50 dark:bg-gray-700'
                         : 'bg-blue-50 dark:bg-blue-900'
                     }`}
-                    onClick={() => handleMarkAsRead(notification.id)}
+                    onClick={() => handleNotificationClick(notification)}
                   >
                     <p className="text-sm text-gray-900 dark:text-white">{notification.message}</p>
                     <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                       {new Date(notification.created_at).toLocaleDateString()}
                     </p>
+                    {!notification.read && (
+                      <div className="mt-2">
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                          New
+                        </span>
+                      </div>
+                    )}
                   </div>
                 ))
               )}

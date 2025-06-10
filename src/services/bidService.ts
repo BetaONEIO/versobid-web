@@ -115,9 +115,13 @@ export const bidService = {
   async updateBidStatus(bidId: string, status: BidStatus, counterOffer?: number): Promise<boolean> {
     try {
       const updateData: BidUpdate = {
-        status,
-        ...(counterOffer !== undefined && { counter_amount: counterOffer })
+        status
       };
+
+      // If it's a counter offer, also update the counter_amount
+      if (status === 'countered' && counterOffer) {
+        updateData.counter_amount = counterOffer;
+      }
 
       const { error } = await supabase
         .from('bids')
@@ -126,15 +130,30 @@ export const bidService = {
 
       if (error) return false;
 
-      // Send notification to the bidder based on status
+      // Get bid details for notifications and item status updates
       const bid = await this.getBid(bidId);
-      if (bid && bid.bidder_id) {
+      if (!bid) return false;
+
+      // If bid is accepted, mark the item as unavailable for others
+      if (status === 'accepted' && bid.item) {
+        const { error: itemError } = await supabase
+          .from('items')
+          .update({ status: 'sold' })
+          .eq('id', bid.item_id);
+
+        if (itemError) {
+          console.error('Failed to update item status:', itemError);
+        }
+      }
+
+      // Send notification to the bidder based on status
+      if (bid.bidder_id) {
         let notificationMessage = '';
         let notificationType: 'bid_accepted' | 'bid_rejected' | 'info' = 'info';
 
         switch (status) {
           case 'accepted':
-            notificationMessage = `Your bid of ${bid.amount} for "${bid.item?.title}" has been accepted!`;
+            notificationMessage = `Your bid of ${bid.counter_amount || bid.amount} for "${bid.item?.title}" has been accepted!`;
             notificationType = 'bid_accepted';
             break;
           case 'rejected':
@@ -162,6 +181,43 @@ export const bidService = {
             read: false
           });
         }
+      }
+
+      return true;
+    } catch {
+      return false;
+    }
+  },
+
+  async deleteBid(bidId: string): Promise<boolean> {
+    try {
+      // Get bid details for notification before deletion
+      const bid = await this.getBid(bidId);
+      if (!bid) return false;
+
+      // Delete the bid
+      const { error } = await supabase
+        .from('bids')
+        .delete()
+        .eq('id', bidId);
+
+      if (error) return false;
+
+      // Send notification to the bidder
+      if (bid.bidder_id) {
+        await notificationService.createNotification({
+          user_id: bid.bidder_id,
+          type: 'bid_rejected',
+          message: `Your counter offer for "${bid.item?.title}" has been rejected and the bid has been removed.`,
+          data: {
+            bidId: bid.id,
+            itemId: bid.item_id,
+            amount: bid.amount,
+            counterAmount: bid.counter_amount,
+            status: 'deleted'
+          },
+          read: false
+        });
       }
 
       return true;
@@ -246,54 +302,16 @@ export const bidService = {
     }
   },
 
-  async createCounterOffer(bidId: string, amount: number, message?: string): Promise<Bid | null> {
+  async cleanupOldPendingBids(): Promise<number> {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return null;
-
-      // Get the original bid to create a counter
-      const originalBid = await this.getBid(bidId);
-      if (!originalBid) return null;
-
-      // Create new bid record as counter offer
-      const counterBidData: BidInsert = {
-        item_id: originalBid.item_id,
-        bidder_id: originalBid.bidder_id,
-        amount,
-        message: message || `Counter offer to bid ${bidId}`,
-        status: 'pending',
-        counter_amount: amount
-      };
-
-      const { data, error } = await supabase
-        .from('bids')
-        .insert(counterBidData)
-        .select(`
-          *,
-          bidder:profiles(username),
-          item:items(
-            id,
-            title,
-            description,
-            min_price,
-            max_price,
-            seller_id,
-            buyer_id,
-            category,
-            status,
-            created_at
-          )
-        `)
-        .single();
-
-      if (error || !data) return null;
-
-      // Update original bid status to 'countered'
-      await this.updateBidStatus(bidId, 'countered', amount);
-
-      return transformBid(data);
+      const { data, error } = await supabase.rpc('delete_old_pending_bids');
+      if (error) {
+        console.error('Error cleaning up old bids:', error);
+        return 0;
+      }
+      return data || 0;
     } catch {
-      return null;
+      return 0;
     }
   },
 
