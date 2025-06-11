@@ -3,10 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { BellIcon } from '@heroicons/react/24/outline';
 import { notificationService } from '../../services/notificationService';
 import { Notification } from '../../types/notification';
+import { useUser } from '../../contexts/UserContext';
 import { supabase } from '../../lib/supabase';
 
 export const NotificationBell: React.FC = () => {
   const navigate = useNavigate();
+  const { role, toggleRole } = useUser();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
@@ -99,6 +101,16 @@ export const NotificationBell: React.FC = () => {
       // If it's a bid-related notification with bidId, navigate to bid details
       if (data.bidId && ['bid_accepted', 'bid_rejected', 'info'].includes(notification.type)) {
         setIsOpen(false);
+        
+        // Handle role switching for notifications where user is the bidder
+        if ((notification.type === 'info' && notification.message.includes('counter offer')) ||
+            ['bid_accepted', 'bid_rejected'].includes(notification.type)) {
+          // User is receiving notification about their bid - they are the bidder (seller role)
+          if (role !== 'seller') {
+            toggleRole();
+          }
+        }
+        
         navigate(`/bids/${data.bidId}`);
         return;
       }
