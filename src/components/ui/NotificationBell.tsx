@@ -25,7 +25,7 @@ export const NotificationBell: React.FC = () => {
 
     fetchNotifications();
 
-    // Subscribe to realtime notifications
+    // Subscribe to realtime notifications - both INSERT and UPDATE events
     const subscription = supabase
       .channel('notifications')
       .on('postgres_changes', {
@@ -36,6 +36,24 @@ export const NotificationBell: React.FC = () => {
         const newNotification = payload.new as Notification;
         setNotifications(prev => [newNotification, ...prev]);
         setUnreadCount(prev => prev + 1);
+      })
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'notifications'
+      }, payload => {
+        const updatedNotification = payload.new as Notification;
+        setNotifications(prev =>
+          prev.map(n => n.id === updatedNotification.id ? updatedNotification : n)
+        );
+        // Recalculate unread count
+        setNotifications(current => {
+          const newUnreadCount = current.filter(n => 
+            n.id === updatedNotification.id ? !updatedNotification.read : !n.read
+          ).length;
+          setUnreadCount(newUnreadCount);
+          return current.map(n => n.id === updatedNotification.id ? updatedNotification : n);
+        });
       })
       .subscribe();
 
@@ -65,10 +83,11 @@ export const NotificationBell: React.FC = () => {
     // Mark as read first
     try {
       await notificationService.markAsRead(notification.id);
+      // Update local state immediately for responsive UI
       setNotifications(prev =>
         prev.map(n => n.id === notification.id ? { ...n, read: true } : n)
       );
-      setUnreadCount(prev => prev - 1);
+      setUnreadCount(prev => notification.read ? prev : prev - 1);
     } catch (error) {
       console.error('Failed to mark notification as read:', error);
     }
@@ -111,7 +130,7 @@ export const NotificationBell: React.FC = () => {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 translate-x-[24%] mt-2 w-96 overflow-y-scroll h-96 rounded-md bg-white dark:bg-gray-800 shadow-lg ring-1 ring-black ring-opacity-5">
+        <div className="absolute left-1/2 -translate-x-1/2 w-full sm:left-auto sm:right-0 sm:translate-x-0 sm:w-80 mt-2 max-w-sm overflow-y-scroll max-h-96 rounded-md bg-white dark:bg-gray-800 shadow-lg ring-1 ring-black ring-opacity-5">
           <div className="p-4">
             <h3 className="text-lg font-medium text-gray-900 dark:text-white">Notifications</h3>
             <div className="mt-4 space-y-4">

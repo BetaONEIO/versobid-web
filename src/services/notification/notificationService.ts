@@ -60,7 +60,7 @@ export const notificationService = {
         .single();
 
       if (error) throw {
-        'the main error--->':error};
+        'the main error--->':error.message};
       if (!data) return null;
 
       return transformNotification(data as NotificationRow);
