@@ -142,8 +142,8 @@ export const NotificationBell: React.FC = () => {
       </button>
 
       {isOpen && (
-        <div className="absolute left-1/2 -translate-x-1/2 w-full sm:left-auto sm:right-0 sm:translate-x-0 sm:w-80 mt-2 max-w-sm overflow-y-scroll max-h-96 rounded-md bg-white dark:bg-gray-800 shadow-lg ring-1 ring-black ring-opacity-5">
-          <div className="p-4">
+        <div className="absolute right-0 translate-x-[24%] mt-2 w-96 overflow-y-scroll h-96 rounded-md bg-white dark:bg-gray-800 shadow-lg ring-1 ring-black ring-opacity-5">
+        <div className="p-4">
             <h3 className="text-lg font-medium text-gray-900 dark:text-white">Notifications</h3>
             <div className="mt-4 space-y-4">
               {notifications.length === 0 ? (
