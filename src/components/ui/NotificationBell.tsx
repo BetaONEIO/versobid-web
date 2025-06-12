@@ -127,6 +127,17 @@ export const NotificationBell: React.FC = () => {
     setIsOpen(false);
   };
 
+  const handleMarkAllAsRead = async () => {
+    try {
+      await notificationService.markAllAsRead();
+      // Update local state
+      setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+      setUnreadCount(0);
+    } catch (error) {
+      console.error('Failed to mark all notifications as read:', error);
+    }
+  };
+
   return (
     <div className="relative z-[100]" ref={dropdownRef}>
       <button
@@ -144,7 +155,17 @@ export const NotificationBell: React.FC = () => {
       {isOpen && (
         <div className="absolute right-0 translate-x-[24%] mt-2 w-96 overflow-y-scroll h-96 rounded-md bg-white dark:bg-gray-800 shadow-lg ring-1 ring-black ring-opacity-5">
         <div className="p-4">
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white">Notifications</h3>
+            <div className="flex justify-between items-center">
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white">Notifications</h3>
+              {unreadCount > 0 && (
+                <button
+                  onClick={handleMarkAllAsRead}
+                  className="text-sm text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300"
+                >
+                  Mark all as read
+                </button>
+              )}
+            </div>
             <div className="mt-4 space-y-4">
               {notifications.length === 0 ? (
                 <p className="text-gray-500 dark:text-gray-400">No notifications</p>
