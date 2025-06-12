@@ -1,0 +1,2 @@
+ALTER TABLE notifications DROP CONSTRAINT valid_notification_types;
+ALTER TABLE notifications ADD CONSTRAINT valid_notification_types CHECK (type = ANY (ARRAY['success', 'error', 'info', 'warning', 'bid_received', 'bid_accepted', 'bid_rejected', 'bid_countered', 'payment_received', 'shipping_update', 'item_sold', 'email_verification', 'onboarding_reminder', 'service_booked', 'service_completed']));
