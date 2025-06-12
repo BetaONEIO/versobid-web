@@ -4,7 +4,7 @@ import { Database } from '../types/supabase';
 
 type ProfileRow = Database['public']['Tables']['profiles']['Row'];
 type ProfileInsert = Database['public']['Tables']['profiles']['Insert'];
-type ProfileUpdate = Database['public']['Tables']['profiles']['Update'];
+type ProfileUpdate = Partial<Database['public']['Tables']['profiles']['Update']>;
 
 const transformProfile = (row: ProfileRow): Profile => ({
   id: row.id,
@@ -110,8 +110,8 @@ export const profileService = {
 
   async uploadAvatar(file: File, userId: string): Promise<string> {
     const fileExt = file.name.split('.').pop();
-    const fileName = `${userId}-${Date.now()}.${fileExt}`;
-    const filePath = `avatars/${fileName}`;
+    const fileName = `${userId}/${Date.now()}.${fileExt}`;
+    const filePath = `${fileName}`;
 
     try {
       const { error: uploadError } = await supabase.storage
