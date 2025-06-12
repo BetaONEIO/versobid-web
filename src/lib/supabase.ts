@@ -34,7 +34,10 @@ export const supabase = createClient<Database>(
     realtime: {
       params: {
         eventsPerSecond: 10
-      }
+      },
+      // Faster reconnection
+      heartbeatIntervalMs: 30000,
+      reconnectAfterMs: (tries: number) => Math.min(tries * 1000, 5000)
     }
   }
 );

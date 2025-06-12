@@ -49,12 +49,7 @@ export const Profile: React.FC = () => {
       setUploading(true);
       const avatarUrl = await profileService.uploadAvatar(file, auth.user.id);
       await profileService.updateProfile(auth.user.id, {
-        avatar_url: avatarUrl,
-        rating: 0,
-        is_admin: false,
-        full_name: '',
-        email: '',
-        username: ''
+        avatar_url: avatarUrl
       });
       setProfile(prev => prev ? { ...prev, avatar_url: avatarUrl } : null);
       addNotification('success', 'Profile picture updated successfully');
@@ -95,7 +90,9 @@ export const Profile: React.FC = () => {
                 onClick={handleAvatarClick}
                 onError={(e) => {
                   const img = e.target as HTMLImageElement;
-                  img.src = defaultAvatar;
+                  if (img.src !== window.location.origin + defaultAvatar) {
+                    img.src = defaultAvatar;
+                  }
                 }}
               />
               {isOwnProfile && (
