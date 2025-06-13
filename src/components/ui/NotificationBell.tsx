@@ -98,6 +98,23 @@ export const NotificationBell: React.FC = () => {
     if (notification.data && typeof notification.data === 'object') {
       const data = notification.data as any;
       
+      // For notifications about removed bids, just mark as read and close dropdown
+      if (notification.message.includes('removed')) {
+        setIsOpen(false);
+        return;
+      }
+      
+      // Handle counter offer acceptance - buyer should go to payment
+      if (notification.type === 'bid_accepted' && notification.message.includes('counter offer') && data.amount) {
+        setIsOpen(false);
+        // Switch to buyer role and navigate to payment
+        if (role !== 'buyer') {
+          toggleRole();
+        }
+        navigate('/payment/checkout', { state: { bidId: data.bidId, amount: data.amount } });
+        return;
+      }
+      
       // If it's a bid-related notification with bidId, navigate to bid details
       if (data.bidId && ['bid_accepted', 'bid_rejected', 'info'].includes(notification.type)) {
         setIsOpen(false);
@@ -127,6 +144,17 @@ export const NotificationBell: React.FC = () => {
     setIsOpen(false);
   };
 
+  const handleMarkAllAsRead = async () => {
+    try {
+      await notificationService.markAllAsRead();
+      // Update local state
+      setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+      setUnreadCount(0);
+    } catch (error) {
+      console.error('Failed to mark all notifications as read:', error);
+    }
+  };
+
   return (
     <div className="relative z-[100]" ref={dropdownRef}>
       <button
@@ -144,7 +172,17 @@ export const NotificationBell: React.FC = () => {
       {isOpen && (
         <div className="absolute right-0 translate-x-[24%] mt-2 w-96 overflow-y-scroll h-96 rounded-md bg-white dark:bg-gray-800 shadow-lg ring-1 ring-black ring-opacity-5">
         <div className="p-4">
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white">Notifications</h3>
+            <div className="flex justify-between items-center">
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white">Notifications</h3>
+              {unreadCount > 0 && (
+                <button
+                  onClick={handleMarkAllAsRead}
+                  className="text-sm text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300"
+                >
+                  Mark all as read
+                </button>
+              )}
+            </div>
             <div className="mt-4 space-y-4">
               {notifications.length === 0 ? (
                 <p className="text-gray-500 dark:text-gray-400">No notifications</p>

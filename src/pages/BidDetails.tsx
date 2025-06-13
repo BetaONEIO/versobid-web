@@ -101,8 +101,10 @@ export const BidDetails: React.FC = () => {
       if (accept) {
         const success = await bidService.updateBidStatus(bid.id, 'accepted');
         if (success) {
-          addNotification('success', 'Counter offer accepted! Redirecting to payment...');
-          navigate('/payment/checkout', { state: { bidId: bid.id, amount: bid.counter_amount } });
+          addNotification('success', 'Counter offer accepted!');
+          // Seller accepted counter offer - just navigate to bids
+          // The buyer will get notified and can navigate to payment from notification
+          navigate('/bids');
         } else {
           addNotification('error', 'Failed to accept counter offer');
         }
@@ -295,14 +297,22 @@ export const BidDetails: React.FC = () => {
                   The buyer has made a counter offer of {formatCurrency(bid.counter_amount!)}
                 </p>
                 <button
-                  onClick={() => handleRespondToCounter(true)}
+                  onClick={() => {
+                    if (window.confirm(`Are you sure you want to accept the counter offer of ${formatCurrency(bid.counter_amount!)}?`)) {
+                      handleRespondToCounter(true);
+                    }
+                  }}
                   disabled={actionLoading}
                   className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md disabled:opacity-50"
                 >
                   {actionLoading ? 'Processing...' : 'Accept Counter'}
                 </button>
                 <button
-                  onClick={() => handleRespondToCounter(false)}
+                  onClick={() => {
+                    if (window.confirm('Are you sure you want to reject this counter offer and delete the bid? This action cannot be undone.')) {
+                      handleRespondToCounter(false);
+                    }
+                  }}
                   disabled={actionLoading}
                   className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md disabled:opacity-50"
                 >

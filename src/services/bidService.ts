@@ -123,6 +123,14 @@ export const bidService = {
         updateData.counter_amount = counterOffer;
       }
 
+      // If accepting a counter offer, update the amount to the counter amount
+      if (status === 'accepted') {
+        const currentBid = await this.getBid(bidId);
+        if (currentBid?.counter_amount) {
+          updateData.amount = currentBid.counter_amount;
+        }
+      }
+
       const { error } = await supabase
         .from('bids')
         .update(updateData)
@@ -146,41 +154,64 @@ export const bidService = {
         }
       }
 
-      // Send notification to the bidder based on status
-      if (bid.bidder_id) {
-        let notificationMessage = '';
-        let notificationType: 'bid_accepted' | 'bid_rejected' | 'info' = 'info';
-
-        switch (status) {
-          case 'accepted':
-            notificationMessage = `Your bid of ${bid.counter_amount || bid.amount} for "${bid.item?.title}" has been accepted!`;
-            notificationType = 'bid_accepted';
-            break;
-          case 'rejected':
-            notificationMessage = `Your bid of ${bid.amount} for "${bid.item?.title}" has been rejected.`;
-            notificationType = 'bid_rejected';
-            break;
-          case 'countered':
-            notificationMessage = `Your bid for "${bid.item?.title}" has received a counter offer of ${counterOffer}.`;
-            notificationType = 'info';
-            break;
-        }
-
-        if (notificationMessage) {
+      // Send notifications based on status
+      if (status === 'accepted') {
+        // When accepting a counter offer, notify the buyer (item owner)
+        if (bid.counter_amount && bid.item?.buyer_id) {
+          await notificationService.createNotification({
+            user_id: bid.item.buyer_id,
+            type: 'bid_accepted',
+            message: `Your counter offer of ${bid.counter_amount} for "${bid.item?.title}" has been accepted! Proceed to payment.`,
+            data: {
+              bidId: bid.id,
+              itemId: bid.item_id,
+              amount: bid.counter_amount,
+              status: 'accepted'
+            },
+            read: false
+          });
+        } else if (bid.bidder_id) {
+          // Regular bid acceptance - notify the bidder
           await notificationService.createNotification({
             user_id: bid.bidder_id,
-            type: notificationType,
-            message: notificationMessage,
+            type: 'bid_accepted',
+            message: `Your bid of ${bid.amount} for "${bid.item?.title}" has been accepted!`,
             data: {
               bidId: bid.id,
               itemId: bid.item_id,
               amount: bid.amount,
-              counterAmount: counterOffer,
-              status
+              status: 'accepted'
             },
             read: false
           });
         }
+      } else if (status === 'rejected' && bid.bidder_id) {
+        await notificationService.createNotification({
+          user_id: bid.bidder_id,
+          type: 'bid_rejected',
+          message: `Your bid of ${bid.amount} for "${bid.item?.title}" has been rejected.`,
+          data: {
+            bidId: bid.id,
+            itemId: bid.item_id,
+            amount: bid.amount,
+            status: 'rejected'
+          },
+          read: false
+        });
+      } else if (status === 'countered' && bid.bidder_id) {
+        await notificationService.createNotification({
+          user_id: bid.bidder_id,
+          type: 'info',
+          message: `Your bid for "${bid.item?.title}" has received a counter offer of ${counterOffer}.`,
+          data: {
+            bidId: bid.id,
+            itemId: bid.item_id,
+            amount: bid.amount,
+            counterAmount: counterOffer,
+            status: 'countered'
+          },
+          read: false
+        });
       }
 
       return true;
@@ -201,9 +232,30 @@ export const bidService = {
         .delete()
         .eq('id', bidId);
 
-      if (error) return false;
+      if (error) {
+        console.error('Delete bid error:', error);
+        return false;
+      }
 
-      // Send notification to the bidder
+      // Send notification to the item owner if available
+      const itemOwnerId = bid.item?.buyer_id;
+      if (itemOwnerId) {
+        await notificationService.createNotification({
+          user_id: itemOwnerId,
+          type: 'bid_rejected',
+          message: `A bid for your item "${bid.item?.title}" has been withdrawn by the bidder and removed from the system.`,
+          data: {
+            bidId: bid.id,
+            itemId: bid.item_id,
+            amount: bid.amount,
+            counterAmount: bid.counter_amount,
+            status: 'deleted'
+          },
+          read: false
+        });
+      }
+
+      // Send notification to the bidder (for consistency, optional)
       if (bid.bidder_id) {
         await notificationService.createNotification({
           user_id: bid.bidder_id,
