@@ -101,8 +101,10 @@ export const BidDetails: React.FC = () => {
       if (accept) {
         const success = await bidService.updateBidStatus(bid.id, 'accepted');
         if (success) {
-          addNotification('success', 'Counter offer accepted! Redirecting to payment...');
-          navigate('/payment/checkout', { state: { bidId: bid.id, amount: bid.counter_amount } });
+          addNotification('success', 'Counter offer accepted!');
+          // Seller accepted counter offer - just navigate to bids
+          // The buyer will get notified and can navigate to payment from notification
+          navigate('/bids');
         } else {
           addNotification('error', 'Failed to accept counter offer');
         }

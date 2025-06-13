@@ -98,6 +98,23 @@ export const NotificationBell: React.FC = () => {
     if (notification.data && typeof notification.data === 'object') {
       const data = notification.data as any;
       
+      // For notifications about removed bids, just mark as read and close dropdown
+      if (notification.message.includes('removed')) {
+        setIsOpen(false);
+        return;
+      }
+      
+      // Handle counter offer acceptance - buyer should go to payment
+      if (notification.type === 'bid_accepted' && notification.message.includes('counter offer') && data.amount) {
+        setIsOpen(false);
+        // Switch to buyer role and navigate to payment
+        if (role !== 'buyer') {
+          toggleRole();
+        }
+        navigate('/payment/checkout', { state: { bidId: data.bidId, amount: data.amount } });
+        return;
+      }
+      
       // If it's a bid-related notification with bidId, navigate to bid details
       if (data.bidId && ['bid_accepted', 'bid_rejected', 'info'].includes(notification.type)) {
         setIsOpen(false);
