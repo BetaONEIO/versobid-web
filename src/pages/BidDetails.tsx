@@ -364,10 +364,17 @@ export const BidDetails: React.FC = () => {
 
             {bid.status === 'accepted' && (
               <div className="text-center">
-                <p className="text-green-600 dark:text-green-400 font-medium">
-                  This bid has been accepted! 
-                  {isBuyer && ' The seller will contact you for payment.'}
+                <p className="text-green-600 dark:text-green-400 font-medium mb-4">
+                  This bid has been accepted!
                 </p>
+                {isBuyer && (
+                  <button
+                    onClick={() => navigate('/payment/checkout', { state: { bidId: bid.id, amount: bid.amount } })}
+                    className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md"
+                  >
+                    Complete Payment
+                  </button>
+                )}
               </div>
             )}
 
