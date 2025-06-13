@@ -12,6 +12,7 @@ export const PaymentSuccess: React.FC = () => {
   const [searchParams] = useSearchParams();
   const { addNotification } = useNotification();
   const [isRecording, setIsRecording] = useState(false);
+  const [recordingComplete, setRecordingComplete] = useState(false);
 
   // Try to get data from location.state first (new flow), then fallback to searchParams (old flow)
   const stateData = location.state;
@@ -30,7 +31,7 @@ export const PaymentSuccess: React.FC = () => {
 
     // Record payment in database if we have complete payment details
     const recordPayment = async () => {
-      if (stateData && bidId && !isRecording) {
+      if (stateData && bidId && !isRecording && !recordingComplete) {
         setIsRecording(true);
         try {
           const paymentDetails: PaymentDetails = {
@@ -44,6 +45,7 @@ export const PaymentSuccess: React.FC = () => {
           
           await paymentService.recordPayment(paymentDetails);
           addNotification('success', 'Payment recorded successfully');
+          setRecordingComplete(true);
         } catch (error) {
           console.error('Error recording payment:', error);
           // Don't show error to user since payment was successful
@@ -54,7 +56,7 @@ export const PaymentSuccess: React.FC = () => {
     };
 
     recordPayment();
-  }, [transactionId, navigate, addNotification, stateData, bidId, amount, isRecording]);
+  }, [transactionId, bidId]); // Only depend on essential data that doesn't change
 
   const handleViewBids = () => {
     navigate('/bids');

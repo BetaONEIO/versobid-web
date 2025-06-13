@@ -62,7 +62,7 @@ export const PaymentCheckout: React.FC = () => {
     currency: 'USD',
     itemId: bidDetails?.item_id || '',
     buyerId: auth.user.id,
-    sellerId: bidDetails?.item?.seller_id || bidDetails?.item?.buyer_id || '' ,
+    sellerId: bidDetails?.bidder_id || '',
     transactionId: '' // Will be set by PayPal
   };
 
@@ -76,7 +76,7 @@ export const PaymentCheckout: React.FC = () => {
         itemId: bidDetails?.item_id,
         itemTitle: bidDetails?.item?.title,
         buyerId: auth.user?.id,
-        sellerId: bidDetails?.item?.seller_id || bidDetails?.item?.buyer_id,
+        sellerId: bidDetails?.bidder_id,
         message: 'Your payment has been processed successfully!' 
       } 
     });
