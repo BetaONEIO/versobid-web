@@ -4,7 +4,8 @@ import { z } from 'zod';
 const envSchema = z.object({
   VITE_SUPABASE_URL: z.string().url('Invalid Supabase URL'),
   VITE_SUPABASE_ANON_KEY: z.string().min(20, 'Invalid Supabase anon key'),
-  VITE_PAYPAL_CLIENT_ID: z.string().optional(),
+  VITE_PAYPAL_STAGING_CLIENT_ID: z.string().optional(),
+  VITE_PAYPAL_PRODUCTION_CLIENT_ID: z.string().optional(),
   VITE_SERPAPI_KEY: z.string().optional(),
   VITE_RESEND_API_KEY: z.string().optional()
 });
@@ -24,7 +25,8 @@ export const validateEnv = (): boolean => {
     const env = {
       VITE_SUPABASE_URL: import.meta.env.VITE_SUPABASE_URL,
       VITE_SUPABASE_ANON_KEY: import.meta.env.VITE_SUPABASE_ANON_KEY,
-      VITE_PAYPAL_CLIENT_ID: import.meta.env.VITE_PAYPAL_CLIENT_ID,
+      VITE_PAYPAL_STAGING_CLIENT_ID: import.meta.env.VITE_PAYPAL_STAGING_CLIENT_ID,
+      VITE_PAYPAL_PRODUCTION_CLIENT_ID: import.meta.env.VITE_PAYPAL_PRODUCTION_CLIENT_ID,
       VITE_SERPAPI_KEY: import.meta.env.VITE_SERPAPI_KEY,
       VITE_RESEND_API_KEY: import.meta.env.VITE_RESEND_API_KEY
     };
@@ -66,6 +68,26 @@ export const getEnvVar = <T extends keyof EnvSchema>(
   }
 
   return value;
+};
+
+// Helper to get PayPal client ID based on environment
+export const getPayPalClientId = (): string => {
+  const isProduction = import.meta.env.PROD;
+  
+  if (isProduction) {
+    const productionClientId = getEnvVar('VITE_PAYPAL_PRODUCTION_CLIENT_ID');
+    if (productionClientId) {
+      return productionClientId;
+    }
+  }
+  
+  const stagingClientId = getEnvVar('VITE_PAYPAL_STAGING_CLIENT_ID');
+  if (stagingClientId) {
+    return stagingClientId;
+  }
+  
+  // Fallback for development
+  return "test";
 };
 
 // Helper to check if all required vars are set

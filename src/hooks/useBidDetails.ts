@@ -52,16 +52,21 @@ export const useBidDetails = (bidId: string | undefined) => {
           filter: `id=eq.${bidId}`
         }, async (payload) => {
           console.log('Real-time bid update received:', payload);
+          console.log('Current bid status:', bid?.status);
+          console.log('New bid status from payload:', payload.new);
           
           // Refetch the complete bid data when it's updated
           try {
             const updatedBid = await bidService.getBid(bidId);
+            console.log('Refetched bid after update:', updatedBid);
             if (updatedBid) {
               setBid(updatedBid);
               
               // Show notification about the update
               const newBid = payload.new as any;
               const oldBid = payload.old as any;
+              
+              console.log('Status change detected:', oldBid?.status, '->', newBid.status);
               
               if (newBid.status !== oldBid?.status) {
                 let message = '';
@@ -78,6 +83,7 @@ export const useBidDetails = (bidId: string | undefined) => {
                   default:
                     message = 'Bid status has been updated.';
                 }
+                console.log('Adding notification:', message);
                 addNotification('info', message);
               }
             }

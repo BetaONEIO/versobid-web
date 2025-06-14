@@ -21,10 +21,11 @@ import { NotificationProvider } from './contexts/NotificationContext';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { NotificationList } from './components/ui/NotificationList';
 import { VerificationBanner } from './components/ui/VerificationBanner';
+import { getPayPalClientId } from './utils/env';
 
 const App: React.FC = () => {
   const paypalOptions = {
-    clientId: import.meta.env.VITE_PAYPAL_CLIENT_ID || "test",
+    clientId: getPayPalClientId(),
     currency: "USD",
     intent: "capture",
   };
