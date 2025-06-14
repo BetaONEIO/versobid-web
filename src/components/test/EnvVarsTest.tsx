@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { getPayPalClientId } from '../../utils/env';
 
 interface EnvVar {
   key: string;
@@ -27,10 +28,17 @@ export const EnvVarsTest: React.FC = () => {
       sensitive: true
     },
     {
-      key: 'VITE_PAYPAL_CLIENT_ID',
-      value: import.meta.env.VITE_PAYPAL_CLIENT_ID,
-      required: true,
-      description: 'Required for payment processing',
+      key: 'VITE_PAYPAL_STAGING_CLIENT_ID',
+      value: import.meta.env.VITE_PAYPAL_STAGING_CLIENT_ID,
+      required: false,
+      description: 'PayPal client ID for staging/development environment',
+      sensitive: true
+    },
+    {
+      key: 'VITE_PAYPAL_PRODUCTION_CLIENT_ID',
+      value: import.meta.env.VITE_PAYPAL_PRODUCTION_CLIENT_ID,
+      required: false,
+      description: 'PayPal client ID for production environment',
       sensitive: true
     },
     {
@@ -67,6 +75,8 @@ export const EnvVarsTest: React.FC = () => {
   };
 
   const missingRequired = envVars.filter(env => env.required && !env.value);
+  const currentPayPalClientId = getPayPalClientId();
+  const isProduction = import.meta.env.PROD;
 
   return (
     <div className="p-6 bg-white dark:bg-gray-800 rounded-lg shadow-md">
@@ -90,6 +100,21 @@ export const EnvVarsTest: React.FC = () => {
         </div>
       </div>
 
+      {/* PayPal Configuration Status */}
+      <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+        <h3 className="text-sm font-medium text-blue-800 dark:text-blue-200 mb-2">PayPal Configuration</h3>
+        <div className="text-sm text-blue-700 dark:text-blue-300">
+          <p><strong>Environment:</strong> {isProduction ? 'Production' : 'Development/Staging'}</p>
+          <p><strong>Active Client ID:</strong> {showSensitive ? currentPayPalClientId : '••••••••' + currentPayPalClientId.slice(-4)}</p>
+          <p className="mt-1 text-xs">
+            {isProduction 
+              ? 'Using VITE_PAYPAL_PRODUCTION_CLIENT_ID (falls back to staging if not set)'
+              : 'Using VITE_PAYPAL_STAGING_CLIENT_ID (falls back to "test" if not set)'
+            }
+          </p>
+        </div>
+      </div>
+
       <div className="space-y-4">
         {envVars.map((envVar) => (
           <div key={envVar.key} className="flex items-start justify-between space-x-4">
@@ -108,6 +133,17 @@ export const EnvVarsTest: React.FC = () => {
                 {envVar.sensitive && (
                   <span className="px-2 py-0.5 text-xs font-medium text-purple-800 bg-purple-100 rounded dark:bg-purple-900 dark:text-purple-200">
                     Sensitive
+                  </span>
+                )}
+                {/* Show which PayPal client ID is currently active */}
+                {(envVar.key === 'VITE_PAYPAL_STAGING_CLIENT_ID' && !isProduction && envVar.value) && (
+                  <span className="px-2 py-0.5 text-xs font-medium text-green-800 bg-green-100 rounded dark:bg-green-900 dark:text-green-200">
+                    Active
+                  </span>
+                )}
+                {(envVar.key === 'VITE_PAYPAL_PRODUCTION_CLIENT_ID' && isProduction && envVar.value) && (
+                  <span className="px-2 py-0.5 text-xs font-medium text-green-800 bg-green-100 rounded dark:bg-green-900 dark:text-green-200">
+                    Active
                   </span>
                 )}
               </div>
@@ -144,6 +180,7 @@ export const EnvVarsTest: React.FC = () => {
           <li>Create a <code className="px-1 py-0.5 bg-gray-100 dark:bg-gray-700 rounded">.env</code> file in the project root</li>
           <li>Copy variables from <code className="px-1 py-0.5 bg-gray-100 dark:bg-gray-700 rounded">.env.example</code></li>
           <li>Fill in the required values from your service providers</li>
+          <li>For PayPal: Set staging client ID for development, production client ID for production builds</li>
           <li>Restart the development server to apply changes</li>
         </ol>
       </div>

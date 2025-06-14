@@ -12,7 +12,7 @@ export const BidDetails: React.FC = () => {
   const { role } = useUser();
   const { addNotification } = useNotification();
   
-  const { bid, loading, error } = useBidDetails(bidId);
+  const { bid, loading, error, setBid } = useBidDetails(bidId);
   const [counterAmount, setCounterAmount] = useState<number>(0);
   const [showCounterForm, setShowCounterForm] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
@@ -99,21 +99,30 @@ export const BidDetails: React.FC = () => {
     setActionLoading(true);
     try {
       if (accept) {
+        console.log('Accepting counter offer for bid:', bid.id);
         const success = await bidService.updateBidStatus(bid.id, 'accepted');
         if (success) {
+          // Update local state immediately to show the change
+          setBid(prevBid => prevBid ? { ...prevBid, status: 'accepted' } : null);
+          
           addNotification('success', 'Counter offer accepted!');
-          // Seller accepted counter offer - just navigate to bids
-          // The buyer will get notified and can navigate to payment from notification
-          navigate('/bids');
+          
+          // Add a small delay so user can see the status change before navigation
+          setTimeout(() => {
+            navigate('/bids');
+          }, 1500);
         } else {
           addNotification('error', 'Failed to accept counter offer');
         }
       } else {
         // When seller rejects counter, delete the bid entirely
+        console.log('Rejecting counter offer and deleting bid:', bid.id);
         const success = await bidService.deleteBid(bid.id);
         if (success) {
           addNotification('success', 'Counter offer rejected. Bid has been removed.');
-          navigate('/bids');
+          setTimeout(() => {
+            navigate('/bids');
+          }, 1500);
         } else {
           addNotification('error', 'Failed to reject counter offer');
         }
@@ -145,6 +154,9 @@ export const BidDetails: React.FC = () => {
   const isCountered = bid.status === 'countered';
   const canRespondToCounter = !isBuyer && isCountered;
   const canMakeCounter = isBuyer && bid.status === 'pending' && !bid.counter_amount; // Only allow 1 counter
+  
+  // Add logic to detect if seller accepted a counter offer
+  const sellerAcceptedCounter = !isBuyer && bid.status === 'accepted' && bid.counter_amount;
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -362,12 +374,27 @@ export const BidDetails: React.FC = () => {
               </div>
             )}
 
-            {bid.status === 'accepted' && (
+            {sellerAcceptedCounter && (
               <div className="text-center">
                 <p className="text-green-600 dark:text-green-400 font-medium">
-                  This bid has been accepted! 
-                  {isBuyer && ' The seller will contact you for payment.'}
+                  You accepted the counter offer of {formatCurrency(bid.counter_amount!)}
                 </p>
+              </div>
+            )}
+
+            {bid.status === 'accepted' && !sellerAcceptedCounter && (
+              <div className="text-center">
+                <p className="text-green-600 dark:text-green-400 font-medium mb-4">
+                  This bid has been accepted!
+                </p>
+                {isBuyer && (
+                  <button
+                    onClick={() => navigate('/payment/checkout', { state: { bidId: bid.id, amount: bid.counter_amount || bid.amount } })}
+                    className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md"
+                  >
+                    Complete Payment
+                  </button>
+                )}
               </div>
             )}
 

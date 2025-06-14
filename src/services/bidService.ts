@@ -114,6 +114,8 @@ export const bidService = {
 
   async updateBidStatus(bidId: string, status: BidStatus, counterOffer?: number): Promise<boolean> {
     try {
+      console.log('updateBidStatus called with:', { bidId, status, counterOffer });
+      
       const updateData: BidUpdate = {
         status
       };
@@ -125,25 +127,38 @@ export const bidService = {
 
       // If accepting a counter offer, update the amount to the counter amount
       if (status === 'accepted') {
+        console.log('Accepted counter offer reacheddddd');
         const currentBid = await this.getBid(bidId);
+        console.log('Current bid before update:', currentBid);
         if (currentBid?.counter_amount) {
           updateData.amount = currentBid.counter_amount;
+          console.log('Updating amount to counter amount:', currentBid.counter_amount);
         }
       }
 
-      const { error } = await supabase
+      console.log('Update data being sent to database:', updateData);
+
+      const { error, data } = await supabase
         .from('bids')
         .update(updateData)
-        .eq('id', bidId);
+        .eq('id', bidId)
+        .select();
 
-      if (error) return false;
+      console.log('Database update result:', { error, data });
+
+      if (error) {
+        console.error('Database update error:', error);
+        return false;
+      }
 
       // Get bid details for notifications and item status updates
       const bid = await this.getBid(bidId);
+      console.log('Bid after update:', bid);
       if (!bid) return false;
 
       // If bid is accepted, mark the item as unavailable for others
       if (status === 'accepted' && bid.item) {
+        console.log('Marking item as sold:', bid.item_id);
         const { error: itemError } = await supabase
           .from('items')
           .update({ status: 'sold' })
@@ -156,8 +171,10 @@ export const bidService = {
 
       // Send notifications based on status
       if (status === 'accepted') {
+        console.log('Sending acceptance notifications...');
         // When accepting a counter offer, notify the buyer (item owner)
         if (bid.counter_amount && bid.item?.buyer_id) {
+          console.log('Notifying buyer about counter acceptance');
           await notificationService.createNotification({
             user_id: bid.item.buyer_id,
             type: 'bid_accepted',
@@ -171,6 +188,7 @@ export const bidService = {
             read: false
           });
         } else if (bid.bidder_id) {
+          console.log('Notifying bidder about bid acceptance');
           // Regular bid acceptance - notify the bidder
           await notificationService.createNotification({
             user_id: bid.bidder_id,
@@ -214,8 +232,10 @@ export const bidService = {
         });
       }
 
+      console.log('updateBidStatus completed successfully');
       return true;
-    } catch {
+    } catch (error) {
+      console.error('updateBidStatus error:', error);
       return false;
     }
   },

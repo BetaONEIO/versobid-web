@@ -1,8 +1,7 @@
 import React from 'react';
 import { PayPalButtons, usePayPalScriptReducer } from '@paypal/react-paypal-js';
 import { useNotification } from '../../contexts/NotificationContext';
-import { PaymentDetails } from '../../types/payment';
-import { paymentService } from '../../services/payment/paymentService';
+import { PaymentDetails } from '../../services/payment/types/payment';
 
 interface PayPalButtonProps {
   paymentDetails: PaymentDetails;
@@ -25,16 +24,23 @@ export const PayPalButton: React.FC<PayPalButtonProps> = ({
   return (
     <PayPalButtons
       style={{ layout: "vertical" }}
-      createOrder={async () => {
-        try {
-          const order = await paymentService.createPayPalOrder(paymentDetails);
-          return order.id;
-        } catch (error) {
-          onError('Failed to create PayPal order');
-          return '';
-        }
+      //@ts-ignore
+      createOrder={(data, actions) => {
+        return actions.order.create({
+          purchase_units: [
+            {
+              amount: {
+                currency_code: paymentDetails.currency,
+                value: paymentDetails.amount.toFixed(2),
+              },
+              description: `Payment for bid - Item ID: ${paymentDetails.itemId}`,
+            },
+          ],
+          intent: "CAPTURE",
+        });
       }}
-      onApprove={async (_, actions) => {
+      //@ts-ignore
+      onApprove={async (data, actions) => {
         try {
           const details = await actions.order?.capture();
           if (details?.id) {

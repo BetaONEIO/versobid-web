@@ -42,6 +42,18 @@ class PaymentServiceImpl implements PaymentService {
       throw new PaymentValidationError('Invalid payment details', errors);
     }
 
+    // Check if payment with this transaction ID already exists
+    const { data: existingPayment } = await supabase
+      .from('payments')
+      .select('id')
+      .eq('transaction_id', details.transactionId)
+      .single();
+
+    if (existingPayment) {
+      console.log('Payment already recorded for transaction:', details.transactionId);
+      return; // Payment already exists, skip recording
+    }
+
     const paymentData: PaymentInsert = {
       amount: details.amount,
       currency: details.currency,
@@ -80,7 +92,7 @@ class PaymentServiceImpl implements PaymentService {
 
     const { error: notificationError } = await supabase
       .from('notifications')
-      .insert([notification]);
+      .insert(notification);//removed array [] --add it if necessary later
 
     if (notificationError) throw new PaymentError(notificationError.message);
   }

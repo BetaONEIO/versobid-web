@@ -1,19 +1,42 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useNotification } from '../contexts/NotificationContext';
+import { useUser } from '../contexts/UserContext';
 import { formatCurrency } from '../utils/formatters';
+import { PayPalButton } from '../components/payment/PayPalButton';
+import { PaymentDetails } from '../services/payment/types/payment';
+import { bidService } from '../services/bidService';
+import { Bid } from '../types';
 
 export const PaymentCheckout: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { addNotification } = useNotification();
+  const { auth } = useUser();
   
-  const [loading, setLoading] = useState(false);
+  //const [loading, setLoading] = useState(false);
+  const [bidDetails, setBidDetails] = useState<Bid | null>(null);
   
   // Get bid info from navigation state
   const { bidId, amount } = location.state || {};
 
-  if (!bidId || !amount) {
+  useEffect(() => {
+    const fetchBidDetails = async () => {
+      if (bidId) {
+        try {
+          const bid = await bidService.getBid(bidId);
+          setBidDetails(bid);
+        } catch (error) {
+          console.error('Error fetching bid details:', error);
+          addNotification('error', 'Failed to load bid details');
+        }
+      }
+    };
+
+    fetchBidDetails();
+  }, [bidId, addNotification]);
+
+  if (!bidId || !amount || !auth.user) {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-8 text-center">
@@ -31,26 +54,44 @@ export const PaymentCheckout: React.FC = () => {
     );
   }
 
-  const handlePayment = async () => {
-    setLoading(true);
-    try {
-      // Simulate payment processing
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      addNotification('success', 'Payment successful!');
-      navigate('/payment/success', { 
-        state: { 
-          bidId, 
-          amount,
-          message: 'Your payment has been processed successfully!' 
-        } 
-      });
-    } catch (error) {
-      console.error('Payment failed:', error);
-      addNotification('error', 'Payment failed. Please try again.');
-    } finally {
-      setLoading(false);
-    }
+  const totalAmount = amount * 1.03; // 3% processing fee
+  const processingFee = amount * 0.03;
+
+  const paymentDetails: PaymentDetails = {
+    amount: totalAmount,
+    currency: 'USD',
+    itemId: bidDetails?.item_id || '',
+    buyerId: auth.user.id,
+    sellerId: bidDetails?.bidder_id || '',
+    transactionId: '' // Will be set by PayPal
+  };
+
+  const handlePaymentSuccess = (transactionId: string) => {
+    addNotification('success', 'Payment successful!');
+    navigate('/payment/success', { 
+      state: { 
+        bidId, 
+        amount: totalAmount,
+        transactionId,
+        itemId: bidDetails?.item_id,
+        itemTitle: bidDetails?.item?.title,
+        buyerId: auth.user?.id,
+        sellerId: bidDetails?.bidder_id,
+        message: 'Your payment has been processed successfully!' 
+      } 
+    });
+  };
+
+  const handlePaymentError = (error: string) => {
+    addNotification('error', error);
+    navigate('/payment/failed', {
+      state: {
+        bidId,
+        amount: totalAmount,
+        itemTitle: bidDetails?.item?.title,
+        error: error
+      }
+    });
   };
 
   return (
@@ -78,7 +119,7 @@ export const PaymentCheckout: React.FC = () => {
                 <div className="flex justify-between">
                   <span className="text-blue-700 dark:text-blue-300">Processing Fee:</span>
                   <span className="font-semibold text-blue-900 dark:text-blue-100">
-                    {formatCurrency(amount * 0.03)}
+                    {formatCurrency(processingFee)}
                   </span>
                 </div>
                 <div className="border-t border-blue-200 dark:border-blue-700 pt-2">
@@ -87,7 +128,7 @@ export const PaymentCheckout: React.FC = () => {
                       Total:
                     </span>
                     <span className="text-lg font-bold text-blue-900 dark:text-blue-100">
-                      {formatCurrency(amount * 1.03)}
+                      {formatCurrency(totalAmount)}
                     </span>
                   </div>
                 </div>
@@ -100,50 +141,19 @@ export const PaymentCheckout: React.FC = () => {
                   Payment Method
                 </h4>
                 <div className="border border-gray-300 dark:border-gray-600 rounded-lg p-4">
-                  <div className="space-y-3">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Card Number
-                      </label>
-                      <input
-                        type="text"
-                        placeholder="1234 5678 9012 3456"
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white"
-                      />
+                  {bidDetails && (
+                    <PayPalButton
+                      paymentDetails={paymentDetails}
+                      onSuccess={handlePaymentSuccess}
+                      onError={handlePaymentError}
+                    />
+                  )}
+                  {!bidDetails && (
+                    <div className="text-center py-4">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                      <p className="mt-2 text-gray-600 dark:text-gray-400">Loading payment options...</p>
                     </div>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                          Expiry Date
-                        </label>
-                        <input
-                          type="text"
-                          placeholder="MM/YY"
-                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                          CVV
-                        </label>
-                        <input
-                          type="text"
-                          placeholder="123"
-                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white"
-                        />
-                      </div>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Name on Card
-                      </label>
-                      <input
-                        type="text"
-                        placeholder="John Doe"
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white"
-                      />
-                    </div>
-                  </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -156,23 +166,9 @@ export const PaymentCheckout: React.FC = () => {
             >
               Cancel
             </button>
-            <button
-              onClick={handlePayment}
-              disabled={loading}
-              className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-md disabled:opacity-50 flex items-center"
-            >
-              {loading ? (
-                <>
-                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Processing...
-                </>
-              ) : (
-                `Pay ${formatCurrency(amount * 1.03)}`
-              )}
-            </button>
+            <div className="text-gray-600 dark:text-gray-400 text-sm flex items-center">
+              Secure payment powered by PayPal
+            </div>
           </div>
         </div>
       </div>
