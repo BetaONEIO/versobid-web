@@ -201,6 +201,12 @@ serve(async (req) => {
       .insert({
         bid_id: bidId,
         user_id: user.id,
+        item_id: bid.item_id,
+        buyer_id: bid.item.buyer_id,
+        seller_id: bid.bidder_id,
+        currency: 'USD',
+        transaction_id: orderData.id,
+        provider: 'paypal',
         paypal_order_id: orderData.id,
         amount: amount,
         processing_fee: processingFee,

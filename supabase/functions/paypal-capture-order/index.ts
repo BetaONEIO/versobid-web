@@ -201,11 +201,11 @@ serve(async (req) => {
       .single()
 
     // Send notification to seller
-    if (bid?.item?.buyer_id) {
+    if (bid.bidder_id) {
       await supabaseClient
         .from('notifications')
         .insert({
-          user_id: bid.item.buyer_id,
+          user_id: bid.bidder_id,
           type: 'payment_received',
           message: `Payment received for "${bid.item.title}"! You can now arrange delivery.`,
           data: {
@@ -246,11 +246,11 @@ serve(async (req) => {
 
 async function sendPayoutToSeller(supabaseClient: any, paymentId: string, bid: any) {
   try {
-    // Get seller's PayPal info
+    // Get seller's PayPal info - seller_id is the bidder (bidder_id in bids table)
     const { data: seller } = await supabaseClient
       .from('profiles')
       .select('paypal_email, paypal_sandbox_email')
-      .eq('id', bid.item.buyer_id)
+      .eq('id', bid.bidder_id)
       .single()
 
     if (!seller) {
@@ -341,7 +341,7 @@ async function sendPayoutToSeller(supabaseClient: any, paymentId: string, bid: a
       await supabaseClient
         .from('notifications')
         .insert({
-          user_id: bid.item.buyer_id,
+          user_id: bid.bidder_id,
           type: 'payout_sent',
           message: `$${sellerAmount} has been sent to your PayPal account for "${bid.item.title}"`,
           data: {
