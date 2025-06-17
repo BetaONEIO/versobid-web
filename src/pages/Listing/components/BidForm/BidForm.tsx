@@ -5,6 +5,7 @@ import { useUser } from '../../../../contexts/UserContext';
 import { useNotification } from '../../../../contexts/NotificationContext';
 
 import { bidService } from '../../../../services/bidService';
+import { PayPalLinkButton } from '../../../../components/profile/PayPalLinkButton';
 
 import { BidFormProps } from './BidForm.types';
 
@@ -14,6 +15,9 @@ const BidForm: React.FC<BidFormProps> = ({ item }) => {
   const { addNotification } = useNotification();
   const [amount, setAmount] = useState<number>(item?.minPrice ?? 0);
   const [message, setMessage] = useState('');
+  const [showPayPalLink, setShowPayPalLink] = useState(false);
+
+  const isPayPalLinked = !!auth.user?.paypal_email;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,9 +30,30 @@ const BidForm: React.FC<BidFormProps> = ({ item }) => {
       navigate('/bids')
     } catch (error) {
       // berhubungan dengan backend untuk handle kalau submitnya tidak berhasil
-      addNotification('error', 'Failed to place bid');
+      if (error instanceof Error && error.message.includes('PayPal')) {
+        setShowPayPalLink(true);
+        addNotification('error', 'Link your PayPal account to place bids and receive payments');
+      } else {
+        addNotification('error', 'Failed to place bid');
+      }
     }
   };
+
+  if (showPayPalLink || !isPayPalLinked) {
+    return (
+      <div className="space-y-4">
+        <PayPalLinkButton />
+        {isPayPalLinked && (
+          <button
+            onClick={() => setShowPayPalLink(false)}
+            className="text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-500"
+          >
+            Continue to place bid
+          </button>
+        )}
+      </div>
+    );
+  }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">

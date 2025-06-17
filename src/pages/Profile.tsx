@@ -6,6 +6,7 @@ import { profileService } from '../services/profileService';
 import { ListingGrid } from '../components/listings/ListingGrid';
 import { useListings } from '../hooks/useListings';
 import { Profile as ProfileType } from '../types/profile';
+import { PayPalLinkButton } from '../components/profile/PayPalLinkButton';
 
 export const Profile: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -18,6 +19,7 @@ export const Profile: React.FC = () => {
   const [uploading, setUploading] = React.useState(false);
 
   const isOwnProfile = auth.user?.username === username;
+  console.log(auth.user?.username,'------------ ', username);
   const defaultAvatar = '/default-avatar.png';
 
   React.useEffect(() => {
@@ -137,6 +139,15 @@ export const Profile: React.FC = () => {
               </p>
             )}
           </div>
+
+          {isOwnProfile && (
+            <div className="mt-8">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+                Payment Settings
+              </h2>
+              <PayPalLinkButton />
+            </div>
+          )}
         </div>
       </div>
     </div>

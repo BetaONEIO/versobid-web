@@ -5,6 +5,7 @@ import { bidService } from '../../../services/bidService';
 import { Item } from '../../../types/item';
 import { BidAmountField } from './BidAmountField';
 import { BidMessageField } from './BidMessageField';
+import { PayPalLinkButton } from '../../profile/PayPalLinkButton';
 
 interface BidFormProps {
   item: Item;
@@ -17,6 +18,9 @@ export const BidForm: React.FC<BidFormProps> = ({ item, onBidSubmitted }) => {
   const [amount, setAmount] = useState<number>(item.minPrice);
   const [message, setMessage] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const [showPayPalLink, setShowPayPalLink] = useState(false);
+
+  const isPayPalLinked = !!auth.user?.paypal_email;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,7 +32,12 @@ export const BidForm: React.FC<BidFormProps> = ({ item, onBidSubmitted }) => {
       setSubmitted(true);
       onBidSubmitted();
     } catch (error) {
-      addNotification('error', 'Failed to place bid');
+      if (error instanceof Error && error.message.includes('PayPal')) {
+        setShowPayPalLink(true);
+        addNotification('error', 'Link your PayPal account to place bids and receive payments');
+      } else {
+        addNotification('error', 'Failed to place bid');
+      }
     }
   };
 
@@ -41,6 +50,22 @@ export const BidForm: React.FC<BidFormProps> = ({ item, onBidSubmitted }) => {
         <p className="text-green-600 dark:text-green-300 text-sm mt-2">
           You'll be notified when they make a decision.
         </p>
+      </div>
+    );
+  }
+
+  if (showPayPalLink || !isPayPalLinked) {
+    return (
+      <div className="space-y-4">
+        <PayPalLinkButton />
+        {isPayPalLinked && (
+          <button
+            onClick={() => setShowPayPalLink(false)}
+            className="text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-500"
+          >
+            Continue to place bid
+          </button>
+        )}
       </div>
     );
   }

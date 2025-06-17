@@ -61,7 +61,8 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 email_verified: session.user.email_confirmed_at !== null,
                 shipping_address: profile.shipping_address,
                 payment_setup: profile.payment_setup,
-                onboarding_completed: profile.onboarding_completed
+                onboarding_completed: profile.onboarding_completed,
+                paypal_email: profile.paypal_email
               }
             });
           }
@@ -93,7 +94,8 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
               email_verified: session.user.email_confirmed_at !== null,
               shipping_address: profile.shipping_address,
               payment_setup: profile.payment_setup,
-              onboarding_completed: profile.onboarding_completed
+              onboarding_completed: profile.onboarding_completed,
+              paypal_email: profile.paypal_email
             }
           });
         }

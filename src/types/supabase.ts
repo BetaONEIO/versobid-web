@@ -19,6 +19,10 @@ export interface Database {
           } | null;
           payment_setup?: boolean | false;
           onboarding_completed?: boolean | false;
+          paypal_email?: string | null;
+          paypal_merchant_id?: string | null;
+          paypal_sandbox_email?: string | null;
+          paypal_sandbox_merchant_id?: string | null;
         };
         Insert: {
           id: string;
@@ -37,6 +41,10 @@ export interface Database {
           } | null;
           payment_setup?: boolean | false;
           onboarding_completed?: boolean | false;
+          paypal_email?: string | null;
+          paypal_merchant_id?: string | null;
+          paypal_sandbox_email?: string | null;
+          paypal_sandbox_merchant_id?: string | null;
         };
         Update: {
           full_name: string;
@@ -53,6 +61,10 @@ export interface Database {
           } | null;
           payment_setup?: boolean | false;
           onboarding_completed?: boolean | false;
+          paypal_email?: string | null;
+          paypal_merchant_id?: string | null;
+          paypal_sandbox_email?: string | null;
+          paypal_sandbox_merchant_id?: string | null;
         };
       };
       items: {
@@ -126,7 +138,7 @@ export interface Database {
           bidder_id?: string;
           amount?: number;
           message?: string | null;
-          status?: 'pending' | 'accepted' | 'rejected' | 'countered';
+          status?: 'pending' | 'accepted' | 'rejected' | 'countered' | 'paid';
           created_at?: string;
           counter_amount?: number | null;
         };

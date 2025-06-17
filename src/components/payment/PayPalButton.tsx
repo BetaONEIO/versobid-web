@@ -3,6 +3,7 @@ import { PayPalButtons, usePayPalScriptReducer } from '@paypal/react-paypal-js';
 import { useNotification } from '../../contexts/NotificationContext';
 import { PaymentDetails } from '../../services/payment/types/payment';
 import { paymentService } from '../../services/paymentService';
+import { bidService } from '../../services/bidService';
 
 interface PayPalButtonProps {
   paymentDetails: PaymentDetails;
@@ -54,6 +55,8 @@ export const PayPalButton: React.FC<PayPalButtonProps> = ({
           });
           
           if (response.success && response.captureId) {
+            await bidService.updateBidStatus(bidId, 'paid');
+            
             onSuccess(response.captureId);
             addNotification('success', 'Payment completed successfully!');
           } else {
