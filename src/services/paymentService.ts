@@ -14,6 +14,27 @@ export interface PaymentDetails {
   transactionId: string;
 }
 
+export interface CreatePayPalOrderRequest {
+  bidId: string;
+  amount: number;
+}
+
+export interface CreatePayPalOrderResponse {
+  orderId: string;
+  amount: number;
+  processingFee: number;
+}
+
+export interface CapturePayPalOrderRequest {
+  orderId: string;
+}
+
+export interface CapturePayPalOrderResponse {
+  success: boolean;
+  captureId: string;
+  status: string;
+}
+
 export const paymentService = {
   async recordPayment(details: PaymentDetails): Promise<void> {
     // Define payment data
@@ -69,6 +90,60 @@ export const paymentService = {
     } catch (error) {
       console.error('Error in recordPayment:', error);
       throw error; // Rethrow to ensure errors propagate correctly
+    }
+  },
+
+  async createPayPalOrder(request: CreatePayPalOrderRequest): Promise<CreatePayPalOrderResponse> {
+    try {
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !session?.access_token) {
+        throw new Error('Authentication required');
+      }
+
+      const { data, error } = await supabase.functions.invoke('paypal-create-order', {
+        body: request,
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+
+      if (error) {
+        console.error('PayPal order creation error:', error);
+        throw new Error(error.message || 'Failed to create PayPal order');
+      }
+
+      return data as CreatePayPalOrderResponse;
+    } catch (error) {
+      console.error('Error creating PayPal order:', error);
+      throw error;
+    }
+  },
+
+  async capturePayPalOrder(request: CapturePayPalOrderRequest): Promise<CapturePayPalOrderResponse> {
+    try {
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !session?.access_token) {
+        throw new Error('Authentication required');
+      }
+
+      const { data, error } = await supabase.functions.invoke('paypal-capture-order', {
+        body: request,
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+
+      if (error) {
+        console.error('PayPal order capture error:', error);
+        throw new Error(error.message || 'Failed to capture PayPal order');
+      }
+
+      return data as CapturePayPalOrderResponse;
+    } catch (error) {
+      console.error('Error capturing PayPal order:', error);
+      throw error;
     }
   }
 };

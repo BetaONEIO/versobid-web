@@ -13,6 +13,7 @@ export interface User {
   } | null;
   payment_setup?: boolean;
   onboarding_completed?: boolean;
+  paypal_email?: string | null;
 }
 
 export type UserRole = 'buyer' | 'seller';

@@ -16,7 +16,8 @@ const transformProfile = (row: ProfileRow): Profile => ({
   is_admin: row.is_admin || false,
   shipping_address: row.shipping_address || null,
   payment_setup: row.payment_setup,
-  onboarding_completed: row.onboarding_completed
+  onboarding_completed: row.onboarding_completed,
+  paypal_email: row.paypal_email
 });
 
 export const profileService = {

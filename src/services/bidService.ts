@@ -47,6 +47,17 @@ export const bidService = {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return null;
 
+      // Check if user has linked PayPal account
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('paypal_email')
+        .eq('id', user.id)
+        .single();
+
+      if (!profile?.paypal_email) {
+        throw new Error('Please link your PayPal account to place bids');
+      }
+
       const bidData: BidInsert = {
         item_id: itemId,
         bidder_id: user.id,
@@ -77,7 +88,10 @@ export const bidService = {
 
       if (error || !data) return null;
       return transformBid(data);
-    } catch {
+    } catch (error) {
+      if (error instanceof Error) {
+        throw error; // Re-throw validation errors with their message
+      }
       return null;
     }
   },
@@ -138,6 +152,15 @@ export const bidService = {
 
       console.log('Update data being sent to database:', updateData);
 
+      // First check if the bid exists
+      const { data: existingBid, error: checkError } = await supabase
+        .from('bids')
+        .select('*')
+        .eq('id', bidId)
+        .single();
+      
+      console.log('Existing bid check:', { existingBid, checkError });
+
       const { error, data } = await supabase
         .from('bids')
         .update(updateData)
@@ -161,7 +184,7 @@ export const bidService = {
         console.log('Marking item as sold:', bid.item_id);
         const { error: itemError } = await supabase
           .from('items')
-          .update({ status: 'sold' })
+          .update({ status: 'completed' })
           .eq('id', bid.item_id);
 
         if (itemError) {
@@ -362,14 +385,15 @@ export const bidService = {
 
   async respondToCounter(bidId: string, accept: boolean): Promise<boolean> {
     try {
+      console.log('respondToCounter called with:', { bidId, accept });
       const status = accept ? 'accepted' : 'rejected';
-      const { error } = await supabase
-        .from('bids')
-        .update({ status })
-        .eq('id', bidId);
-
-      return !error;
-    } catch {
+      console.log('About to call updateBidStatus with status:', status);
+      // Use updateBidStatus to handle all the complex logic for counter offer acceptance
+      const result = await this.updateBidStatus(bidId, status);
+      console.log('updateBidStatus returned:', result);
+      return result;
+    } catch (error) {
+      console.error('respondToCounter error:', error);
       return false;
     }
   },

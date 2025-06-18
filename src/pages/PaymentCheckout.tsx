@@ -144,6 +144,8 @@ export const PaymentCheckout: React.FC = () => {
                   {bidDetails && (
                     <PayPalButton
                       paymentDetails={paymentDetails}
+                      bidId={bidId}
+                      amount={amount}
                       onSuccess={handlePaymentSuccess}
                       onError={handlePaymentError}
                     />

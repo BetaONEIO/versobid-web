@@ -171,6 +171,8 @@ export const BidDetails: React.FC = () => {
               <span className={`px-3 py-1 rounded-full text-sm font-medium ${
                 bid.status === 'accepted' 
                   ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                  : bid.status === 'confirmed'
+                  ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
                   : bid.status === 'rejected'
                   ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
                   : bid.status === 'countered'
@@ -395,6 +397,17 @@ export const BidDetails: React.FC = () => {
                     Complete Payment
                   </button>
                 )}
+              </div>
+            )}
+
+            {bid.status === 'confirmed' && (
+              <div className="text-center">
+                <p className="text-green-600 dark:text-green-400 font-medium mb-4">
+                  Payment has been completed!
+                </p>
+                <p className="text-gray-600 dark:text-gray-400 text-sm">
+                  The seller has been notified and will arrange delivery.
+                </p>
               </div>
             )}
 
