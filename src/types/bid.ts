@@ -1,4 +1,4 @@
-export type BidStatus = 'pending' | 'accepted' | 'rejected' | 'countered' | 'paid';
+export type BidStatus = 'pending' | 'accepted' | 'rejected' | 'countered' | 'confirmed';
 
 export interface Bid {
   id: string;

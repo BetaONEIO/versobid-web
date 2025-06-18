@@ -14,6 +14,7 @@ interface PayPalButtonProps {
 }
 
 export const PayPalButton: React.FC<PayPalButtonProps> = ({
+  //@ts-ignore
   paymentDetails,
   bidId,
   amount,
@@ -55,7 +56,7 @@ export const PayPalButton: React.FC<PayPalButtonProps> = ({
           });
           
           if (response.success && response.captureId) {
-            await bidService.updateBidStatus(bidId, 'paid');
+            await bidService.updateBidStatus(bidId, 'confirmed');
             
             onSuccess(response.captureId);
             addNotification('success', 'Payment completed successfully!');

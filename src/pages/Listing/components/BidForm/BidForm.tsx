@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 
 import { useUser } from '../../../../contexts/UserContext';
 import { useNotification } from '../../../../contexts/NotificationContext';
+import { usePayPalStatus } from '../../../../hooks/usePayPalStatus';
 
 import { bidService } from '../../../../services/bidService';
 import { PayPalLinkButton } from '../../../../components/profile/PayPalLinkButton';
@@ -13,11 +14,10 @@ const BidForm: React.FC<BidFormProps> = ({ item }) => {
   const navigate = useNavigate();
   const { auth } = useUser();
   const { addNotification } = useNotification();
+  const { isLinked: isPayPalLinked } = usePayPalStatus();
   const [amount, setAmount] = useState<number>(item?.minPrice ?? 0);
   const [message, setMessage] = useState('');
   const [showPayPalLink, setShowPayPalLink] = useState(false);
-
-  const isPayPalLinked = !!auth.user?.paypal_email;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

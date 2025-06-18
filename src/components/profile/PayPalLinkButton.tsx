@@ -1,36 +1,38 @@
 import React, { useState } from 'react';
 import { useUser } from '../../contexts/UserContext';
 import { useNotification } from '../../contexts/NotificationContext';
+import { usePayPalStatus } from '../../hooks/usePayPalStatus';
 import { supabase } from '../../lib/supabase';
 
 export const PayPalLinkButton: React.FC = () => {
   const { auth } = useUser();
   const { addNotification } = useNotification();
+  const { isLinked, paypalEmail, loading: dataLoading, refreshStatus } = usePayPalStatus();
   const [showForm, setShowForm] = useState(false);
-  const [paypalEmail, setPaypalEmail] = useState('');
+  const [paypalEmailInput, setPaypalEmailInput] = useState('');
   const [loading, setLoading] = useState(false);
-
-  const isLinked = !!auth.user?.paypal_email;
 
   const handleLinkPayPal = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!auth.user?.id || !paypalEmail.trim()) return;
+    if (!auth.user?.id || !paypalEmailInput.trim()) return;
 
     setLoading(true);
     try {
+      console.log('Linking PayPal email:', paypalEmailInput.trim());
       const { error } = await supabase
         .from('profiles')
-        .update({ paypal_email: paypalEmail.trim() })
+        .update({ paypal_email: paypalEmailInput.trim() })
         .eq('id', auth.user.id);
 
       if (error) throw error;
 
-      // Update the user context
-      window.location.reload(); // Simple reload to refresh user data
+      // Refresh the PayPal status
+      refreshStatus();
       
       addNotification('success', 'PayPal account linked successfully!');
       setShowForm(false);
-      setPaypalEmail('');
+      setPaypalEmailInput('');
+      console.log('PayPal linked successfully');
     } catch (error) {
       console.error('Error linking PayPal:', error);
       addNotification('error', 'Failed to link PayPal account');
@@ -44,6 +46,7 @@ export const PayPalLinkButton: React.FC = () => {
 
     setLoading(true);
     try {
+      console.log('Unlinking PayPal email...');
       const { error } = await supabase
         .from('profiles')
         .update({ paypal_email: null })
@@ -51,8 +54,11 @@ export const PayPalLinkButton: React.FC = () => {
 
       if (error) throw error;
 
-      window.location.reload(); // Simple reload to refresh user data
+      // Refresh the PayPal status
+      refreshStatus();
+      
       addNotification('success', 'PayPal account unlinked');
+      console.log('PayPal unlinked successfully');
     } catch (error) {
       console.error('Error unlinking PayPal:', error);
       addNotification('error', 'Failed to unlink PayPal account');
@@ -61,7 +67,19 @@ export const PayPalLinkButton: React.FC = () => {
     }
   };
 
-  if (isLinked) {
+  // Show loading state while fetching data
+  if (dataLoading) {
+    return (
+      <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+        <div className="animate-pulse">
+          <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/4 mb-2"></div>
+          <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (isLinked && paypalEmail) {
     return (
       <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
         <div className="flex items-center justify-between">
@@ -76,7 +94,7 @@ export const PayPalLinkButton: React.FC = () => {
                 PayPal Account Linked
               </h3>
               <p className="text-sm text-green-700 dark:text-green-300">
-                {auth.user?.paypal_email}
+                {paypalEmail}
               </p>
             </div>
           </div>
@@ -126,8 +144,8 @@ export const PayPalLinkButton: React.FC = () => {
             </label>
             <input
               type="email"
-              value={paypalEmail}
-              onChange={(e) => setPaypalEmail(e.target.value)}
+              value={paypalEmailInput}
+              onChange={(e) => setPaypalEmailInput(e.target.value)}
               placeholder="your-paypal@email.com"
               required
               className="w-full px-3 py-2 border border-yellow-300 dark:border-yellow-600 rounded-md shadow-sm focus:outline-none focus:ring-yellow-500 focus:border-yellow-500 dark:bg-yellow-900/20 dark:text-yellow-100"
@@ -136,7 +154,7 @@ export const PayPalLinkButton: React.FC = () => {
           <div className="flex space-x-2">
             <button
               type="submit"
-              disabled={loading || !paypalEmail.trim()}
+              disabled={loading || !paypalEmailInput.trim()}
               className="bg-yellow-600 text-white px-4 py-2 rounded text-sm hover:bg-yellow-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? 'Linking...' : 'Link Account'}
@@ -145,7 +163,7 @@ export const PayPalLinkButton: React.FC = () => {
               type="button"
               onClick={() => {
                 setShowForm(false);
-                setPaypalEmail('');
+                setPaypalEmailInput('');
               }}
               className="bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-300 px-4 py-2 rounded text-sm hover:bg-gray-400 dark:hover:bg-gray-500"
             >

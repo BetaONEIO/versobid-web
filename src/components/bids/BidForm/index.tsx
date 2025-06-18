@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useUser } from '../../../contexts/UserContext';
 import { useNotification } from '../../../contexts/NotificationContext';
+import { usePayPalStatus } from '../../../hooks/usePayPalStatus';
 import { bidService } from '../../../services/bidService';
 import { Item } from '../../../types/item';
 import { BidAmountField } from './BidAmountField';
@@ -15,12 +16,11 @@ interface BidFormProps {
 export const BidForm: React.FC<BidFormProps> = ({ item, onBidSubmitted }) => {
   const { auth } = useUser();
   const { addNotification } = useNotification();
+  const { isLinked: isPayPalLinked } = usePayPalStatus();
   const [amount, setAmount] = useState<number>(item.minPrice);
   const [message, setMessage] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const [showPayPalLink, setShowPayPalLink] = useState(false);
-
-  const isPayPalLinked = !!auth.user?.paypal_email;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

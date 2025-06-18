@@ -178,7 +178,7 @@ serve(async (req) => {
     // Update bid status to paid
     const { error: bidUpdateError } = await supabaseClient
       .from('bids')
-      .update({ status: 'paid' })
+      .update({ status: 'confirmed' })
       .eq('id', payment.bid_id)
 
     if (bidUpdateError) {

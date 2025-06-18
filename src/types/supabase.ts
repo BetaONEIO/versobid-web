@@ -138,7 +138,7 @@ export interface Database {
           bidder_id?: string;
           amount?: number;
           message?: string | null;
-          status?: 'pending' | 'accepted' | 'rejected' | 'countered' | 'paid';
+          status?: 'pending' | 'accepted' | 'rejected' | 'countered' | 'confirmed';
           created_at?: string;
           counter_amount?: number | null;
         };
