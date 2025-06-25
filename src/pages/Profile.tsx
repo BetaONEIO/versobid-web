@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 import { useUser } from '../contexts/UserContext';
 import { useNotification } from '../contexts/NotificationContext';
 import { profileService } from '../services/profileService';
@@ -11,12 +11,24 @@ import { PayPalLinkButton } from '../components/profile/PayPalLinkButton';
 export const Profile: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { username } = useParams<{ username: string }>();
-  const { auth } = useUser();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { auth, refreshUserData } = useUser();
   const { addNotification } = useNotification();
   const { listings } = useListings();
   const [profile, setProfile] = React.useState<ProfileType | null>(null);
   const [loading, setLoading] = React.useState(true);
   const [uploading, setUploading] = React.useState(false);
+  const [saving, setSaving] = React.useState(false);
+  const [isEditMode, setIsEditMode] = React.useState(false);
+  const [editData, setEditData] = React.useState({
+    full_name: '',
+    shipping_address: {
+      street: '',
+      city: '',
+      postcode: '',
+      country: ''
+    }
+  });
 
   const isOwnProfile = auth.user?.username === username;
   console.log(auth.user?.username,'------------ ', username);
@@ -27,6 +39,20 @@ export const Profile: React.FC = () => {
       try {
         const data = await profileService.getProfileByUsername(username!);
         setProfile(data);
+        
+        // Initialize edit data
+        if (data && isOwnProfile) {
+          const address = data.shipping_address || { street: '', city: '', postcode: '', country: '' };
+          setEditData({
+            full_name: data.full_name || '',
+            shipping_address: {
+              street: address.street || '',
+              city: address.city || '',
+              postcode: address.postcode || '',
+              country: address.country || ''
+            }
+          });
+        }
       } catch (error) {
         addNotification('error', 'Failed to load profile');
       } finally {
@@ -35,7 +61,15 @@ export const Profile: React.FC = () => {
     };
 
     fetchProfile();
-  }, [username, addNotification]);
+  }, [username, addNotification, isOwnProfile]);
+
+  // Check for edit mode from URL parameter
+  React.useEffect(() => {
+    const editParam = searchParams.get('edit');
+    if (editParam === 'true' && isOwnProfile) {
+      setIsEditMode(true);
+    }
+  }, [searchParams, isOwnProfile]);
 
   const handleAvatarClick = () => {
     if (isOwnProfile && fileInputRef.current) {
@@ -60,6 +94,65 @@ export const Profile: React.FC = () => {
       addNotification('error', 'Failed to update profile picture');
     } finally {
       setUploading(false);
+    }
+  };
+
+  const handleEditToggle = () => {
+    if (isEditMode) {
+      // Cancel edit - remove edit parameter from URL
+      setSearchParams({});
+    } else {
+      // Enter edit mode - add edit parameter to URL
+      setSearchParams({ edit: 'true' });
+    }
+    setIsEditMode(!isEditMode);
+  };
+
+  const handleSaveProfile = async () => {
+    if (!auth.user?.id) return;
+
+    setSaving(true);
+    try {
+      await profileService.updateProfile(auth.user.id, {
+        full_name: editData.full_name,
+        shipping_address: editData.shipping_address
+      });
+
+      // Update local state
+      setProfile(prev => prev ? {
+        ...prev,
+        full_name: editData.full_name,
+        shipping_address: editData.shipping_address
+      } : null);
+
+      // Refresh user data in context
+      await refreshUserData();
+
+      addNotification('success', 'Profile updated successfully');
+      setIsEditMode(false);
+      setSearchParams({});
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      addNotification('error', 'Failed to update profile');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleInputChange = (field: string, value: string, isAddress = false) => {
+    if (isAddress) {
+      setEditData(prev => ({
+        ...prev,
+        shipping_address: {
+          ...prev.shipping_address,
+          [field]: value
+        }
+      }));
+    } else {
+      setEditData(prev => ({
+        ...prev,
+        [field]: value
+      }));
     }
   };
 
@@ -125,7 +218,125 @@ export const Profile: React.FC = () => {
                 Member since {new Date(profile.created_at).toLocaleDateString()}
               </p>
             </div>
+            {isOwnProfile && (
+              <div className="mt-4 md:mt-0">
+                <button
+                  onClick={handleEditToggle}
+                  className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 disabled:opacity-50"
+                  disabled={saving}
+                >
+                  {isEditMode ? 'Cancel' : 'Edit Profile'}
+                </button>
+              </div>
+            )}
           </div>
+
+          {/* Edit Mode Form */}
+          {isEditMode && isOwnProfile && (
+            <div className="mt-8 bg-gray-50 dark:bg-gray-700 rounded-lg p-6">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                Edit Profile Information
+              </h3>
+              
+              <div className="space-y-6">
+                {/* Personal Information */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Full Name
+                  </label>
+                  <input
+                    type="text"
+                    value={editData.full_name}
+                    onChange={(e) => handleInputChange('full_name', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-600 dark:text-white"
+                    placeholder="Enter your full name"
+                  />
+                </div>
+
+                {/* Address Preferences */}
+                <div>
+                  <h4 className="text-md font-medium text-gray-900 dark:text-white mb-3">
+                    Address Preferences (Private)
+                  </h4>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                    This information is private and used for shipping and location-based features.
+                  </p>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Street Address
+                      </label>
+                      <input
+                        type="text"
+                        value={editData.shipping_address.street}
+                        onChange={(e) => handleInputChange('street', e.target.value, true)}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-600 dark:text-white"
+                        placeholder="123 Main Street"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        City
+                      </label>
+                      <input
+                        type="text"
+                        value={editData.shipping_address.city}
+                        onChange={(e) => handleInputChange('city', e.target.value, true)}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-600 dark:text-white"
+                        placeholder="London"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Postcode
+                      </label>
+                      <input
+                        type="text"
+                        value={editData.shipping_address.postcode}
+                        onChange={(e) => handleInputChange('postcode', e.target.value, true)}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-600 dark:text-white"
+                        placeholder="SW1A 1AA"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Country
+                      </label>
+                      <input
+                        type="text"
+                        value={editData.shipping_address.country}
+                        onChange={(e) => handleInputChange('country', e.target.value, true)}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-600 dark:text-white"
+                        placeholder="United Kingdom"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Save Button */}
+                <div className="flex justify-end space-x-4">
+                  <button
+                    onClick={handleEditToggle}
+                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 dark:bg-gray-600 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-500"
+                    disabled={saving}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleSaveProfile}
+                    className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 disabled:opacity-50"
+                    disabled={saving}
+                  >
+                    {saving ? 'Saving...' : 'Save Changes'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
           <div className="mt-8">
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
