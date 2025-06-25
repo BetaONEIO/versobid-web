@@ -22,11 +22,21 @@ serve(async (req) => {
     const webhookEvent = await req.json()
     console.log('PayPal webhook received:', webhookEvent.event_type)
 
-    // Verify webhook signature (optional but recommended)
+    // Verify webhook signature
     const webhookId = Deno.env.get('PAYPAL_WEBHOOK_ID')
     if (webhookId) {
-      // TODO: Implement webhook signature verification
-      // This requires PayPal's webhook verification library
+      const isValid = await verifyPayPalWebhookSignature(req, webhookEvent, webhookId)
+      if (!isValid) {
+        console.error('PayPal webhook signature verification failed')
+        return new Response(
+          JSON.stringify({ error: 'Invalid webhook signature' }),
+          { 
+            status: 401, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          }
+        )
+      }
+      console.log('PayPal webhook signature verified successfully')
     }
 
     const eventType = webhookEvent.event_type
@@ -72,6 +82,100 @@ serve(async (req) => {
     )
   }
 })
+
+async function verifyPayPalWebhookSignature(req: Request, webhookEvent: any, webhookId: string): Promise<boolean> {
+  try {
+    // Get PayPal access token
+    const accessToken = await getPayPalAccessToken()
+    if (!accessToken) {
+      console.error('Failed to get PayPal access token for webhook verification')
+      return false
+    }
+
+    // Extract headers needed for verification
+    const headers = req.headers
+    const transmissionId = headers.get('paypal-transmission-id')
+    const transmissionTime = headers.get('paypal-transmission-time')
+    const certUrl = headers.get('paypal-cert-url')
+    const authAlgo = headers.get('paypal-auth-algo')
+    const transmissionSig = headers.get('paypal-transmission-sig')
+
+    if (!transmissionId || !transmissionTime || !certUrl || !authAlgo || !transmissionSig) {
+      console.error('Missing required PayPal webhook headers')
+      return false
+    }
+
+    // Prepare verification payload
+    const verificationPayload = {
+      transmission_id: transmissionId,
+      transmission_time: transmissionTime,
+      cert_url: certUrl,
+      auth_algo: authAlgo,
+      transmission_sig: transmissionSig,
+      webhook_id: webhookId,
+      webhook_event: webhookEvent
+    }
+
+    // Call PayPal verification endpoint
+    const baseUrl = Deno.env.get('PAYPAL_BASE_URL') || 'https://api.sandbox.paypal.com'
+    const verifyResponse = await fetch(`${baseUrl}/v1/notifications/verify-webhook-signature`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify(verificationPayload)
+    })
+
+    if (!verifyResponse.ok) {
+      console.error('PayPal webhook verification failed:', verifyResponse.status, await verifyResponse.text())
+      return false
+    }
+
+    const verificationResult = await verifyResponse.json()
+    return verificationResult.verification_status === 'SUCCESS'
+
+  } catch (error) {
+    console.error('Error verifying PayPal webhook signature:', error)
+    return false
+  }
+}
+
+async function getPayPalAccessToken(): Promise<string | null> {
+  try {
+    const clientId = Deno.env.get('PAYPAL_CLIENT_ID')
+    const clientSecret = Deno.env.get('PAYPAL_CLIENT_SECRET')
+    const baseUrl = Deno.env.get('PAYPAL_BASE_URL') || 'https://api.sandbox.paypal.com'
+
+    if (!clientId || !clientSecret) {
+      console.error('PayPal client credentials not found in environment variables')
+      return null
+    }
+
+    const credentials = btoa(`${clientId}:${clientSecret}`)
+    
+    const response = await fetch(`${baseUrl}/v1/oauth2/token`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Basic ${credentials}`,
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: 'grant_type=client_credentials'
+    })
+
+    if (!response.ok) {
+      console.error('Failed to get PayPal access token:', response.status)
+      return null
+    }
+
+    const tokenData = await response.json()
+    return tokenData.access_token
+
+  } catch (error) {
+    console.error('Error getting PayPal access token:', error)
+    return null
+  }
+}
 
 async function handlePaymentCaptureCompleted(supabaseClient: any, resource: any) {
   const orderId = resource.supplementary_data?.related_ids?.order_id
