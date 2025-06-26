@@ -8,7 +8,7 @@ import { supabase } from '../../lib/supabase';
 
 export const NotificationBell: React.FC = () => {
   const navigate = useNavigate();
-  const { role, toggleRole } = useUser();
+  const { role, toggleRole, auth } = useUser();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
@@ -101,6 +101,13 @@ export const NotificationBell: React.FC = () => {
       // For notifications about removed bids, just mark as read and close dropdown
       if (notification.message.includes('removed')) {
         setIsOpen(false);
+        return;
+      }
+      
+      // Handle onboarding reminder - redirect to profile edit
+      if (notification.type === 'onboarding_reminder') {
+        setIsOpen(false);
+        navigate(`/profile/${auth.user?.username}?edit=true`);
         return;
       }
       

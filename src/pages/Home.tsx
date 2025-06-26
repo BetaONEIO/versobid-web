@@ -24,12 +24,16 @@ export const Home: React.FC = () => {
   }
 
   if (auth.isAuthenticated) {
+    // Determine if user is a first-time user based on onboarding status
+    const isFirstTimeUser = !auth.user?.onboarding_completed;
+    const welcomeMessage = isFirstTimeUser ? 'Welcome!' : 'Welcome Back!';
+
     return (
       <div className="bg-white dark:bg-gray-900">
         <div className="max-w-7xl mx-auto py-16 px-4 sm:py-24 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h1 className="text-4xl font-extrabold tracking-tight text-gray-900 dark:text-white sm:text-5xl md:text-6xl">
-              <span className="block">Welcome Back!</span>
+              <span className="block">{welcomeMessage}</span>
               <span className="block text-indigo-600 dark:text-indigo-400">
                 {role === 'seller' ? 'Find Buyers for Your Items' : 'Find What You Need'}
               </span>
