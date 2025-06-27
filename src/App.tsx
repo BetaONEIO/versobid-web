@@ -6,6 +6,8 @@ import { Footer } from './components/layout/Footer';
 import { Home } from './pages/Home';
 import { SignIn } from './pages/SignIn';
 import { SignUp } from './pages/SignUp';
+import { ForgotPassword } from './pages/ForgotPassword';
+import { ResetPassword } from './pages/ResetPassword';
 import { AddItem, Listing } from './pages';
 import { Help } from './pages/Help';
 import { Admin } from './pages/Admin';
@@ -44,6 +46,9 @@ const App: React.FC = () => {
                     <Route path="/" element={<Home />} />
                     <Route path="/signin" element={<SignIn />} />
                     <Route path="/signup" element={<SignUp />} />
+                    <Route path="/forgot-password" element={<ForgotPassword />} />
+                    <Route path="/reset-password" element={<ResetPassword />} />
+                    <Route path="/auth/callback" element={<ResetPassword />} />
                     <Route path="/help" element={<Help />} />
                     <Route path="/profile/:username" element={<Profile />} />
                     <Route path="/payment/success" element={<PaymentSuccess />} />
