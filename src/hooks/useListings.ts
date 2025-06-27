@@ -3,7 +3,11 @@ import { Item } from '../types/item';
 import { itemService } from '../services/itemService';
 import { useUser } from '../contexts/UserContext';
 
-export const useListings = () => {
+interface UseListingsOptions {
+  forceOwnListings?: boolean; // Force showing only user's own listings regardless of role
+}
+
+export const useListings = (options: UseListingsOptions = {}) => {
   const [listings, setListings] = useState<Item[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -13,7 +17,15 @@ export const useListings = () => {
   const fetchListings = async (search?: string) => {
     try {
       let filters;
-      if (role === 'buyer') {
+      
+      if (options.forceOwnListings) {
+        // Force showing only user's own listings (both as buyer and seller)
+        filters = { 
+          buyer_id: auth.user?.id,
+          status: 'active',
+          search
+        };
+      } else if (role === 'buyer') {
         // Buyers see their own listings (items they want to buy)
         filters = { 
           buyer_id: auth.user?.id,
@@ -47,7 +59,7 @@ export const useListings = () => {
       setLoading(false);
       setListings([]); // Clear listings when not authenticated
     }
-  }, [role, auth.user?.id, auth.isAuthenticated]);
+  }, [role, auth.user?.id, auth.isAuthenticated, options.forceOwnListings]);
 
   const searchListings = (query: string) => {
     setLoading(true);
