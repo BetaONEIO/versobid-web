@@ -14,7 +14,7 @@ export const Profile: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const { auth, refreshUserData } = useUser();
   const { addNotification } = useNotification();
-  const { listings } = useListings();
+  const { listings } = useListings({ forceOwnListings: true });
   const [profile, setProfile] = React.useState<ProfileType | null>(null);
   const [loading, setLoading] = React.useState(true);
   const [uploading, setUploading] = React.useState(false);
