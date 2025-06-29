@@ -6,7 +6,7 @@ type ItemRow = Database['public']['Tables']['items']['Row'];
 type ItemInsert = Database['public']['Tables']['items']['Insert'];
 type ItemUpdate = Database['public']['Tables']['items']['Update'];
 
-const transformItem = (row: ItemRow, seller_username?: string): Item => ({
+const transformItem = (row: ItemRow, buyer_username?: string): Item => ({
   id: row.id,
   title: row.title,
   description: row.description || '',
@@ -18,7 +18,7 @@ const transformItem = (row: ItemRow, seller_username?: string): Item => ({
   shippingOptions: row.shipping_options || [],
   status: row.status,
   createdAt: row.created_at,
-  sellerUsername: seller_username,
+  buyerUsername: buyer_username,
   imageUrl: row.image_url
 });
 
@@ -29,8 +29,9 @@ export const itemService = {
         .from('items')
         .select(`
           *,
-          seller:profiles!items_seller_id_fkey(
-            username
+          buyer:profiles!items_buyer_id_fkey(
+            username,
+            full_name
           )
         `);
 
@@ -51,13 +52,12 @@ export const itemService = {
       }
 
       const { data, error } = await query.order('created_at', { ascending: false });
-
       if (error) {
         console.error('Error fetching items:', error);
         return [];
       }
 
-      return (data || []).map(item => transformItem(item, item.seller?.username));
+      return (data || []).map(item => transformItem(item, item.buyer?.username));
     } catch (error) {
       console.error('Error in getItems:', error);
       return [];
@@ -70,7 +70,7 @@ export const itemService = {
         .from('items')
         .select(`
           *,
-          seller:profiles!items_seller_id_fkey(
+          buyer:profiles!items_buyer_id_fkey(
             username
           )
         `)
@@ -82,7 +82,7 @@ export const itemService = {
         return null;
       }
 
-      return transformItem(data, data.seller?.username);
+      return transformItem(data, data.buyer?.username);
     } catch (error) {
       console.error('Error in getItem:', error);
       return null;

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 
 import { useListing } from "../../../hooks/useListing";
 
@@ -96,6 +96,16 @@ const ItemListDetail: React.FC = () => {
                   </dt>
                   <dd className="text-gray-900 dark:text-white">
                     £{listing.minPrice} - £{listing.maxPrice}
+                  </dd>
+                </div>
+                <div>
+                <dt className="text-sm text-gray-500 dark:text-gray-400">
+                    Posted by
+                  </dt>
+                  <dd className="text-gray-900 dark:text-white">
+                    <Link to={`/profile/${listing.buyerUsername}`}>
+                      {listing.buyerUsername}
+                    </Link>
                   </dd>
                 </div>
               </dl>

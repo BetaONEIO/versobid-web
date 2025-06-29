@@ -5,6 +5,7 @@ import { useUser } from '../contexts/UserContext';
 
 interface UseListingsOptions {
   forceOwnListings?: boolean; // Force showing only user's own listings regardless of role
+  userId?: string; // Specific user ID to fetch listings for
 }
 
 export const useListings = (options: UseListingsOptions = {}) => {
@@ -18,8 +19,15 @@ export const useListings = (options: UseListingsOptions = {}) => {
     try {
       let filters;
       
-      if (options.forceOwnListings) {
-        // Force showing only user's own listings (both as buyer and seller)
+      if (options.forceOwnListings && options.userId) {
+        // Show listings for a specific user (for profile pages)
+        filters = { 
+          buyer_id: options.userId,
+          status: 'active',
+          search
+        };
+      } else if (options.forceOwnListings) {
+        // Force showing only current user's own listings (both as buyer and seller)
         filters = { 
           buyer_id: auth.user?.id,
           status: 'active',
@@ -53,13 +61,13 @@ export const useListings = (options: UseListingsOptions = {}) => {
   };
 
   useEffect(() => {
-    if (auth.isAuthenticated) {
+    if (auth.isAuthenticated || options.userId) {
       fetchListings();
     } else {
       setLoading(false);
       setListings([]); // Clear listings when not authenticated
     }
-  }, [role, auth.user?.id, auth.isAuthenticated, options.forceOwnListings]);
+  }, [role, auth.user?.id, auth.isAuthenticated, options.forceOwnListings, options.userId]);
 
   const searchListings = (query: string) => {
     setLoading(true);
