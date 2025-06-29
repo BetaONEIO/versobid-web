@@ -52,8 +52,6 @@ export const itemService = {
       }
 
       const { data, error } = await query.order('created_at', { ascending: false });
-      console.log('mydata', data);
-
       if (error) {
         console.error('Error fetching items:', error);
         return [];
@@ -72,7 +70,7 @@ export const itemService = {
         .from('items')
         .select(`
           *,
-          seller:profiles!items_seller_id_fkey(
+          buyer:profiles!items_buyer_id_fkey(
             username
           )
         `)
@@ -84,7 +82,7 @@ export const itemService = {
         return null;
       }
 
-      return transformItem(data, data.seller?.username);
+      return transformItem(data, data.buyer?.username);
     } catch (error) {
       console.error('Error in getItem:', error);
       return null;
