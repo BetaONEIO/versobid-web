@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useSearchParams, useNavigate } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { PasswordStrengthIndicator } from '../components/auth/PasswordStrengthIndicator';
 import { validatePassword } from '../utils/validation';
@@ -9,7 +9,6 @@ import { useNotification } from '../contexts/NotificationContext';
 export const ResetPassword: React.FC = () => {
   const { resetPassword, isLoading, error } = useAuth();
   const { addNotification } = useNotification();
-  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
