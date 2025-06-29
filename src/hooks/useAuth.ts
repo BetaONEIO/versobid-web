@@ -263,10 +263,39 @@ export const useAuth = () => {
     }
   };
 
+  const forgotPassword = async (email: string) => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      if (!email) {
+        throw new Error('Please enter your email address');
+      }
+
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      addNotification('success', 'Password reset email sent! Check your inbox.');
+    } catch (error) {
+      console.error('Password reset error:', error);
+      const message = error instanceof Error ? error.message : 'Failed to send reset email';
+      setError(message);
+      addNotification('error', message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return {
     isLoading,
     error,
     signup,
-    login
+    login,
+    forgotPassword
   };
 };
