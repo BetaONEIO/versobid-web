@@ -291,11 +291,41 @@ export const useAuth = () => {
     }
   };
 
+  const resetPassword = async (newPassword: string) => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      if (!newPassword) {
+        throw new Error('Please enter a new password');
+      }
+
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      addNotification('success', 'Password updated successfully!');
+      navigate('/signin');
+    } catch (error) {
+      console.error('Password reset error:', error);
+      const message = error instanceof Error ? error.message : 'Failed to update password';
+      setError(message);
+      addNotification('error', message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return {
     isLoading,
     error,
     signup,
     login,
-    forgotPassword
+    forgotPassword,
+    resetPassword
   };
 };
