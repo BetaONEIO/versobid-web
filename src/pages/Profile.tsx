@@ -14,8 +14,11 @@ export const Profile: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const { auth, refreshUserData } = useUser();
   const { addNotification } = useNotification();
-  const { listings } = useListings({ forceOwnListings: true });
   const [profile, setProfile] = React.useState<ProfileType | null>(null);
+  const { listings } = useListings({ 
+    forceOwnListings: true,
+    userId: profile?.id
+  });
   const [loading, setLoading] = React.useState(true);
   const [uploading, setUploading] = React.useState(false);
   const [saving, setSaving] = React.useState(false);
@@ -31,7 +34,6 @@ export const Profile: React.FC = () => {
   });
 
   const isOwnProfile = auth.user?.username === username;
-  console.log(auth.user?.username,'------------ ', username);
   const defaultAvatar = '/default-avatar.png';
 
   React.useEffect(() => {

@@ -71,7 +71,7 @@ export const NavLinks: React.FC<NavLinksProps> = ({ role, isAdmin, username, mob
         </Link>
       )}
       {/* to include logout button */}
-      <button className={`${baseClasses} cursor-pointer sm:hidden`}
+      <button className={`${baseClasses} cursor-pointer sm:hidden w-full text-left`}
         onClick={handleLogout}
       >
         Logout

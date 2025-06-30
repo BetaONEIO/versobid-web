@@ -54,6 +54,8 @@ export interface Item extends ItemFormData {
   createdAt: string;
   sellerUsername?: string;
   buyerUsername?: string;
+  username?: string;
+  full_name?: string;
   archivedReason?: string;
   archivedAt?: string;
 }

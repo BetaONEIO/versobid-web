@@ -29,7 +29,7 @@ export const ListingCard: React.FC<ListingCardProps> = ({ listing }) => {
               </span>
             </div>
             <div className="text-sm text-gray-500 dark:text-gray-400">
-              Posted by: {listing.sellerUsername}
+              Posted by: {listing.buyerUsername}
             </div>
           </div>
         </div>
