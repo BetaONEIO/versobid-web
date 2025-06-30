@@ -19,26 +19,25 @@ export const ResetPassword: React.FC = () => {
   useEffect(() => {
     const verifyResetSession = async () => {
       try {
-        // Check if we have an access token and refresh token in the URL (from email link)
-        const accessToken = searchParams.get('access_token');
-        const refreshToken = searchParams.get('refresh_token');
+        // Check if we have a token in the URL (from email link)
+        const token = searchParams.get('token');
         const type = searchParams.get('type');
+        console.log('token', token);
+        console.log('type', type);
 
-        if (type === 'recovery' && accessToken && refreshToken) {
-          // Set the session from the URL parameters
-          const { data, error } = await supabase.auth.setSession({
-            access_token: accessToken,
-            refresh_token: refreshToken
+        if (type === 'recovery' && token) {
+          // Use the token to set session
+          const { error } = await supabase.auth.verifyOtp({
+            token_hash: token,
+            type: 'recovery'
           });
 
           if (error) {
             console.error('Session error:', error);
             setIsValidSession(false);
-          } else if (data.user) {
+          } else {
             console.log('Valid reset session established');
             setIsValidSession(true);
-          } else {
-            setIsValidSession(false);
           }
         } else {
           // Check if we already have a valid session
