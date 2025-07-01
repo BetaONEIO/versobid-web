@@ -7,6 +7,8 @@ import { ListingGrid } from '../components/listings/ListingGrid';
 import { useListings } from '../hooks/useListings';
 import { Profile as ProfileType } from '../types/profile';
 import { PayPalLinkButton } from '../components/profile/PayPalLinkButton';
+import { ImageEditor } from '../components/profile/ImageEditor';
+import { CameraIcon, PencilIcon } from '@heroicons/react/24/outline';
 
 export const Profile: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -23,6 +25,8 @@ export const Profile: React.FC = () => {
   const [uploading, setUploading] = React.useState(false);
   const [saving, setSaving] = React.useState(false);
   const [isEditMode, setIsEditMode] = React.useState(false);
+  const [selectedImageFile, setSelectedImageFile] = React.useState<File | null>(null);
+  const [showImageEditor, setShowImageEditor] = React.useState(false);
   const [editData, setEditData] = React.useState({
     full_name: '',
     shipping_address: {
@@ -76,6 +80,46 @@ export const Profile: React.FC = () => {
   const handleAvatarClick = () => {
     if (isOwnProfile && fileInputRef.current) {
       fileInputRef.current.click();
+    }
+  };
+
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !auth.user?.id) return;
+
+    // Validate file size (5MB limit)
+    if (file.size > 5 * 1024 * 1024) {
+      addNotification('error', 'Image size must be less than 5MB');
+      return;
+    }
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      addNotification('error', 'Please select a valid image file');
+      return;
+    }
+
+    setSelectedImageFile(file);
+    setShowImageEditor(true);
+  };
+
+  const handleSaveCroppedImage = async (croppedFile: File) => {
+    if (!auth.user?.id) return;
+
+    try {
+      setUploading(true);
+      const avatarUrl = await profileService.uploadAvatar(croppedFile, auth.user.id);
+      await profileService.updateProfile(auth.user.id, {
+        avatar_url: avatarUrl
+      });
+      setProfile(prev => prev ? { ...prev, avatar_url: avatarUrl } : null);
+      addNotification('success', 'Profile picture updated successfully');
+    } catch (error) {
+      console.error('Error uploading avatar:', error);
+      addNotification('error', 'Failed to update profile picture');
+    } finally {
+      setUploading(false);
+      setSelectedImageFile(null);
     }
   };
 
@@ -179,33 +223,81 @@ export const Profile: React.FC = () => {
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden">
         <div className="relative h-32 bg-gradient-to-r from-indigo-500 to-purple-600">
           <div className="absolute -bottom-16 left-8">
-            <div className="relative">
-              <img
-                src={profile.avatar_url || defaultAvatar}
-                alt={`${profile.username}'s avatar`}
-                className={`w-32 h-32 rounded-full border-4 border-white dark:border-gray-800 object-cover bg-white cursor-${isOwnProfile ? 'pointer' : 'default'}`}
-                onClick={handleAvatarClick}
-                onError={(e) => {
-                  const img = e.target as HTMLImageElement;
-                  if (img.src !== window.location.origin + defaultAvatar) {
-                    img.src = defaultAvatar;
-                  }
-                }}
-              />
+            <div className="relative group">
+              {/* Profile Picture */}
+              <div className="relative">
+                <img
+                  src={profile.avatar_url || defaultAvatar}
+                  alt={`${profile.username}'s avatar`}
+                  className={`w-32 h-32 rounded-full border-4 border-white dark:border-gray-800 object-cover bg-white ${
+                    isOwnProfile ? 'cursor-pointer' : 'cursor-default'
+                  }`}
+                  onClick={handleAvatarClick}
+                  onError={(e) => {
+                    const img = e.target as HTMLImageElement;
+                    if (img.src !== window.location.origin + defaultAvatar) {
+                      img.src = defaultAvatar;
+                    }
+                  }}
+                />
+                
+                {/* Upload Overlay - only shown on hover for own profile */}
+                {isOwnProfile && !uploading && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-0 hover:bg-opacity-50 rounded-full transition-all duration-200 cursor-pointer group-hover:opacity-100 opacity-0">
+                    <div className="text-center text-white">
+                      <CameraIcon className="h-8 w-8 mx-auto mb-1" />
+                      <span className="text-xs font-medium select-none">
+                        {profile.avatar_url ? 'Change Photo' : 'Add Photo'}
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Upload Button for own profile when no avatar */}
+                {isOwnProfile && !profile.avatar_url && !uploading && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-gray-100 dark:bg-gray-700 rounded-full border-4 border-white dark:border-gray-800">
+                    <div className="text-center text-gray-400 dark:text-gray-500">
+                      <CameraIcon className="h-12 w-12 mx-auto mb-2" />
+                      <span className="text-sm font-medium">Add Photo</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Upload progress indicator */}
+                {uploading && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-full">
+                    <div className="text-center text-white">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto mb-1"></div>
+                      <span className="text-xs font-medium">Uploading...</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Edit button for existing avatar */}
+                {isOwnProfile && profile.avatar_url && !uploading && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleAvatarClick();
+                    }}
+                    className="absolute bottom-2 right-2 bg-white dark:bg-gray-700 rounded-full p-2 shadow-lg border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
+                    title="Edit profile picture"
+                  >
+                    <PencilIcon className="h-4 w-4 text-gray-600 dark:text-gray-300" />
+                  </button>
+                )}
+              </div>
+
+              {/* Hidden file input */}
               {isOwnProfile && (
                 <input
                   ref={fileInputRef}
                   type="file"
                   accept="image/*"
                   className="hidden"
-                  onChange={handleAvatarChange}
+                  onChange={handleImageSelect}
                   disabled={uploading}
                 />
-              )}
-              {uploading && (
-                <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-full">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
-                </div>
               )}
             </div>
           </div>
@@ -363,6 +455,19 @@ export const Profile: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* Image Editor Modal */}
+      {selectedImageFile && (
+        <ImageEditor
+          isOpen={showImageEditor}
+          onClose={() => {
+            setShowImageEditor(false);
+            setSelectedImageFile(null);
+          }}
+          onSave={handleSaveCroppedImage}
+          imageFile={selectedImageFile}
+        />
+      )}
     </div>
   );
 };
