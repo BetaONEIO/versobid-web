@@ -21,6 +21,7 @@ import { ThemeProvider } from './contexts/ThemeContext';
 import { UserProvider } from './contexts/UserContext';
 import { NotificationProvider } from './contexts/NotificationContext';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
+import { PublicRoute } from './components/auth/PublicRoute';
 import { NotificationList } from './components/ui/NotificationList';
 import { VerificationBanner } from './components/ui/VerificationBanner';
 import { getPayPalClientId } from './utils/env';
@@ -44,10 +45,38 @@ const App: React.FC = () => {
                 <main className="flex-grow max-w-7xl mx-auto py-6 sm:px-6 lg:px-8 w-full">
                   <Routes>
                     <Route path="/" element={<Home />} />
-                    <Route path="/signin" element={<SignIn />} />
-                    <Route path="/signup" element={<SignUp />} />
-                    <Route path="/forgot-password" element={<ForgotPassword />} />
-                    <Route path="/reset-password" element={<ResetPassword />} />
+                    <Route
+                      path="/signin"
+                      element={
+                        <PublicRoute>
+                          <SignIn />
+                        </PublicRoute>
+                      }
+                    />
+                    <Route
+                      path="/signup"
+                      element={
+                        <PublicRoute>
+                          <SignUp />
+                        </PublicRoute>
+                      }
+                    />
+                    <Route
+                      path="/forgot-password"
+                      element={
+                        <PublicRoute>
+                          <ForgotPassword />
+                        </PublicRoute>
+                      }
+                    />
+                    <Route
+                      path="/reset-password"
+                      element={
+                        <PublicRoute>
+                          <ResetPassword />
+                        </PublicRoute>
+                      }
+                    />
                     <Route path="/auth/callback" element={<ResetPassword />} />
                     <Route path="/help" element={<Help />} />
                     <Route path="/profile/:username" element={<Profile />} />
