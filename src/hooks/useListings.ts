@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Item } from '../types/item';
 import { itemService } from '../services/itemService';
 import { useUser } from '../contexts/UserContext';
@@ -15,8 +15,9 @@ export const useListings = (options: UseListingsOptions = {}) => {
   const { role, auth } = useUser();
 
   // berhubungan dengan backend untuk get list item
-  const fetchListings = async (search?: string) => {
+  const fetchListings = useCallback(async (search?: string) => {
     try {
+      setError(null);
       let filters;
       
       if (options.forceOwnListings && options.userId) {
@@ -58,7 +59,7 @@ export const useListings = (options: UseListingsOptions = {}) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [role, auth.user?.id, options.forceOwnListings, options.userId]);
 
   useEffect(() => {
     if (auth.isAuthenticated || options.userId) {
@@ -67,12 +68,12 @@ export const useListings = (options: UseListingsOptions = {}) => {
       setLoading(false);
       setListings([]); // Clear listings when not authenticated
     }
-  }, [role, auth.user?.id, auth.isAuthenticated, options.forceOwnListings, options.userId]);
+  }, [auth.isAuthenticated, fetchListings]);
 
-  const searchListings = (query: string) => {
+  const searchListings = useCallback((query: string) => {
     setLoading(true);
     fetchListings(query);
-  };
+  }, [fetchListings]);
 
   return { listings, loading, error, searchListings, refreshListings: fetchListings };
 };
