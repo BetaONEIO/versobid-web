@@ -123,25 +123,25 @@ export const Profile: React.FC = () => {
     }
   };
 
-  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !auth.user?.id) return;
+  // const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   const file = e.target.files?.[0];
+  //   if (!file || !auth.user?.id) return;
 
-    try {
-      setUploading(true);
-      const avatarUrl = await profileService.uploadAvatar(file, auth.user.id);
-      await profileService.updateProfile(auth.user.id, {
-        avatar_url: avatarUrl
-      });
-      setProfile(prev => prev ? { ...prev, avatar_url: avatarUrl } : null);
-      addNotification('success', 'Profile picture updated successfully');
-    } catch (error) {
-      console.error('Error uploading avatar:', error);
-      addNotification('error', 'Failed to update profile picture');
-    } finally {
-      setUploading(false);
-    }
-  };
+  //   try {
+  //     setUploading(true);
+  //     const avatarUrl = await profileService.uploadAvatar(file, auth.user.id);
+  //     await profileService.updateProfile(auth.user.id, {
+  //       avatar_url: avatarUrl
+  //     });
+  //     setProfile(prev => prev ? { ...prev, avatar_url: avatarUrl } : null);
+  //     addNotification('success', 'Profile picture updated successfully');
+  //   } catch (error) {
+  //     console.error('Error uploading avatar:', error);
+  //     addNotification('error', 'Failed to update profile picture');
+  //   } finally {
+  //     setUploading(false);
+  //   }
+  // };
 
   const handleEditToggle = () => {
     if (isEditMode) {
