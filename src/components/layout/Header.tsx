@@ -18,6 +18,8 @@ export const Header: React.FC = () => {
 
   // Disable role toggle on bid detail pages
   const isBidDetailPage = location.pathname.startsWith('/bids/') && location.pathname !== '/bids';
+  //Disable role toggle on listings detail pages
+  const isListingDetailPage = location.pathname.startsWith('/listings/') && location.pathname !== '/listings';
 
   const handleLogout = async () => {
     try {
@@ -69,7 +71,7 @@ export const Header: React.FC = () => {
           <div className="flex items-center space-x-2 sm:space-x-4">
             {auth.isAuthenticated && (
               <>
-                <RoleToggle disabled={isBidDetailPage} />
+                <RoleToggle disabled={isBidDetailPage || isListingDetailPage} />
                 <NotificationBell />
               </>
             )}
