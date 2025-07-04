@@ -9,9 +9,10 @@ interface NavLinksProps {
   isAdmin: boolean;
   username?: string;
   mobile?: boolean;
+  onMenuClose?: () => void;
 }
 
-export const NavLinks: React.FC<NavLinksProps> = ({ role, isAdmin, username, mobile = false }) => {
+export const NavLinks: React.FC<NavLinksProps> = ({ role, isAdmin, username, mobile = false, onMenuClose }) => {
   const { logout } = useUser();
   const navigate = useNavigate();
   const { addNotification } = useNotification();
@@ -55,6 +56,7 @@ export const NavLinks: React.FC<NavLinksProps> = ({ role, isAdmin, username, mob
           key={link.to}
           to={link.to}
           className={baseClasses}
+          onClick={mobile ? onMenuClose : undefined}
         >
           {link.label}
         </Link>
@@ -66,13 +68,17 @@ export const NavLinks: React.FC<NavLinksProps> = ({ role, isAdmin, username, mob
             ? "block px-3 py-2 text-base font-medium bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
             : "inline-flex items-center px-3 pt-1 text-sm font-medium bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
           }
+          onClick={mobile ? onMenuClose : undefined}
         >
           Admin Panel
         </Link>
       )}
       {/* to include logout button */}
       <button className={`${baseClasses} cursor-pointer sm:hidden w-full text-left`}
-        onClick={handleLogout}
+        onClick={() => {
+          handleLogout();
+          if (mobile && onMenuClose) onMenuClose();
+        }}
       >
         Logout
       </button>

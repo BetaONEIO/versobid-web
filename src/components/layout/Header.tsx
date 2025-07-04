@@ -117,11 +117,13 @@ export const Header: React.FC = () => {
                   isAdmin={auth.user?.is_admin || false} 
                   username={auth.user?.username}
                   mobile={true}
+                  onMenuClose={() => setIsMenuOpen(false)}
                 />
               )}
               {!auth.isAuthenticated && (
                 <Link
                   to="/signin"
+                  onClick={() => setIsMenuOpen(false)}
                   state={{ from: location }}
                   className="block px-3 py-2 text-base font-medium text-gray-500 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-700 rounded-md"
                 >
