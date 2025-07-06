@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Bid } from '../types';
 import { bidService } from '../services/bidService';
 import { useUser } from '../contexts/UserContext';
@@ -10,22 +10,27 @@ export const useBids = () => {
   const [error, setError] = useState<string | null>(null);
   const { auth, role } = useUser();
 
-  useEffect(() => {
-    const fetchBids = async () => {
-      if (!auth.user?.id) return;
-      
-      try {
-        const data = role === 'buyer' 
-          ? await bidService.getReceivedBids(auth.user.id)
-          : await bidService.getBidsForItem(auth.user.id);
-        setBids(data);
-      } catch (err) {
-        setError('Failed to fetch bids');
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchBids = useCallback(async () => {
+    if (!auth.user?.id) {
+      setLoading(false);
+      return;
+    }
+    
+    try {
+      setError(null);
+      const data = role === 'buyer' 
+        ? await bidService.getReceivedBids(auth.user.id)
+        : await bidService.getBidsForItem(auth.user.id);
+      setBids(data);
+    } catch (err) {
+      console.error('Failed to fetch bids:', err);
+      setError('Failed to fetch bids');
+    } finally {
+      setLoading(false);
+    }
+  }, [auth.user?.id, role]);
 
+  useEffect(() => {
     fetchBids();
 
     // Set up real-time subscription for bid changes
@@ -55,7 +60,7 @@ export const useBids = () => {
     return () => {
       subscription.unsubscribe();
     };
-  }, [auth.user?.id, role]);
+  }, [fetchBids, auth.user?.id, role]);
 
   return { bids, loading, error };
 };

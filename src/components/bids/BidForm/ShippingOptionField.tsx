@@ -23,7 +23,7 @@ export const ShippingOptionField: React.FC<ShippingOptionFieldProps> = ({
         {options.map((option) => (
           <option key={option.type} value={option.type}>
             {option.type === 'shipping' 
-              ? `Shipping (+$${option.cost})` 
+              ? `Shipping (+£${option.cost})` 
               : `Pickup (${option.location})`}
           </option>
         ))}

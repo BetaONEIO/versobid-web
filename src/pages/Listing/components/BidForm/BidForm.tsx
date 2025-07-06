@@ -31,12 +31,12 @@ const BidForm: React.FC<BidFormProps> = ({ item }) => {
     }
 
     if (bidAmount < (item.minPrice ?? 0)) {
-      addNotification('error', `Bid amount must be at least $${item.minPrice}`);
+      addNotification('error', `Bid amount must be at least £${item.minPrice}`);
       return;
     }
 
     if (item.maxPrice && bidAmount > item.maxPrice) {
-      addNotification('error', `Bid amount cannot exceed $${item.maxPrice}`);
+      addNotification('error', `Bid amount cannot exceed £${item.maxPrice}`);
       return;
     }
 
@@ -84,7 +84,7 @@ const BidForm: React.FC<BidFormProps> = ({ item }) => {
             min={item?.minPrice}
             max={item?.maxPrice}
             step="0.01"
-            placeholder={`Enter amount (min $${item?.minPrice ?? 0})`}
+            placeholder={`Enter amount (min £${item?.minPrice ?? 0})`}
             className="block w-full pl-6 pr-3 py-2 rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}

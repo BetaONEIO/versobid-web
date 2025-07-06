@@ -13,16 +13,17 @@ export const BidDetails: React.FC = () => {
   const { addNotification } = useNotification();
   
   const { bid, loading, error, setBid } = useBidDetails(bidId);
-  const [counterAmount, setCounterAmount] = useState<number>(0);
+  const [counterAmount, setCounterAmount] = useState<string>('');
   const [showCounterForm, setShowCounterForm] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
 
   // Set counter amount when bid loads
   React.useEffect(() => {
-    if (bid) {
-      setCounterAmount(bid.counter_amount || bid.amount);
+    if (bid && showCounterForm && counterAmount === '') {
+      // Only set initial value when form is shown and field is empty
+      setCounterAmount(String(bid.counter_amount || bid.amount));
     }
-  }, [bid]);
+  }, [bid, showCounterForm, counterAmount]);
 
   // Handle errors from the hook
   React.useEffect(() => {
@@ -73,11 +74,27 @@ export const BidDetails: React.FC = () => {
   };
 
   const handleCounterOffer = async () => {
-    if (!bid || counterAmount <= 0) return;
+    if (!bid) return;
+    
+    const counterValue = parseFloat(counterAmount);
+    if (isNaN(counterValue) || counterValue <= 0) {
+      addNotification('error', 'Please enter a valid counter amount');
+      return;
+    }
+
+    if (bid.item?.minPrice && counterValue < bid.item.minPrice) {
+      addNotification('error', `Counter amount must be at least £${bid.item.minPrice}`);
+      return;
+    }
+
+    if (bid.item?.maxPrice && counterValue > bid.item.maxPrice) {
+      addNotification('error', `Counter amount cannot exceed £${bid.item.maxPrice}`);
+      return;
+    }
     
     setActionLoading(true);
     try {
-      const success = await bidService.updateBidStatus(bid.id, 'countered', counterAmount);
+      const success = await bidService.updateBidStatus(bid.id, 'countered', counterValue);
       if (success) {
         addNotification('success', 'Counter offer sent!');
         navigate('/bids');
@@ -345,29 +362,32 @@ export const BidDetails: React.FC = () => {
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Counter Amount
                     </label>
-                    <input
-                      type="number"
-                      value={counterAmount}
-                      onChange={(e) => {
-                        const value = e.target.value;
-                        // Remove leading zeros but allow valid decimal numbers
-                        const cleanValue = value.replace(/^0+(?=\d)/, '');
-                        setCounterAmount(Number(cleanValue) || 0);
-                      }}
-                      min="0"
-                      step="0.01"
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white"
-                    />
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400">£</span>
+                      <input
+                        type="number"
+                        value={counterAmount}
+                        onChange={(e) => setCounterAmount(e.target.value)}
+                        min={bid.item?.minPrice}
+                        max={bid.item?.maxPrice}
+                        step="0.01"
+                        placeholder={`Enter amount (min £${bid.item?.minPrice ?? 0})`}
+                        className="w-full pl-6 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-800 dark:text-white"
+                      />
+                    </div>
                   </div>
                   <button
                     onClick={handleCounterOffer}
-                    disabled={actionLoading || counterAmount <= 0}
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md disabled:opacity-50"
+                    disabled={actionLoading || !counterAmount || parseFloat(counterAmount) <= 0}
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {actionLoading ? 'Sending...' : 'Send Counter'}
+                    {actionLoading ? 'Sending...' : 'Send'}
                   </button>
                   <button
-                    onClick={() => setShowCounterForm(false)}
+                    onClick={() => {
+                      setShowCounterForm(false);
+                      setCounterAmount('');
+                    }}
                     className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md"
                   >
                     Cancel
