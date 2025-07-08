@@ -19,8 +19,7 @@ export interface InputsType {
   minPrice: number;
   maxPrice: number;
   category: string;
-  shipping_type: ShippingType[];
-  shipping_cost?: number;
+  shipping_type: ShippingType;
   location: PickupLocation
   condition?: "new" | "like-new" | "good" | "fair" | "poor";
   image_url?: string;

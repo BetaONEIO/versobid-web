@@ -23,7 +23,7 @@ import DeliveryOption from "../DeliveryOption";
 import { InputsType, SuggestionItemType } from "./WantedItemForm.types";
 import { isEmpty, isNil } from "ramda";
 import { itemService } from "../../../../services/itemService";
-import { Item, ShippingOption } from "../../../../types";
+import { Item } from "../../../../types";
 
 const WantedItemForm = () => {
   const navigate = useNavigate();
@@ -46,8 +46,7 @@ const WantedItemForm = () => {
       title: "",
       image_url: "",
       image: null,
-      shipping_type: [],
-      shipping_cost: 0,
+      shipping_type: "shipping",
     },
   });
 
@@ -119,7 +118,7 @@ const WantedItemForm = () => {
         minPrice: data.minPrice,
         maxPrice: data.maxPrice,
         category: data.category,
-        shippingOptions: data.shipping_type as unknown as ShippingOption[], // or map if needed
+        shippingOptions: data.shipping_type,
         status: "active",
         buyerId: auth.user?.id as string,
         imageUrl: imageUrl || "",
@@ -335,7 +334,6 @@ const WantedItemForm = () => {
         <DeliveryOption
           shippingData={shipping_type}
           setValue={setValue}
-          register={register}
         />
         <div className="flex justify-end space-x-3">
           <button

@@ -28,7 +28,7 @@ export interface ItemFormData {
   minPrice: number;
   maxPrice: number;
   category: string;
-  shippingOptions: ShippingOption[];
+  shippingOptions: ShippingType;
   condition?: 'new' | 'like-new' | 'good' | 'fair' | 'poor';
   imageUrl?: string;
   type?: 'item' | 'service';
