@@ -5,6 +5,13 @@ export interface PickupLocation {
   maxDistance?: number;
 }
 
+export interface ShippingAddress {
+  street: string | null;
+  city: string | null;
+  postcode: string | null;
+  country: string | null;
+}
+
 export type ShippingType = 'shipping' | 'seller-pickup';
 
 export interface ShippingOption {
@@ -58,4 +65,5 @@ export interface Item extends ItemFormData {
   full_name?: string;
   archivedReason?: string;
   archivedAt?: string;
+  shippingAddress?: ShippingAddress | null;
 }

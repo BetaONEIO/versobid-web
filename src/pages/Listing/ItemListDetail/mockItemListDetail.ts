@@ -15,13 +15,7 @@ export const MockItemListDetail: Item = {
   minPrice: 100,
   maxPrice: 1000,
   category: "Electronics",
-  shippingOptions: [
-    {
-      type: "shipping",
-      cost: 10,
-      location: { postcode: "2344PO", town: "Any town", maxDistance: 100 },
-    },
-  ],
+  shippingOptions: "shipping",
   condition: "new",
   type: "item",
   serviceDetails: null,

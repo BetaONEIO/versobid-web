@@ -10,7 +10,7 @@ interface ItemRow {
   buyer_id: string;
   seller_id: string;
   category: string;
-  shipping_options: any[];
+  shipping_options: 'shipping' | 'seller-pickup';
   status: 'active' | 'completed' | 'archived';
   created_at: string;
 }

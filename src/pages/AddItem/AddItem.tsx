@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { Tab } from '@headlessui/react';
 import { WantedItemForm } from './components';
 import { ServiceItemForm } from '../../components/items/ServiceItemForm';
+import { useProfileCompletion } from '../../hooks/useProfileCompletion';
+import { ProfileCompletionBanner, ProfileCompletionProgress } from '../../components/profile/ProfileCompletionBanner';
 // import { WantedItemForm } from '../../components/items/WantedItemForm';
 
 function classNames(...classes: string[]) {
@@ -10,10 +12,19 @@ function classNames(...classes: string[]) {
 
 const AddItem: React.FC = () => {
   const [categories] = useState(['Item', 'Service']);
+  const profileStatus = useProfileCompletion();
 
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Place a Listing</h1>
+      
+      {/* Profile completion guidance */}
+      <div className="mb-6 space-y-4">
+        <ProfileCompletionBanner status={profileStatus} action="list" />
+        {!profileStatus.isComplete && (
+          <ProfileCompletionProgress status={profileStatus} />
+        )}
+      </div>
       
       <Tab.Group>
         <Tab.List className="flex space-x-1 rounded-xl bg-indigo-900/20 p-1">

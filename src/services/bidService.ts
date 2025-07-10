@@ -20,6 +20,7 @@ interface BidWithRelations extends BidRow {
     category: string;
     status: string;
     created_at: string;
+    shipping_options?: 'shipping' | 'seller-pickup';
   };
 }
 
@@ -34,10 +35,17 @@ const transformBid = (data: BidWithRelations): Bid => ({
   counter_amount: data.counter_amount || undefined,
   bidder: data.bidder,
   item: data.item && {
-    ...data.item,
+    id: data.item.id,
+    title: data.item.title,
+    description: data.item.description,
     minPrice: data.item.min_price,
     maxPrice: data.item.max_price,
-    buyer_id: data.item.buyer_id
+    seller_id: data.item.seller_id,
+    buyer_id: data.item.buyer_id,
+    category: data.item.category,
+    status: data.item.status,
+    created_at: data.item.created_at,
+    shippingOptions: data.item.shipping_options 
   }
 });
 
@@ -50,7 +58,10 @@ export const bidService = {
       // Check if user has linked PayPal account
       const { data: profile } = await supabase
         .from('profiles')
-        .select('paypal_email')
+        .select(
+          `paypal_email,
+          shipping_address
+        `)
         .eq('id', user.id)
         .single();
 
@@ -58,13 +69,41 @@ export const bidService = {
         throw new Error('Please link your PayPal account to place bids');
       }
 
+      // Get the item to check its shipping options
+      const { data: item } = await supabase
+        .from('items')
+        .select(`
+          shipping_options,
+          buyer:profiles!items_buyer_id_fkey(
+            username,
+            shipping_address
+          )
+        `)
+        .eq('id', itemId)
+        .single();
+
+      if(!item) throw new Error('Item not found');
+
+      let shippingAddress = null;
+      console.log('--------->',item.buyer)
+      if (item.shipping_options == 'shipping') {
+        shippingAddress = (item.buyer as any)?.shipping_address;
+        console.log('shippingAddress', shippingAddress)
+      }
+      else{
+        console.log('smthhhhh', profile.shipping_address)
+        shippingAddress = profile.shipping_address
+      }
+
       const bidData: BidInsert = {
         item_id: itemId,
         bidder_id: user.id,
+        shipping_address: shippingAddress,
         amount,
         message: message || null,
         status: 'pending'
       };
+      console.log('bidData---->', bidData)
 
       const { data, error } = await supabase
         .from('bids')
@@ -113,13 +152,15 @@ export const bidService = {
             buyer_id,
             category,
             status,
-            created_at
+            created_at,
+            shipping_options
           )
         `)
         .eq('id', bidId)
         .single();
 
       if (error || !data) return null;
+      console.log('data', data)
       return transformBid(data);
     } catch {
       return null;

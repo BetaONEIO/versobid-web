@@ -108,6 +108,26 @@ const ItemListDetail: React.FC = () => {
                     </Link>
                   </dd>
                 </div>
+                {/* Display shipping/collection information based on listing preferences */}
+                {listing.shippingOptions == "shipping" ? (
+                    <div>
+                      <dt className="text-sm text-gray-500 dark:text-gray-400">
+                        Ship to
+                      </dt>
+                      <dd className="text-gray-900 dark:text-white">
+                        {listing.shippingAddress?.postcode}, {listing.shippingAddress?.city}
+                      </dd>
+                    </div>
+                  ) :  (
+                    <div>
+                      <dt className="text-sm text-gray-500 dark:text-gray-400">
+                        Collection 
+                      </dt>
+                      <dd className="text-gray-900 dark:text-white">
+                        Buyer will collect from your location
+                      </dd>
+                    </div>
+                  )}
               </dl>
             </div>
           </div>

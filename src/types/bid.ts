@@ -23,5 +23,6 @@ export interface Bid {
     category: string;
     status: string;
     created_at: string;
+    shippingOptions?: 'shipping' | 'seller-pickup';
   };
 }

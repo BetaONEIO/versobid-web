@@ -5,6 +5,7 @@ import { useUser } from '../../../contexts/UserContext';
 import { useNotification } from '../../../contexts/NotificationContext';
 import { itemService } from '../../../services/itemService';
 import { categories } from '../../../utils/constants';
+import { checkProfileCompletion, getProfileCompletionMessage } from '../../../utils/profileCompletion';
 
 export const useWantedItemForm = () => {
   const navigate = useNavigate();
@@ -16,11 +17,19 @@ export const useWantedItemForm = () => {
     minPrice: 0,
     maxPrice: 0,
     category: categories[0],
-    shippingOptions: []
+    shippingOptions: 'shipping'
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Check profile completion for listing
+    const profileStatus = checkProfileCompletion(auth.user);
+    if (!profileStatus.canList) {
+      const message = getProfileCompletionMessage(profileStatus, 'list');
+      addNotification('error', message);
+      return;
+    }
     
     try {
       console.log('formData----->', formData);

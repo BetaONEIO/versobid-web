@@ -6,16 +6,27 @@ import { useNotification } from '../../../contexts/NotificationContext';
 import { useItemForm } from './useItemForm';
 import { ItemFormFields } from './ItemFormFields';
 import { ItemPriceFields } from './ItemPriceFields';
+import { useProfileCompletion } from '../../../hooks/useProfileCompletion';
+import { ProfileCompletionBanner } from '../../profile/ProfileCompletionBanner';
+import { getProfileCompletionMessage } from '../../../utils/profileCompletion';
 
 export const ItemForm: React.FC = () => {
   const navigate = useNavigate();
   const { auth } = useUser();
   const { addNotification } = useNotification();
   const { formData, handleChange } = useItemForm();
+  const profileStatus = useProfileCompletion();
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!auth.user) return;
+
+    // Check profile completion for listing
+    if (!profileStatus.canList) {
+      const message = getProfileCompletionMessage(profileStatus, 'list');
+      addNotification('error', message);
+      return;
+    }
 
     try {
       await itemService.createItem({
@@ -31,12 +42,21 @@ export const ItemForm: React.FC = () => {
   };
 
   return (
-    <form onSubmit={onSubmit} className="space-y-6">
-      <ItemFormFields formData={formData} onChange={handleChange} />
-      <ItemPriceFields formData={formData} onChange={handleChange} />
-      <button type="submit" className="btn-primary">
-        List Item
-      </button>
-    </form>
+    <div className="space-y-6">
+      {/* Profile completion banner */}
+      <ProfileCompletionBanner status={profileStatus} action="list" />
+      
+      <form onSubmit={onSubmit} className="space-y-6">
+        <ItemFormFields formData={formData} onChange={handleChange} />
+        <ItemPriceFields formData={formData} onChange={handleChange} />
+        <button 
+          type="submit" 
+          className={`btn-primary ${!profileStatus.canList ? 'opacity-50 cursor-not-allowed' : ''}`}
+          disabled={!profileStatus.canList}
+        >
+          List Item
+        </button>
+      </form>
+    </div>
   );
 };

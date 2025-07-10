@@ -12,6 +12,7 @@ import { storageService } from "../../../../services/storage/storageService";
 
 import { useUser } from "../../../../contexts/UserContext";
 import { useNotification } from "../../../../contexts/NotificationContext";
+import { checkProfileCompletion, getProfileCompletionMessage } from "../../../../utils/profileCompletion";
 
 import { categories } from "../../../../utils/constants";
 
@@ -105,6 +106,15 @@ const WantedItemForm = () => {
     setLoading(true);
 
     try {
+      // Check profile completion for listing
+      const profileStatus = checkProfileCompletion(auth.user);
+      if (!profileStatus.canList) {
+        const message = getProfileCompletionMessage(profileStatus, 'list');
+        addNotification('error', message);
+        setLoading(false);
+        return;
+      }
+
       let imageUrl = data.image_url;
       if (image && auth.user?.id) {
         // Upload image and get URL
