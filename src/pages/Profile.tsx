@@ -277,7 +277,7 @@ export const Profile: React.FC = () => {
                 )}
 
                 {/* Edit button for existing avatar */}
-                {isOwnProfile && profile.avatar_url && !uploading && (
+                {isOwnProfile && !uploading && (
                   <button
                     onClick={(e) => {
                       e.stopPropagation();

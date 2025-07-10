@@ -12,6 +12,12 @@ export interface Bid {
   bidder?: {
     username: string;
   };
+  shipping_address?: {
+    city: string;
+    country: string;
+    postcode: string;
+    street: string;
+  };
   item?: {
     id: string;
     title: string;

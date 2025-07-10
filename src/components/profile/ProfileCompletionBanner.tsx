@@ -1,3 +1,4 @@
+import { useUser } from '../../contexts/UserContext';
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { ExclamationTriangleIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
@@ -14,6 +15,9 @@ export const ProfileCompletionBanner: React.FC<ProfileCompletionBannerProps> = (
   action,
   className = '' 
 }) => {
+  const { auth } = useUser();
+  const username = auth.user?.username;
+
   // Don't show banner if profile is complete
   if (status.isComplete) {
     return null;
@@ -67,8 +71,8 @@ export const ProfileCompletionBanner: React.FC<ProfileCompletionBannerProps> = (
           </div>
           <div className="mt-4">
             <Link
-              to="/profile?edit=true"
-              className="text-sm font-medium text-yellow-800 dark:text-yellow-200 underline hover:text-yellow-900 dark:hover:text-yellow-100"
+            to={`/profile/${username}?edit=true`}
+            className="text-sm font-medium text-yellow-800 dark:text-yellow-200 underline hover:text-yellow-900 dark:hover:text-yellow-100"
             >
               Complete your profile →
             </Link>
@@ -81,6 +85,8 @@ export const ProfileCompletionBanner: React.FC<ProfileCompletionBannerProps> = (
 
 // Variant for showing completion progress
 export const ProfileCompletionProgress: React.FC<{ status: ProfileCompletionStatus }> = ({ status }) => {
+  const { auth } = useUser();
+  const username = auth.user?.username;
   const steps = getProfileCompletionSteps(status);
   const completedCount = steps.filter(step => step.completed).length;
   const progressPercentage = (completedCount / steps.length) * 100;
@@ -132,7 +138,7 @@ export const ProfileCompletionProgress: React.FC<{ status: ProfileCompletionStat
       {!status.isComplete && (
         <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
           <Link
-            to="/profile?edit=true"
+            to={`/profile/${username}?edit=true`}
             className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md hover:bg-indigo-700"
           >
             Complete Profile

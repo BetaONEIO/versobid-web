@@ -8,6 +8,12 @@ type BidInsert = Database['public']['Tables']['bids']['Insert'];
 type BidUpdate = Database['public']['Tables']['bids']['Update'];
 
 interface BidWithRelations extends BidRow {
+  shipping_address?: {
+    city: string;
+    country: string;
+    postcode: string;
+    street: string;
+  };
   bidder?: { username: string };
   item?: {
     id: string;
@@ -34,6 +40,7 @@ const transformBid = (data: BidWithRelations): Bid => ({
   created_at: data.created_at,
   counter_amount: data.counter_amount || undefined,
   bidder: data.bidder,
+  shipping_address: data.shipping_address,
   item: data.item && {
     id: data.item.id,
     title: data.item.title,
@@ -160,7 +167,6 @@ export const bidService = {
         .single();
 
       if (error || !data) return null;
-      console.log('data', data)
       return transformBid(data);
     } catch {
       return null;

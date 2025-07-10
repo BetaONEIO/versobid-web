@@ -18,7 +18,6 @@ export const useBidDetails = (bidId: string | undefined) => {
       
       try {
         const foundBid = await bidService.getBid(bidId);
-        console.log('foundBid', foundBid)
         if (foundBid) {
           // Verify user can access this bid (they're either the bidder or item owner)
           const isBidder = foundBid.bidder_id === auth.user.id;

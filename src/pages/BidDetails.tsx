@@ -16,7 +16,6 @@ export const BidDetails: React.FC = () => {
   const [counterAmount, setCounterAmount] = useState<string>('');
   const [showCounterForm, setShowCounterForm] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
-  console.log('bid', bid)
   // Set counter amount when bid loads
   React.useEffect(() => {
     if (bid && showCounterForm && counterAmount === '') {
@@ -288,10 +287,10 @@ export const BidDetails: React.FC = () => {
                         <p className="text-gray-900 dark:text-white">
                           {bid.status === 'accepted' || bid.status === 'confirmed' ? (
                             // Show full address when bid is accepted/confirmed
-                            'Full buyer address will be provided upon payment completion'
+                            `${bid.shipping_address?.city}, ${bid.shipping_address?.postcode}, ${bid.shipping_address?.street}, ${bid.shipping_address?.country}`
                           ) : (
                             // Show actual city + postcode format before acceptance
-                            `${bid.item?.shippingOptions}`
+                            `${bid.shipping_address?.city}, ${bid.shipping_address?.postcode}`
                           )}
                         </p>
                       </div>
@@ -303,10 +302,10 @@ export const BidDetails: React.FC = () => {
                         <p className="text-gray-900 dark:text-white">
                           {bid.status === 'accepted' || bid.status === 'confirmed' ? (
                             // Show seller's address when bid is accepted/confirmed for collection
-                            'Seller\'s collection address will be provided upon acceptance'
+                            `${bid.shipping_address?.city}, ${bid.shipping_address?.postcode}, ${bid.shipping_address?.street}, ${bid.shipping_address?.country}`
                           ) : (
                             // Show actual city + postcode format before acceptance
-                            'M1 1AA, Manchester'
+                            `${bid.shipping_address?.city}, ${bid.shipping_address?.postcode}`
                           )}
                         </p>
                       </div>
