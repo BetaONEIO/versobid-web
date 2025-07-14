@@ -5,7 +5,7 @@ export interface Database {
         Row: {
           id: string;
           created_at: string;
-          username: string | null;
+          username: string;
           full_name: string | null;
           avatar_url: string | null;
           email: string | null;
@@ -27,7 +27,7 @@ export interface Database {
         Insert: {
           id: string;
           created_at: string;
-          username: string | null;
+          username: string;
           full_name: string | null;
           avatar_url: string | null;
           email: string | null;
@@ -76,7 +76,13 @@ export interface Database {
           max_price: number;
           seller_id?: string;
           category: string;
-          shipping_options: any[];
+          shipping_options: 'shipping' | 'seller-pickup';
+          shipping_address?: {
+            street: string | null;
+            city: string | null;
+            postcode: string | null;
+            country: string | null;
+          } | null;
           status: 'active' | 'completed' | 'archived';
           created_at: string;
           image_url?: string;
@@ -90,7 +96,13 @@ export interface Database {
           max_price: number;
           seller_id?: string;
           category: string;
-          shipping_options?: any[];
+          shipping_options?: 'shipping' | 'seller-pickup';
+          shipping_address?: {
+            street: string | null;
+            city: string | null;
+            postcode: string | null;
+            country: string | null;
+          } | null;
           status?: 'active' | 'completed' | 'archived';
           created_at?: string;
           image_url?: string;
@@ -105,6 +117,12 @@ export interface Database {
           seller_id?: string;
           category?: string;
           shipping_options?: any[];
+          shipping_address?: {
+            street: string | null;
+            city: string | null;
+            postcode: string | null;
+            country: string | null;
+          } | null;
           status?: 'active' | 'completed' | 'archived';
           created_at?: string;
           image_url?: string;
@@ -129,6 +147,12 @@ export interface Database {
           amount: number;
           message?: string | null;
           status?: 'pending' | 'accepted' | 'rejected' | 'countered';
+          shipping_address?: {
+            street: string | null;
+            city: string | null;
+            postcode: string | null;
+            country: string | null;
+          } | null;
           created_at?: string;
           counter_amount?: number | null;
         };

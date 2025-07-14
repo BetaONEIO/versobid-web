@@ -5,20 +5,21 @@ import { Database } from '../types/supabase';
 type ItemRow = Database['public']['Tables']['items']['Row'];
 type ItemInsert = Database['public']['Tables']['items']['Insert'];
 type ItemUpdate = Database['public']['Tables']['items']['Update'];
+type BuyerRow = Database['public']['Tables']['profiles']['Row'];
 
-const transformItem = (row: ItemRow, buyer_username?: string): Item => ({
+const transformItem = (row: ItemRow, buyer: BuyerRow): Item => ({
   id: row.id,
   title: row.title,
   description: row.description || '',
   minPrice: row.min_price,
   maxPrice: row.max_price,
-  sellerId: row.seller_id,
   buyerId: row.buyer_id ,
   category: row.category,
-  shippingOptions: row.shipping_options || [],
+  shippingOptions: row.shipping_options || 'shipping',
+  shippingAddress: buyer.shipping_address,
   status: row.status,
   createdAt: row.created_at,
-  buyerUsername: buyer_username,
+  buyerUsername: buyer.username,
   imageUrl: row.image_url
 });
 
@@ -71,7 +72,8 @@ export const itemService = {
         .select(`
           *,
           buyer:profiles!items_buyer_id_fkey(
-            username
+            username,
+            shipping_address
           )
         `)
         .eq('id', id)
@@ -81,8 +83,8 @@ export const itemService = {
         console.error('Error fetching item:', error);
         return null;
       }
-
-      return transformItem(data, data.buyer?.username);
+      console.log('data', data);
+      return transformItem(data, data.buyer);
     } catch (error) {
       console.error('Error in getItem:', error);
       return null;

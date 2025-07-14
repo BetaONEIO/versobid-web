@@ -7,6 +7,9 @@ import { Item } from '../../../types/item';
 import { BidAmountField } from './BidAmountField';
 import { BidMessageField } from './BidMessageField';
 import { PayPalLinkButton } from '../../profile/PayPalLinkButton';
+import { useProfileCompletion } from '../../../hooks/useProfileCompletion';
+import { ProfileCompletionBanner } from '../../profile/ProfileCompletionBanner';
+import { getProfileCompletionMessage } from '../../../utils/profileCompletion';
 
 interface BidFormProps {
   item: Item;
@@ -21,10 +24,18 @@ export const BidForm: React.FC<BidFormProps> = ({ item, onBidSubmitted }) => {
   const [message, setMessage] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const [showPayPalLink, setShowPayPalLink] = useState(false);
+  const profileStatus = useProfileCompletion();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!auth.user) return;
+
+    // Check profile completion for bidding
+    if (!profileStatus.canBid) {
+      const message = getProfileCompletionMessage(profileStatus, 'bid');
+      addNotification('error', message);
+      return;
+    }
 
     try {
       await bidService.createBid(item.id, amount, message);
@@ -50,6 +61,15 @@ export const BidForm: React.FC<BidFormProps> = ({ item, onBidSubmitted }) => {
         <p className="text-green-600 dark:text-green-300 text-sm mt-2">
           You'll be notified when they make a decision.
         </p>
+      </div>
+    );
+  }
+
+  // Show profile completion banner first if profile is incomplete
+  if (!profileStatus.canBid) {
+    return (
+      <div className="space-y-4">
+        <ProfileCompletionBanner status={profileStatus} action="bid" />
       </div>
     );
   }

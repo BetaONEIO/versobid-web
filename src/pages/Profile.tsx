@@ -39,11 +39,13 @@ export const Profile: React.FC = () => {
 
   const isOwnProfile = auth.user?.username === username;
   const defaultAvatar = '/default-avatar.png';
-
   React.useEffect(() => {
     const fetchProfile = async () => {
+      console.log('fetching definitely runs everytime ')
       try {
+        console.log('username', username);
         const data = await profileService.getProfileByUsername(username!);
+        console.log('data', data);
         setProfile(data);
         
         // Initialize edit data
@@ -60,6 +62,7 @@ export const Profile: React.FC = () => {
           });
         }
       } catch (error) {
+        console.log(error)
         addNotification('error', 'Failed to load profile');
       } finally {
         setLoading(false);
@@ -274,7 +277,7 @@ export const Profile: React.FC = () => {
                 )}
 
                 {/* Edit button for existing avatar */}
-                {isOwnProfile && profile.avatar_url && !uploading && (
+                {isOwnProfile && !uploading && (
                   <button
                     onClick={(e) => {
                       e.stopPropagation();

@@ -16,7 +16,6 @@ export const BidDetails: React.FC = () => {
   const [counterAmount, setCounterAmount] = useState<string>('');
   const [showCounterForm, setShowCounterForm] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
-
   // Set counter amount when bid loads
   React.useEffect(() => {
     if (bid && showCounterForm && counterAmount === '') {
@@ -279,14 +278,39 @@ export const BidDetails: React.FC = () => {
                     </label>
                     <p className="text-gray-900 dark:text-white">{formatDate(bid.created_at)}</p>
                   </div>
-                  {bid.message && (
-                    <div>
-                      <label className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                        Message
-                      </label>
-                      <p className="text-gray-900 dark:text-white">{bid.message}</p>
-                    </div>
-                  )}
+                  {/* Replace message with address information based on shipping preferences and bid status */}
+                  {bid.item?.shippingOptions == "shipping" ? (
+                      <div>
+                        <label className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                          Shipping Address
+                        </label>
+                        <p className="text-gray-900 dark:text-white">
+                          {bid.status === 'accepted' || bid.status === 'confirmed' ? (
+                            // Show full address when bid is accepted/confirmed
+                            `${bid.shipping_address?.city}, ${bid.shipping_address?.postcode}, ${bid.shipping_address?.street}, ${bid.shipping_address?.country}`
+                          ) : (
+                            // Show actual city + postcode format before acceptance
+                            `${bid.shipping_address?.city}, ${bid.shipping_address?.postcode}`
+                          )}
+                        </p>
+                      </div>
+                    ) :  (
+                      <div>
+                        <label className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                          Collection Address
+                        </label>
+                        <p className="text-gray-900 dark:text-white">
+                          {bid.status === 'accepted' || bid.status === 'confirmed' ? (
+                            // Show seller's address when bid is accepted/confirmed for collection
+                            `${bid.shipping_address?.city}, ${bid.shipping_address?.postcode}, ${bid.shipping_address?.street}, ${bid.shipping_address?.country}`
+                          ) : (
+                            // Show actual city + postcode format before acceptance
+                            `${bid.shipping_address?.city}, ${bid.shipping_address?.postcode}`
+                          )}
+                        </p>
+                      </div>
+                    ) 
+                   }
                 </div>
               </div>
             </div>
