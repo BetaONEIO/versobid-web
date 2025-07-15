@@ -92,20 +92,10 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     let mounted = true;
-    let timeoutId: NodeJS.Timeout | null = null; // Store the timeout ID
 
     const initializeAuth = async () => {
       try {
-        // Add timeout to prevent infinite loading
-        const sessionPromise = supabase.auth.getSession();
-        const timeoutPromise = new Promise((_, reject) =>
-          timeoutId = setTimeout(() => reject(new Error('Session check timeout')), 15000)
-        );
-
-        const { data: { session } } = await Promise.race([sessionPromise, timeoutPromise]) as any;
-
-        // Clear timeout if session check succeeds
-        if (timeoutId) clearTimeout(timeoutId);
+        const { data: { session } } = await supabase.auth.getSession();
 
         if (!mounted) return;
 
@@ -120,7 +110,6 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
             }
           } catch (profileError) {
             console.error('Profile fetch error:', profileError);
-            // Still set as authenticated even if profile fetch fails
             if (mounted) {
               setAuth({
                 isAuthenticated: true,
@@ -131,7 +120,6 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       } catch (error) {
         console.error('Auth initialization error:', error);
-        if (timeoutId) clearTimeout(timeoutId);
         if (mounted) {
           setAuth({
             isAuthenticated: false,
@@ -147,7 +135,6 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     initializeAuth();
 
-    // Set up auth state listener with error handling
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!mounted) return;
 
@@ -178,7 +165,6 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     return () => {
       mounted = false;
-      if (timeoutId) clearTimeout(timeoutId);
       subscription.unsubscribe();
     };
   }, []);

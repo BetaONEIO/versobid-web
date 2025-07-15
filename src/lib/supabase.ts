@@ -1,16 +1,11 @@
 import { createClient } from '@supabase/supabase-js';
 import { Database } from '../types/supabase';
 
-// Get environment variables with fallbacks
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://placeholder.supabase.co';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'placeholder-key';
+// Use the same credentials as the integration client for consistency
+const supabaseUrl = 'https://srefxubqmfxgkgzjncfr.supabase.co';
+const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNyZWZ4dWJxbWZ4Z2tnempuY2ZyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzQ5MDk1OTksImV4cCI6MjA1MDQ4NTU5OX0.ZHzMMp8BP3NQbqlSDHK-KgNydp_BmViLVUCNL2sH6as';
 
-// Validate environment variables
-if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY) {
-  console.warn('Missing Supabase credentials. Please configure your environment variables.');
-}
-
-// Create Supabase client with enhanced configuration and error handling
+// Create Supabase client with basic configuration
 export const supabase = createClient<Database>(
   supabaseUrl,
   supabaseAnonKey,
@@ -20,49 +15,12 @@ export const supabase = createClient<Database>(
       persistSession: true,
       detectSessionInUrl: true,
       storage: window.localStorage,
-      storageKey: 'versobid-auth',
-      flowType: 'pkce'
+      storageKey: 'versobid-auth'
     },
     global: {
       headers: {
         'X-Client-Info': 'versobid-web'
-      },
-      fetch: (url, options = {}) => {
-        // Add timeout and better error handling to all requests
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
-        
-        return fetch(url, {
-          ...options,
-          signal: controller.signal,
-        }).catch(error => {
-          clearTimeout(timeoutId);
-          console.error('Supabase fetch error:', error);
-          throw new Error(`Connection failed: ${error.message}`);
-        }).finally(() => {
-          clearTimeout(timeoutId);
-        });
       }
-    },
-    db: {
-      schema: 'public'
-    },
-    realtime: {
-      params: {
-        eventsPerSecond: 10
-      },
-      // Faster reconnection
-      heartbeatIntervalMs: 30000,
-      reconnectAfterMs: (tries: number) => Math.min(tries * 1000, 5000)
     }
   }
 );
-
-// Global error handler for unhandled promise rejections
-if (typeof window !== 'undefined') {
-  window.addEventListener('unhandledrejection', (event) => {
-    console.error('Unhandled promise rejection:', event.reason);
-    // Prevent the default behavior of logging to console
-    event.preventDefault();
-  });
-}
