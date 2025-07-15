@@ -98,7 +98,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // Add timeout to prevent infinite loading
         const sessionPromise = supabase.auth.getSession();
         const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Session check timeout')), 10000)
+          setTimeout(() => reject(new Error('Session check timeout')), 30000)
         );
 
         const { data: { session } } = await Promise.race([sessionPromise, timeoutPromise]) as any;
