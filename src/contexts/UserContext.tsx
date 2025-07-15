@@ -92,20 +92,28 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     let mounted = true;
-    let timeoutId: NodeJS.Timeout | null = null; // Store the timeout ID
+    let timeoutId: NodeJS.Timeout | null = null;
 
     const initializeAuth = async () => {
       try {
-        // Add timeout to prevent infinite loading
-        const sessionPromise = supabase.auth.getSession();
-        const timeoutPromise = new Promise((_, reject) =>
-          timeoutId = setTimeout(() => reject(new Error('Session check timeout')), 30000)
-        );
+        // Check if Supabase is configured
+        if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY) {
+          console.warn('Supabase not configured, skipping auth initialization');
+          if (mounted) {
+            setLoading(false);
+          }
+          return;
+        }
 
-        const { data: { session } } = await Promise.race([sessionPromise, timeoutPromise]) as any;
+        // Add timeout with AbortController
+        const controller = new AbortController();
+        timeoutId = setTimeout(() => controller.abort(), 10000);
 
-        // Clear timeout if session check succeeds
+        const { data: { session }, error } = await supabase.auth.getSession();
+
         if (timeoutId) clearTimeout(timeoutId);
+
+        if (error) throw error;
 
         if (!mounted) return;
 
@@ -119,13 +127,16 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
         }
       } catch (error) {
-        console.error('Auth initialization error:', error);
         if (timeoutId) clearTimeout(timeoutId);
         if (mounted) {
           setAuth({
             isAuthenticated: false,
             user: null
           });
+          // Only log error if it's not an abort signal
+          if (error instanceof Error && error.name !== 'AbortError') {
+            console.error('Auth initialization error:', error.message);
+          }
         }
       } finally {
         if (mounted) {
@@ -158,9 +169,11 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setLoading(false);
         }
       } catch (error) {
-        console.error('Auth state change error:', error);
         if (mounted) {
           setLoading(false);
+          if (error instanceof Error) {
+            console.error('Auth state change error:', error.message);
+          }
         }
       }
     });

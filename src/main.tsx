@@ -18,6 +18,10 @@ if (!validateEnv()) {
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <App />
-  </React.StrictMode>
+    <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+      <PayPalScriptProvider options={paypalOptions}>
+        <App />
+      </PayPalScriptProvider>
+    </BrowserRouter>
+  </React.StrictMode>,
 );

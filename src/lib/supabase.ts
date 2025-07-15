@@ -26,6 +26,18 @@ export const supabase = createClient<Database>(
     global: {
       headers: {
         'X-Client-Info': 'versobid-web'
+      },
+      fetch: (url, options = {}) => {
+        // Add timeout and better error handling to all requests
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000);
+        
+        return fetch(url, {
+          ...options,
+          signal: controller.signal,
+        }).finally(() => {
+          clearTimeout(timeoutId);
+        });
       }
     },
     db: {
@@ -35,9 +47,8 @@ export const supabase = createClient<Database>(
       params: {
         eventsPerSecond: 10
       },
-      // Faster reconnection
       heartbeatIntervalMs: 30000,
-      reconnectAfterMs: (tries: number) => Math.min(tries * 1000, 5000)
+      reconnectAfterMs: (tries: number) => Math.min(tries * 1000, 10000)
     }
   }
 );
