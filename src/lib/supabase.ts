@@ -1,13 +1,13 @@
 import { createClient } from '@supabase/supabase-js';
 import { Database } from '../types/supabase';
 
-// Get environment variables
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+// Get environment variables with fallbacks
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://placeholder.supabase.co';
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'placeholder-key';
 
 // Validate environment variables
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.error('Missing Supabase credentials. Please check your .env file.');
+if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY) {
+  console.warn('Missing Supabase credentials. Please configure your environment variables.');
 }
 
 // Create Supabase client with enhanced configuration and error handling

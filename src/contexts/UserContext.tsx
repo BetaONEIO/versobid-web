@@ -92,35 +92,41 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     let mounted = true;
+    let timeoutId: NodeJS.Timeout | null = null; // Store the timeout ID
 
     const initializeAuth = async () => {
       try {
         // Add timeout to prevent infinite loading
         const sessionPromise = supabase.auth.getSession();
-        const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Session check timeout')), 30000)
+        const timeoutPromise = new Promise((_, reject) =>
+          timeoutId = setTimeout(() => reject(new Error('Session check timeout')), 30000)
         );
 
         const { data: { session } } = await Promise.race([sessionPromise, timeoutPromise]) as any;
-        
+
+        // Clear timeout if session check succeeds
+        if (timeoutId) clearTimeout(timeoutId);
+
         if (!mounted) return;
 
         if (session?.user) {
-          console.log('Session found, fetching profile data...');
           const userData = await fetchProfileData(session.user.id, session.user.email_confirmed_at);
           if (userData && mounted) {
             setAuth({
               isAuthenticated: true,
               user: userData
             });
-            console.log('User authenticated successfully');
           }
-        } else {
-          console.log('No session found');
         }
       } catch (error) {
-        console.error('Error during auth initialization:', error);
-        // Don't set auth state on error, just complete loading
+        console.error('Auth initialization error:', error);
+        if (timeoutId) clearTimeout(timeoutId);
+        if (mounted) {
+          setAuth({
+            isAuthenticated: false,
+            user: null
+          });
+        }
       } finally {
         if (mounted) {
           setLoading(false);
@@ -130,29 +136,38 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     initializeAuth();
 
-    // Listen for auth changes
+    // Set up auth state listener with error handling
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('Auth state change:', event, session?.user?.id);
-      
       if (!mounted) return;
 
-      if (event === 'SIGNED_IN' && session?.user) {
-        const userData = await fetchProfileData(session.user.id, session.user.email_confirmed_at);
-        if (userData && mounted) {
+      try {
+        if (event === 'SIGNED_OUT' || !session) {
           setAuth({
-            isAuthenticated: true,
-            user: userData
+            isAuthenticated: false,
+            user: null
           });
+          setLoading(false);
+        } else if (event === 'SIGNED_IN' && session.user) {
+          const userData = await fetchProfileData(session.user.id, session.user.email_confirmed_at);
+          if (userData && mounted) {
+            setAuth({
+              isAuthenticated: true,
+              user: userData
+            });
+          }
+          setLoading(false);
         }
-      } else if (event === 'SIGNED_OUT') {
+      } catch (error) {
+        console.error('Auth state change error:', error);
         if (mounted) {
-          setAuth(initialAuthState);
+          setLoading(false);
         }
       }
     });
 
     return () => {
       mounted = false;
+      if (timeoutId) clearTimeout(timeoutId);
       subscription.unsubscribe();
     };
   }, []);
