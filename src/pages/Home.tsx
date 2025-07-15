@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import { useUser } from '../contexts/UserContext';
 import { useListings } from '../hooks/useListings';
 import { ListingGrid } from '../components/listings/ListingGrid';
-import { TrendingCategories } from '../components/home/TrendingCategories';
 import { HowItWorks } from '../components/home/HowItWorks';
 
 export const Home: React.FC = () => {
@@ -122,7 +121,6 @@ export const Home: React.FC = () => {
       </div>
 
       <HowItWorks />
-      <TrendingCategories />
     </div>
   );
 };
