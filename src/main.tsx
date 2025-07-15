@@ -2,21 +2,26 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 import './index.css';
-import { validateEnv } from './utils/env';
 
-// Add global error handler for unhandled promise rejections
+// Global error handlers
+window.addEventListener('error', (event) => {
+  console.error('Global error:', event.error);
+});
+
 window.addEventListener('unhandledrejection', (event) => {
   console.error('Unhandled promise rejection:', event.reason);
-  // Prevent the default behavior that would terminate the app
+  // Prevent default behavior to avoid console spam
   event.preventDefault();
 });
 
-// Environment validation - warn but don't block
-if (!validateEnv()) {
-  console.warn('Environment variables are not properly configured. Some features may not work correctly.');
+// Ensure we have a root element
+const rootElement = document.getElementById('root');
+if (!rootElement) {
+  throw new Error('Root element not found');
 }
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
+const root = ReactDOM.createRoot(rootElement);
+root.render(
   <React.StrictMode>
     <App />
   </React.StrictMode>

@@ -26,6 +26,22 @@ export const supabase = createClient<Database>(
     global: {
       headers: {
         'X-Client-Info': 'versobid-web'
+      },
+      fetch: (url, options = {}) => {
+        // Add timeout and better error handling to all requests
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+        
+        return fetch(url, {
+          ...options,
+          signal: controller.signal,
+        }).catch(error => {
+          clearTimeout(timeoutId);
+          console.error('Supabase fetch error:', error);
+          throw new Error(`Connection failed: ${error.message}`);
+        }).finally(() => {
+          clearTimeout(timeoutId);
+        });
       }
     },
     db: {
@@ -41,3 +57,12 @@ export const supabase = createClient<Database>(
     }
   }
 );
+
+// Global error handler for unhandled promise rejections
+if (typeof window !== 'undefined') {
+  window.addEventListener('unhandledrejection', (event) => {
+    console.error('Unhandled promise rejection:', event.reason);
+    // Prevent the default behavior of logging to console
+    event.preventDefault();
+  });
+}

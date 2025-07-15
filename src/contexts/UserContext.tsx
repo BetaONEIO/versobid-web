@@ -99,7 +99,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // Add timeout to prevent infinite loading
         const sessionPromise = supabase.auth.getSession();
         const timeoutPromise = new Promise((_, reject) =>
-          timeoutId = setTimeout(() => reject(new Error('Session check timeout')), 30000)
+          timeoutId = setTimeout(() => reject(new Error('Session check timeout')), 15000)
         );
 
         const { data: { session } } = await Promise.race([sessionPromise, timeoutPromise]) as any;
@@ -110,12 +110,23 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (!mounted) return;
 
         if (session?.user) {
-          const userData = await fetchProfileData(session.user.id, session.user.email_confirmed_at);
-          if (userData && mounted) {
-            setAuth({
-              isAuthenticated: true,
-              user: userData
-            });
+          try {
+            const userData = await fetchProfileData(session.user.id, session.user.email_confirmed_at);
+            if (userData && mounted) {
+              setAuth({
+                isAuthenticated: true,
+                user: userData
+              });
+            }
+          } catch (profileError) {
+            console.error('Profile fetch error:', profileError);
+            // Still set as authenticated even if profile fetch fails
+            if (mounted) {
+              setAuth({
+                isAuthenticated: true,
+                user: null
+              });
+            }
           }
         }
       } catch (error) {

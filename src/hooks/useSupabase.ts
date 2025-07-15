@@ -8,24 +8,28 @@ export const useSupabase = () => {
   useEffect(() => {
     let mounted = true;
     let retryCount = 0;
-    const maxRetries = 3;
+    const maxRetries = 5;
+    let retryTimeout: NodeJS.Timeout;
 
     const checkConnection = async () => {
       try {
-        // Add timeout for connection check
-        const connectionPromise = supabase
-          .from('profiles')
-          .select('count')
-          .limit(1);
+        // Simple health check that doesn't require table access
+        const { error } = await supabase.rpc('version');
+        
+        if (error && error.message.includes('function version() does not exist')) {
+          // Function doesn't exist, but connection is working
+          if (mounted) {
+            setConnected(true);
+            setLoading(false);
+          }
+          return;
+        }
 
-        const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Connection timeout')), 5000)
-        );
-
-        await Promise.race([connectionPromise, timeoutPromise]);
+        if (error) throw error;
 
         if (mounted) {
           setConnected(true);
+          setLoading(false);
         }
       } catch (error) {
         console.error('Supabase connection error:', error);
@@ -33,15 +37,20 @@ export const useSupabase = () => {
         if (mounted && retryCount < maxRetries) {
           retryCount++;
           console.log(`Retrying connection... (${retryCount}/${maxRetries})`);
-          setTimeout(checkConnection, 2000 * retryCount);
+          
+          // Exponential backoff: 1s, 2s, 4s, 8s, 16s
+          const delay = Math.min(1000 * Math.pow(2, retryCount - 1), 16000);
+          
+          retryTimeout = setTimeout(() => {
+            if (mounted) {
+              checkConnection();
+            }
+          }, delay);
           return;
         }
 
         if (mounted) {
           setConnected(false);
-        }
-      } finally {
-        if (mounted) {
           setLoading(false);
         }
       }
@@ -51,6 +60,9 @@ export const useSupabase = () => {
 
     return () => {
       mounted = false;
+      if (retryTimeout) {
+        clearTimeout(retryTimeout);
+      }
     };
   }, []);
 
