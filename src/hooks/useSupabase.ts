@@ -32,7 +32,13 @@ export const useSupabase = () => {
 
         clearTimeout(timeoutId);
 
-        if (error) throw error;
+        if (error) {
+          // Log specific error but don't spam console
+          if (error.message?.includes('fetch') || error.message?.includes('Failed to fetch')) {
+            throw new Error('Connection failed');
+          }
+          throw error;
+        }
 
         if (mounted) {
           setConnected(true);
@@ -42,7 +48,7 @@ export const useSupabase = () => {
         if (mounted && retryCount < maxRetries) {
           retryCount++;
           console.log(`Retrying connection... (${retryCount}/${maxRetries})`);
-          timeoutId = setTimeout(checkConnection, 3000 * retryCount);
+          timeoutId = setTimeout(checkConnection, 5000);
           return;
         }
 

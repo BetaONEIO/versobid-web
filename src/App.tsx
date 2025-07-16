@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { PayPalScriptProvider } from '@paypal/react-paypal-js';
 import { Header } from './components/layout/Header';
 import { Footer } from './components/layout/Footer';
@@ -176,7 +176,7 @@ const App: React.FC = () => {
 
   return (
     <PayPalScriptProvider options={paypalOptions}>
-      <Router>
+      <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <ThemeProvider>
           <NotificationProvider>
             <UserProvider>
@@ -184,7 +184,7 @@ const App: React.FC = () => {
             </UserProvider>
           </NotificationProvider>
         </ThemeProvider>
-      </Router>
+      </BrowserRouter>
     </PayPalScriptProvider>
   );
 };

@@ -107,13 +107,20 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         // Add timeout with AbortController
         const controller = new AbortController();
-        timeoutId = setTimeout(() => controller.abort(), 10000);
+        timeoutId = setTimeout(() => controller.abort(), 8000);
 
         const { data: { session }, error } = await supabase.auth.getSession();
 
         if (timeoutId) clearTimeout(timeoutId);
 
-        if (error) throw error;
+        if (error) {
+          // Only throw if it's not a network error
+          if (!error.message?.includes('fetch') && !error.message?.includes('Failed to fetch')) {
+            throw error;
+          }
+          console.warn('Auth session check failed due to network issues');
+          return;
+        }
 
         if (!mounted) return;
 

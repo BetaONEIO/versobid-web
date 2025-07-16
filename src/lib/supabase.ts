@@ -30,13 +30,22 @@ export const supabase = createClient<Database>(
       fetch: (url, options = {}) => {
         // Add timeout and better error handling to all requests
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000);
+        const timeoutId = setTimeout(() => controller.abort(), 8000);
         
         return fetch(url, {
           ...options,
           signal: controller.signal,
-        }).finally(() => {
+        }).then(response => {
           clearTimeout(timeoutId);
+          return response;
+        }).catch(error => {
+          clearTimeout(timeoutId);
+          // Suppress network errors in development
+          if (error.name === 'AbortError' || error.message?.includes('fetch')) {
+            console.warn('Network request failed, this is expected if Supabase is not configured');
+            throw new Error('Network unavailable');
+          }
+          throw error;
         });
       }
     },
